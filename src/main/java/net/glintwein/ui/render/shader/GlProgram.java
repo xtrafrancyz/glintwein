@@ -42,7 +42,7 @@ public class GlProgram {
         this.format = format;
 
         int vertexShaderId;
-        try (InputStream is = ResourceLoader.getResourceAsStream("/assets/shaders/" + vsh + ".vsh")) {
+        try (InputStream is = ResourceLoader.getStream("/assets/shaders/" + vsh + ".vsh")) {
             String vertexSource = IOUtils.toString(is, StandardCharsets.UTF_8);
             vertexShaderId = compileShader(vertexSource, GL20.GL_VERTEX_SHADER);
         } catch (Exception e) {
@@ -50,7 +50,7 @@ public class GlProgram {
         }
 
         int fragmentShaderId;
-        try (InputStream is = ResourceLoader.getResourceAsStream("/assets/shaders/" + fsh + ".fsh")) {
+        try (InputStream is = ResourceLoader.getStream("/assets/shaders/" + fsh + ".fsh")) {
             String fragmentSource = IOUtils.toString(is, StandardCharsets.UTF_8);
             fragmentShaderId = compileShader(fragmentSource, GL20.GL_FRAGMENT_SHADER);
         } catch (Exception e) {

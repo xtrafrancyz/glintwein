@@ -149,10 +149,10 @@ public class GigaFont {
     }
 
     public static GigaFont load(String path) {
-        MsdfModel model = ResourceLoader.getResourceAsJson(path + ".json", MsdfModel.class);
+        MsdfModel model = ResourceLoader.getJson(path + ".json", MsdfModel.class);
 
         NativeImage image;
-        try (InputStream is = ResourceLoader.getResourceAsStream(path + ".png")) {
+        try (InputStream is = ResourceLoader.getStream(path + ".png")) {
             image = NativeImage.read(NativeImage.Format.RGBA, is);
         } catch (Exception e) {
             throw new RuntimeException("Failed to load GigaFont texture from path: " + path, e);

@@ -2,6 +2,7 @@ package net.glintwein.ui;
 
 import net.glintwein.ui.render.command.Context;
 import net.glintwein.ui.test.TestWindow;
+import net.minecraft.client.Minecraft;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +11,7 @@ public class WindowManager {
     public List<Window> windows = new ArrayList<>();
 
     public WindowManager() {
-        addWindow(new TestWindow());
+        addWindow(new TestWindow(this));
     }
 
     public void addWindow(Window window) {
@@ -61,5 +62,13 @@ public class WindowManager {
             }
         }
         return false;
+    }
+
+    public float getScreenWidth() {
+        return Minecraft.getInstance().getWindow().getGuiScaledWidth();
+    }
+
+    public float getScreenHeight() {
+        return Minecraft.getInstance().getWindow().getGuiScaledHeight();
     }
 }

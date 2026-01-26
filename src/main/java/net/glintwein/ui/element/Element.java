@@ -56,6 +56,10 @@ public class Element extends YogaNode {
         this.mouseScrollHandler = handler;
     }
 
+    public void trackAnimation(Animated animation) {
+        animations.add(animation);
+    }
+
     public void enableLayoutLerp(float durationMs, Easing easing) {
         layoutLerp = new LayoutBoxLerp(durationMs, easing);
     }
@@ -91,6 +95,14 @@ public class Element extends YogaNode {
         children.clear();
     }
 
+    public float getComputedWidth() {
+        return borderBox.width;
+    }
+
+    public float getComputedHeight() {
+        return borderBox.height;
+    }
+
     protected void propagateLayoutRead() {
         if (Yoga.YGNodeGetHasNewLayout(yogaNode)) {
             Yoga.YGNodeSetHasNewLayout(yogaNode, false);
@@ -120,10 +132,6 @@ public class Element extends YogaNode {
         contentBox.height = paddingBox.height - borderTop - Yoga.YGNodeLayoutGetBorder(yogaNode, Yoga.YGEdgeBottom);
         if (layoutLerp != null)
             layoutLerp.animate(borderBox, paddingBox, contentBox);
-    }
-
-    public void trackAnimation(Animated animation) {
-        animations.add(animation);
     }
 
     protected void handleMouseMoved(float mouseX, float mouseY) {

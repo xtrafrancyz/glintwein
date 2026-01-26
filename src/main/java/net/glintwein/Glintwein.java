@@ -2,6 +2,7 @@ package net.glintwein;
 
 import net.glintwein.ui.WindowManager;
 import net.glintwein.ui.util.NativeCleaner;
+import net.glintwein.util.KVStore;
 import net.minecraft.Util;
 import net.minecraft.client.gui.screens.Screen;
 import org.apache.logging.log4j.LogManager;
@@ -20,12 +21,14 @@ public class Glintwein {
         if (instance != null)
             throw new IllegalStateException("Glintwein instance already exists!");
         instance = this;
+        KVStore.load();
 
         windowManager = new WindowManager();
     }
 
     public void tick() {
         NativeCleaner.cleanUp();
+        KVStore.save();
     }
 
     public void preRender() {

@@ -1,6 +1,7 @@
 package net.glintwein.ui.test;
 
 import net.glintwein.ui.Window;
+import net.glintwein.ui.WindowManager;
 import net.glintwein.ui.data.Edge;
 import net.glintwein.ui.element.Element;
 import net.glintwein.ui.element.Image;
@@ -13,7 +14,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class TestWindow extends Window {
-    public TestWindow() {
+    public TestWindow(WindowManager manager) {
+        super(manager, "test_window");
         root.setPadding(Edge.ALL, 5);
         root.setBackground(0x88ffffff);
         root.setMaxWidth(200);
@@ -21,6 +23,7 @@ public class TestWindow extends Window {
         root.addChild(new Text("Test Window"));
 
         Element list = new Element();
+        list.setMousePressHandler((button, x, y) -> true); // To prevent clicks from propagating to the window
         list.setPadding(Edge.ALL, 5);
         list.setBackground(0x55ff0000);
         list.addChild(new Text("Item 1"));
