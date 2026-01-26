@@ -1,6 +1,7 @@
 package net.glintwein.ui.element;
 
 import net.glintwein.ui.data.Box;
+import net.glintwein.ui.data.Display;
 import net.glintwein.ui.render.command.Context;
 import net.glintwein.ui.util.ARGB;
 import net.glintwein.ui.util.Animated;
@@ -17,12 +18,35 @@ public class Element extends YogaNode {
     protected final Box paddingBox = new Box();
     protected final Box contentBox = new Box();
     private LayoutBoxLerp layoutLerp;
-    protected final List<Animated> animations = new ArrayList<>();
+    private final List<Animated> animations = new ArrayList<>();
+
+    private boolean hovered;
+    private boolean pressed;
 
     private int backgroundColor = 0x00000000;
+    private ClickHandler clickHandler;
+    private MousePressHandler mousePressHandler;
+    private MouseReleaseHandler mouseReleaseHandler;
+    private MouseScrollHandler mouseScrollHandler;
 
     public void setBackground(int color) {
         this.backgroundColor = color;
+    }
+
+    public void setClickHandler(ClickHandler handler) {
+        this.clickHandler = handler;
+    }
+
+    public void setMousePressHandler(MousePressHandler handler) {
+        this.mousePressHandler = handler;
+    }
+
+    public void setMouseReleaseHandler(MouseReleaseHandler handler) {
+        this.mouseReleaseHandler = handler;
+    }
+
+    public void setMouseScrollHandler(MouseScrollHandler handler) {
+        this.mouseScrollHandler = handler;
     }
 
     public void enableLayoutLerp(float durationMs, Easing easing) {
@@ -95,6 +119,67 @@ public class Element extends YogaNode {
         animations.add(animation);
     }
 
+    protected void handleMouseMoved(float mouseX, float mouseY) {
+        float x = borderBox.x;
+        float y = borderBox.y;
+        float width = borderBox.width;
+        float height = borderBox.height;
+        hovered = mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
+
+        float localX = mouseX - borderBox.x;
+        float localY = mouseY - borderBox.y;
+        for (Element child : children) {
+            child.handleMouseMoved(localX, localY);
+        }
+    }
+
+    protected boolean handleMousePress(float mouseX, float mouseY, int button) {
+        pressed = true;
+        float localX = mouseX - borderBox.x;
+        float localY = mouseY - borderBox.y;
+        boolean handled = false;
+        for (Element child : children) {
+            if (child.canHandleClick() && child.handleMousePress(localX, localY, button)) {
+                handled = true;
+                break;
+            }
+        }
+        if (!handled && mousePressHandler != null)
+            handled = mousePressHandler.onMousePress(localX, localY, button);
+        return handled;
+    }
+
+    protected boolean handleMouseRelease(float mouseX, float mouseY, int button, boolean blocked) {
+        float localX = mouseX - borderBox.x;
+        float localY = mouseY - borderBox.y;
+        for (Element child : children) {
+            if (child.canHandleClick() && child.handleMouseRelease(localX, localY, button, blocked))
+                blocked = true;
+        }
+        if (pressed) {
+            pressed = false;
+            if (mouseReleaseHandler != null)
+                blocked |= mouseReleaseHandler.onMouseRelease(localX, localY, button);
+            if (hovered && !blocked && clickHandler != null)
+                blocked = clickHandler.onClick(button);
+        }
+        return blocked;
+    }
+
+    protected boolean handleMouseScroll(float mouseX, float mouseY, float amount, float vertical) {
+        float localX = mouseX - borderBox.x;
+        float localY = mouseY - borderBox.y;
+        for (Element child : children) {
+            if (child.canHandleClick() && child.handleMouseScroll(localX, localY, amount, vertical))
+                return true;
+        }
+        return false;
+    }
+
+    public boolean canHandleClick() {
+        return getDisplayType() == Display.FLEX && hovered;
+    }
+
     public void tick() {
         for (Animated animation : animations)
             animation.update();
@@ -104,11 +189,36 @@ public class Element extends YogaNode {
             layoutLerp.apply(borderBox, paddingBox, contentBox);
     }
 
-    public void draw(Context context) {
+    public void draw(Context ctx) {
         if (ARGB.alpha(backgroundColor) > 0)
-            context.drawRect(borderBox.x, borderBox.y, borderBox.width, borderBox.height, backgroundColor);
+            ctx.drawRect(borderBox.x, borderBox.y, borderBox.width, borderBox.height, backgroundColor);
 
-        for (Element child : children)
-            child.draw(context);
+        if (!children.isEmpty()) {
+            ctx.pose().pushMatrix();
+            ctx.pose().translate(borderBox.x, borderBox.y);
+            for (Element child : children)
+                child.draw(ctx);
+            ctx.pose().popMatrix();
+        }
+    }
+
+    public boolean isHovered() {
+        return hovered;
+    }
+
+    public interface ClickHandler {
+        boolean onClick(int button);
+    }
+
+    public interface MousePressHandler {
+        boolean onMousePress(float mouseX, float mouseY, int button);
+    }
+
+    public interface MouseReleaseHandler {
+        boolean onMouseRelease(float mouseX, float mouseY, int button);
+    }
+
+    public interface MouseScrollHandler {
+        boolean onMouseScroll(float mouseX, float mouseY, float amount, float vertical);
     }
 }

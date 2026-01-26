@@ -2,8 +2,12 @@ package net.glintwein.ui.render.shader;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.*;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormatElement;
 import com.mojang.datafixers.util.Pair;
+import net.glintwein.util.ResourceLoader;
 import org.apache.commons.io.IOUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
@@ -18,9 +22,11 @@ public class GlProgram {
     private static final Map<VertexFormatElement, AttribProperties> ATTRIBUTES = new HashMap<>();
 
     static {
-        ATTRIBUTES.put(DefaultVertexFormat.ELEMENT_POSITION, new AttribProperties("Position", 3, GL20.GL_FLOAT, false));
-        ATTRIBUTES.put(DefaultVertexFormat.ELEMENT_COLOR, new AttribProperties("Color", 4, GL20.GL_UNSIGNED_BYTE, true));
-        ATTRIBUTES.put(DefaultVertexFormat.ELEMENT_UV0, new AttribProperties("UV0", 2, GL20.GL_FLOAT, false));
+        ATTRIBUTES.put(DefaultVertexFormat.ELEMENT_POSITION, new AttribProperties("Position", false));
+        ATTRIBUTES.put(DefaultVertexFormat.ELEMENT_COLOR, new AttribProperties("Color", true));
+        ATTRIBUTES.put(DefaultVertexFormat.ELEMENT_UV0, new AttribProperties("UV0", false));
+        ATTRIBUTES.put(GlintVertexFormat.ELEMENT_RADIUS, new AttribProperties("Radius", false));
+        ATTRIBUTES.put(GlintVertexFormat.ELEMENT_SIZE, new AttribProperties("Size", false));
     }
 
     private final VertexFormat format;
@@ -29,22 +35,26 @@ public class GlProgram {
     private final List<Uniform> samplerUnits = new ArrayList<>();
 
     public GlProgram(String name, VertexFormat format) {
+        this(name, name, format);
+    }
+
+    public GlProgram(String vsh, String fsh, VertexFormat format) {
         this.format = format;
 
         int vertexShaderId;
-        try (InputStream is = GlProgram.class.getResourceAsStream("/assets/shaders/" + name + ".vsh")) {
+        try (InputStream is = ResourceLoader.getResourceAsStream("/assets/shaders/" + vsh + ".vsh")) {
             String vertexSource = IOUtils.toString(is, StandardCharsets.UTF_8);
             vertexShaderId = compileShader(vertexSource, GL20.GL_VERTEX_SHADER);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to load vertex shader source for " + name, e);
+            throw new RuntimeException("Failed to load vertex shader source for " + vsh, e);
         }
 
         int fragmentShaderId;
-        try (InputStream is = GlProgram.class.getResourceAsStream("/assets/shaders/" + name + ".fsh")) {
+        try (InputStream is = ResourceLoader.getResourceAsStream("/assets/shaders/" + fsh + ".fsh")) {
             String fragmentSource = IOUtils.toString(is, StandardCharsets.UTF_8);
             fragmentShaderId = compileShader(fragmentSource, GL20.GL_FRAGMENT_SHADER);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to load fragment shader source for " + name, e);
+            throw new RuntimeException("Failed to load fragment shader source for " + fsh, e);
         }
 
         this.programId = GL20.glCreateProgram();
@@ -80,10 +90,10 @@ public class GlProgram {
         GL20.glUseProgram(0);
     }
 
-    public VertexConsumer begin() {
+    public GlintVertexConsumer begin() {
         BufferBuilder b = RenderSystem.renderThreadTesselator().getBuilder();
-        b.begin(GL11.GL_QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
-        return b;
+        b.begin(GL11.GL_QUADS, format);
+        return new GlintVertexConsumer(b);
     }
 
     public void draw() {
@@ -99,8 +109,9 @@ public class GlProgram {
             for (int i = 0; i < format.getElements().size(); i++) {
                 VertexFormatElement element = format.getElements().get(i);
                 AttribProperties props = ATTRIBUTES.get(element);
+                int count = element.getByteSize() / element.getType().getSize();
                 GL20.glEnableVertexAttribArray(i);
-                GL20.glVertexAttribPointer(i, props.size, props.type, props.normalized, stride, pointer + offset);
+                GL20.glVertexAttribPointer(i, count, element.getType().getGlType(), props.normalized, stride, pointer + offset);
                 offset += element.getByteSize();
             }
 
@@ -145,14 +156,10 @@ public class GlProgram {
 
     private static class AttribProperties {
         public final String name;
-        public final int size;
-        public final int type;
         public final boolean normalized;
 
-        public AttribProperties(String name, int size, int type, boolean normalized) {
+        public AttribProperties(String name, boolean normalized) {
             this.name = name;
-            this.size = size;
-            this.type = type;
             this.normalized = normalized;
         }
     }

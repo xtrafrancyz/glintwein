@@ -5,11 +5,11 @@ import net.minecraft.client.Minecraft;
 import org.joml.Matrix4f;
 
 public class GlobalRender {
-    private static float[] guiProxMatrix = new float[16];
+    private static final float[] guiProxMatrix = new float[16];
     private static int projMatrixWidth = -1;
     private static int projMatrixHeight = -1;
 
-    private static float[] modelViewMatrix = new float[16];
+    private static final float[] modelViewMatrix = new float[16];
 
     static {
         new Matrix4f().get(modelViewMatrix);

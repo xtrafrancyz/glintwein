@@ -88,6 +88,14 @@ public abstract class Animated {
             update();
         }
 
+        public CompletableFuture<End> animateIfDifferent(int value, int durationMs, Easing easing) {
+            if (this.targetValue != value) {
+                return animate(value, durationMs, easing);
+            } else {
+                return CompletableFuture.completedFuture(new End(Glintwein.time));
+            }
+        }
+
         public CompletableFuture<End> animate(int value, int durationMs, Easing easing) {
             this.value = get();
             this.targetValue = value;

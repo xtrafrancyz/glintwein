@@ -1,15 +1,16 @@
 package net.glintwein.ui.render.command;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.glintwein.ui.render.GlobalRender;
 import net.glintwein.ui.render.font.GigaFont;
 import net.glintwein.ui.render.shader.GlProgram;
+import net.glintwein.ui.render.shader.GlintVertexConsumer;
 import net.glintwein.ui.render.shader.Shaders;
+import org.joml.Matrix3x2f;
 
 import java.util.List;
 
 public class DrawTextCommand extends DrawCommand {
+    private final Matrix3x2f pose;
     private final GigaFont font;
     private final String text;
     private final float x;
@@ -19,8 +20,9 @@ public class DrawTextCommand extends DrawCommand {
 
     private final Bounds bounds;
 
-    public DrawTextCommand(GigaFont font, String text, float x, float y, float size, int color) {
-        this.bounds = Bounds.fromXYWH(x, y, font.getWidth(text, size), font.getHeight(size));
+    public DrawTextCommand(Matrix3x2f pose, GigaFont font, String text, float x, float y, float size, int color) {
+        this.pose = pose;
+        this.bounds = Bounds.fromXYWH(x, y, font.getWidth(text, size), font.getHeight(size)).transformMaxBounds(pose);
         this.font = font;
         this.text = text;
         this.x = x;
@@ -45,8 +47,6 @@ public class DrawTextCommand extends DrawCommand {
     public static class Executor implements DrawCommand.Executor<DrawTextCommand> {
         @Override
         public void execute(List<DrawTextCommand> commands) {
-            RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
             DrawTextCommand first = commands.get(0);
             GlProgram msdf = Shaders.MSDF;
             msdf.bind();
@@ -55,13 +55,12 @@ public class DrawTextCommand extends DrawCommand {
             msdf.getUniform("Thickness").setFloat(0f);
             msdf.getUniform("Smoothness").setFloat(0.5f);
             msdf.getUniform("Outline").setBool(false);
-            msdf.getUniform("OutlineThickness").setFloat(0.3f);
+            msdf.getUniform("OutlineThickness").setFloat(0f);
             msdf.getUniform("OutlineColor").setColor4f(0xff000000);
-            msdf.getUniform("ModelViewMat").setMat4(GlobalRender.getModelViewMatrix());
             msdf.getUniform("ProjMat").setMat4(GlobalRender.getGuiProxMatrix());
-            VertexConsumer consumer = msdf.begin();
+            GlintVertexConsumer consumer = msdf.begin();
             for (DrawTextCommand cmd : commands) {
-                cmd.font.render(consumer, cmd.text, cmd.x, cmd.y, cmd.size, cmd.color);
+                cmd.font.render(consumer, cmd.pose, cmd.text, cmd.x, cmd.y, cmd.size, cmd.color);
             }
             msdf.draw();
         }

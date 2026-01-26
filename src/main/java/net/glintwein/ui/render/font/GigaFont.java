@@ -2,11 +2,13 @@ package net.glintwein.ui.render.font;
 
 import com.google.gson.Gson;
 import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import it.unimi.dsi.fastutil.chars.Char2ObjectMap;
 import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2FloatOpenHashMap;
+import net.glintwein.ui.render.shader.GlintVertexConsumer;
 import net.glintwein.ui.util.ARGB;
+import net.glintwein.util.ResourceLoader;
+import org.joml.Matrix3x2f;
 import org.lwjgl.opengl.GL11;
 
 import java.io.InputStream;
@@ -15,8 +17,6 @@ import java.nio.ByteBuffer;
 import java.util.List;
 
 public class GigaFont {
-    private static final Gson gson = new Gson();
-
     private final MsdfModel.Atlas atlas;
     private final MsdfModel.FontMetrics metrics;
     private final Char2ObjectMap<Glyph> glyphs;
@@ -84,7 +84,7 @@ public class GigaFont {
         output.add(text);
     }
 
-    public void render(VertexConsumer consumer, String text, float x, float y, float size, int color) {
+    public void render(GlintVertexConsumer consumer, Matrix3x2f pose, String text, float x, float y, float size, int color) {
         float cursorX = x;
         float cursorY = y + metrics.ascender * size;
         char prevChar = 0;
@@ -105,10 +105,10 @@ public class GigaFont {
                 float x1 = x0 + glyph.width * size;
                 float y1 = y0 + glyph.height * size;
 
-                consumer.vertex(x0, y0, 0).color(a, r, g, b).uv(glyph.minU, glyph.maxV).endVertex();
-                consumer.vertex(x0, y1, 0).color(a, r, g, b).uv(glyph.minU, glyph.minV).endVertex();
-                consumer.vertex(x1, y1, 0).color(a, r, g, b).uv(glyph.maxU, glyph.minV).endVertex();
-                consumer.vertex(x1, y0, 0).color(a, r, g, b).uv(glyph.maxU, glyph.maxV).endVertex();
+                consumer.vertex(pose, x0, y0, 0).color(r, g, b, a).uv(glyph.minU, glyph.maxV).endVertex();
+                consumer.vertex(pose, x0, y1, 0).color(r, g, b, a).uv(glyph.minU, glyph.minV).endVertex();
+                consumer.vertex(pose, x1, y1, 0).color(r, g, b, a).uv(glyph.maxU, glyph.minV).endVertex();
+                consumer.vertex(pose, x1, y0, 0).color(r, g, b, a).uv(glyph.maxU, glyph.maxV).endVertex();
 
                 cursorX += glyph.advance * size;
                 prevChar = c;
@@ -136,15 +136,10 @@ public class GigaFont {
     }
 
     public static GigaFont load(String path) {
-        MsdfModel model;
-        try (InputStream is = GigaFont.class.getResourceAsStream(path + ".json")) {
-            model = gson.fromJson(new InputStreamReader(is), MsdfModel.class);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to load GigaFont from path: " + path, e);
-        }
+        MsdfModel model = ResourceLoader.getResourceAsJson(path + ".json", MsdfModel.class);
 
         NativeImage image;
-        try (InputStream is = GigaFont.class.getResourceAsStream(path + ".png")) {
+        try (InputStream is = ResourceLoader.getResourceAsStream(path + ".png")) {
             image = NativeImage.read(NativeImage.Format.RGBA, is);
         } catch (Exception e) {
             throw new RuntimeException("Failed to load GigaFont texture from path: " + path, e);

@@ -11,12 +11,22 @@ import java.util.List;
 public abstract class YogaNode {
     protected final long yogaNode;
     private final List<NativeCleaner.Handle> cleanerHandlers = new ArrayList<>();
+    private Display display = Display.FLEX;
 
     public YogaNode() {
         this.yogaNode = Yoga.YGNodeNew();
 
         long yogaNodeFinal = this.yogaNode;
         cleanerHandlers.add(NativeCleaner.register(() -> Yoga.YGNodeFree(yogaNodeFinal)));
+    }
+
+    public Display getDisplayType() {
+        return display;
+    }
+
+    public void setDisplay(Display display) {
+        this.display = display;
+        Yoga.YGNodeStyleSetDisplay(yogaNode, display.getValue());
     }
 
     public void setAlignContent(Align align) {

@@ -1,10 +1,37 @@
 package net.glintwein;
 
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
+import net.fabricmc.fabric.api.client.screen.v1.ScreenMouseEvents;
+import net.minecraft.client.Minecraft;
 
 public class GlintweinFabricMod implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
+        ScreenEvents.BEFORE_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
+            ScreenMouseEvents.allowMouseClick(screen).register((s, mouseX, mouseY, button) -> {
+                return !Glintwein.instance.onMousePress(s, (float) mouseX, (float) mouseY, button);
+            });
+            ScreenMouseEvents.allowMouseRelease(screen).register((s, mouseX, mouseY, button) -> {
+                return !Glintwein.instance.onMouseRelease(s, (float) mouseX, (float) mouseY, button);
+            });
+            ScreenMouseEvents.allowMouseScroll(screen).register((s, mouseX, mouseY, horizontal, vertical) -> {
+                return !Glintwein.instance.onMouseScroll(s, (float) mouseX, (float) mouseY, (float) horizontal, (float) vertical);
+            });
+        });
+    }
 
+    public static float getMouseX() {
+        Minecraft mc = Minecraft.getInstance();
+        double xpos = mc.mouseHandler.xpos();
+        xpos = xpos * mc.getWindow().getGuiScaledWidth() / mc.getWindow().getScreenWidth();
+        return (float) xpos;
+    }
+
+    public static float getMouseY() {
+        Minecraft mc = Minecraft.getInstance();
+        double ypos = mc.mouseHandler.ypos();
+        ypos = ypos * mc.getWindow().getGuiScaledHeight() / mc.getWindow().getScreenHeight();
+        return (float) ypos;
     }
 }

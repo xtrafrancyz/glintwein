@@ -2,7 +2,6 @@ package net.glintwein.mixin.ui;
 
 import net.glintwein.Glintwein;
 import net.minecraft.client.Minecraft;
-import org.lwjgl.opengl.GL30;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -10,24 +9,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Minecraft.class)
 public class MixinMinecraft {
-    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;setWindowActive(Z)V"), method = "<init>")
-    private void onGlContextInit(CallbackInfo info) {
-
-    }
-
     @Inject(at = @At("RETURN"), method = "<init>")
     private void init(CallbackInfo info) {
-        Glintwein.init();
+        new Glintwein();
     }
 
     @Inject(at = @At("TAIL"), method = "tick()V")
     private void tick(CallbackInfo info) {
-        Glintwein.tick();
+        Glintwein.instance.tick();
     }
 
     @Inject(at = @At("HEAD"), method = "runTick(Z)V")
     private void runTickHead(boolean renderLevel, CallbackInfo info) {
-        Glintwein.preRender();
+        Glintwein.instance.preRender();
     }
 
     @Inject(
@@ -39,17 +33,6 @@ public class MixinMinecraft {
         method = "runTick(Z)V"
     )
     private void runTickAfterRender(boolean renderLevel, CallbackInfo info) {
-        Glintwein.postRender();
-    }
-
-    @Inject(
-        at = @At(
-            value = "INVOKE",
-            target = "Lcom/mojang/blaze3d/platform/Window;updateDisplay()V"
-        ),
-        method = "runTick(Z)V"
-    )
-    private void beforeSwap(boolean renderLevel, CallbackInfo info) {
-        //Glintwein.postRender();
+        Glintwein.instance.postRender();
     }
 }

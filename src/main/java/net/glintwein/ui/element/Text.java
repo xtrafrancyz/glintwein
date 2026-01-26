@@ -86,11 +86,11 @@ public class Text extends Element {
     }
 
     @Override
-    public void draw(Context context) {
-        super.draw(context);
+    public void draw(Context ctx) {
+        super.draw(ctx);
         float y = borderBox.y;
         for (WrappedLine line : wrappedLines) {
-            context.drawText(font, line.text, borderBox.x, y, fontSize, color);
+            ctx.drawText(font, line.text, borderBox.x, y, fontSize, color);
             y += font.getHeight(fontSize);
         }
     }

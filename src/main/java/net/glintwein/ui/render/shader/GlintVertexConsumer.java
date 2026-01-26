@@ -1,0 +1,94 @@
+package net.glintwein.ui.render.shader;
+
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.glintwein.ui.data.BorderRadius;
+import org.joml.Matrix3x2fc;
+import org.joml.Vector2f;
+
+public class GlintVertexConsumer implements VertexConsumer {
+    private static final Vector2f TEMP_VEC = new Vector2f();
+
+    private final BufferBuilder builder;
+
+    public GlintVertexConsumer(BufferBuilder builder) {
+        this.builder = builder;
+    }
+
+    @Override
+    public GlintVertexConsumer vertex(double x, double y, double z) {
+        builder.vertex(x, y, z);
+        return this;
+    }
+
+    public GlintVertexConsumer vertex(Matrix3x2fc pose, float x, float y, float z) {
+        Vector2f dest = pose.transformPosition(x, y, TEMP_VEC);
+        builder.vertex(dest.x, dest.y, z);
+        return this;
+    }
+
+    public GlintVertexConsumer color(int color) {
+        int a = (color >> 24) & 0xFF;
+        int r = (color >> 16) & 0xFF;
+        int g = (color >> 8) & 0xFF;
+        int b = color & 0xFF;
+        builder.color(r, g, b, a);
+        return this;
+    }
+
+    @Override
+    public GlintVertexConsumer color(int red, int green, int blue, int alpha) {
+        builder.color(red, green, blue, alpha);
+        return this;
+    }
+
+    @Override
+    public GlintVertexConsumer uv(float u, float v) {
+        builder.uv(u, v);
+        return this;
+    }
+
+    @Override
+    public GlintVertexConsumer overlayCoords(int u, int v) {
+        builder.overlayCoords(u, v);
+        return this;
+    }
+
+    @Override
+    public GlintVertexConsumer uv2(int u, int v) {
+        builder.uv2(u, v);
+        return this;
+    }
+
+    @Override
+    public GlintVertexConsumer normal(float x, float y, float z) {
+        builder.normal(x, y, z);
+        return this;
+    }
+
+    public GlintVertexConsumer radius(BorderRadius radius, float width, float height) {
+        float maxRadius = Math.min(width, height) / 2f;
+        float topLeft = Math.min(radius.topLeft, maxRadius);
+        float topRight = Math.min(radius.topRight, maxRadius);
+        float bottomRight = Math.min(radius.bottomRight, maxRadius);
+        float bottomLeft = Math.min(radius.bottomLeft, maxRadius);
+        builder.putByte(0, (byte) topLeft);
+        builder.putByte(1, (byte) topRight);
+        builder.putByte(2, (byte) bottomRight);
+        builder.putByte(3, (byte) bottomLeft);
+        builder.nextElement();
+        return this;
+    }
+
+    public GlintVertexConsumer size(float width, float height) {
+        builder.putFloat(0, width);
+        builder.putFloat(4, height);
+        builder.nextElement();
+        return this;
+    }
+
+    @Override
+    public void endVertex() {
+        builder.endVertex();
+    }
+}

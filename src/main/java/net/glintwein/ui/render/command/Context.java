@@ -2,9 +2,11 @@ package net.glintwein.ui.render.command;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.floats.FloatArrayFIFOQueue;
+import net.glintwein.ui.data.BorderRadius;
 import net.glintwein.ui.render.font.GigaFont;
+import net.glintwein.ui.render.texture.Sprite;
+import org.joml.Matrix3x2f;
 import org.joml.Matrix3x2fStack;
-import org.joml.Vector2f;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,6 +19,7 @@ public class Context {
     static {
         EXECUTORS.put(DrawRectCommand.class, new DrawRectCommand.Executor());
         EXECUTORS.put(DrawTextCommand.class, new DrawTextCommand.Executor());
+        EXECUTORS.put(DrawTextureCommand.class, new DrawTextureCommand.Executor());
     }
 
     private final List<DrawCommand> commands = new ArrayList<>();
@@ -42,18 +45,39 @@ public class Context {
     }
 
     public void drawRect(float x, float y, float width, float height, int color) {
-        Vector2f temp = new Vector2f();
-        transform.transformPosition(x, y, temp);
-        x = temp.x;
-        y = temp.y;
-        transform.transformPosition(width, height, temp);
-        width = temp.x;
-        height = temp.y;
-        addCommand(new DrawRectCommand(x, y, width, height, color));
+        drawRect(x, y, width, height, BorderRadius.ZERO, color);
+    }
+
+    public void drawRect(float x, float y, float width, float height, BorderRadius radius, int color) {
+        addCommand(new DrawRectCommand(
+            new Matrix3x2f(transform),
+            x, y, x + width, y + height,
+            radius,
+            color
+        ));
+    }
+
+    public void drawTexture(Sprite sprite, float x, float y, float width, float height, int color) {
+        drawTexture(sprite, x, y, width, height, BorderRadius.ZERO, color);
+    }
+
+    public void drawTexture(Sprite sprite, float x, float y, float width, float height, BorderRadius radius, int color) {
+        addCommand(new DrawTextureCommand(
+            new Matrix3x2f(transform),
+            x, y, x + width, y + height,
+            sprite.u0, sprite.v0, sprite.u1, sprite.v1,
+            radius, sprite.textureId,
+            color
+        ));
     }
 
     public void drawText(GigaFont font, String text, float x, float y, float size, int color) {
-        addCommand(new DrawTextCommand(font, text, x, y, size, color));
+        addCommand(new DrawTextCommand(
+            new Matrix3x2f(transform),
+            font, text,
+            x, y, size,
+            color
+        ));
     }
 
     private void addCommand(DrawCommand cmd) {

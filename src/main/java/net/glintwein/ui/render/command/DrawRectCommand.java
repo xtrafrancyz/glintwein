@@ -1,21 +1,29 @@
 package net.glintwein.ui.render.command;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.gui.Gui;
+import net.glintwein.ui.data.BorderRadius;
+import net.glintwein.ui.render.GlobalRender;
+import net.glintwein.ui.render.shader.GlProgram;
+import net.glintwein.ui.render.shader.GlintVertexConsumer;
+import net.glintwein.ui.render.shader.Shaders;
+import org.joml.Matrix3x2fc;
 
 import java.util.List;
 
 public class DrawRectCommand extends DrawCommand {
     private final Bounds bounds;
-    private final float x, y, width, height;
+    private final Matrix3x2fc pose;
+    private final float x0, y0, x1, y1;
+    private final BorderRadius radius;
     private final int color;
 
-    public DrawRectCommand(float x, float y, float width, float height, int color) {
-        this.bounds = Bounds.fromXYWH(x, y, width, height);
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
+    public DrawRectCommand(Matrix3x2fc pose, float x0, float y0, float x1, float y1, BorderRadius radius, int color) {
+        this.bounds = Bounds.fromMinMax(x0, y0, x1, y1).transformMaxBounds(pose);
+        this.pose = pose;
+        this.x0 = x0;
+        this.y0 = y0;
+        this.x1 = x1;
+        this.y1 = y1;
+        this.radius = radius;
         this.color = color;
     }
 
@@ -34,15 +42,27 @@ public class DrawRectCommand extends DrawCommand {
     public static class Executor implements DrawCommand.Executor<DrawRectCommand> {
         @Override
         public void execute(List<DrawRectCommand> commands) {
-            PoseStack pose = new PoseStack();
+            GlProgram shader = Shaders.RECT;
+            shader.bind();
+            shader.getUniform("ProjMat").setMat4(GlobalRender.getGuiProxMatrix());
+            GlintVertexConsumer consumer = shader.begin();
             for (DrawRectCommand cmd : commands) {
-                Gui.fill(pose,
-                    (int) cmd.x,
-                    (int) cmd.y,
-                    (int) (cmd.x + cmd.width),
-                    (int) (cmd.y + cmd.height),
-                    cmd.color);
+                vertex(consumer, cmd, cmd.x0, cmd.y0);
+                vertex(consumer, cmd, cmd.x0, cmd.y1);
+                vertex(consumer, cmd, cmd.x1, cmd.y1);
+                vertex(consumer, cmd, cmd.x1, cmd.y0);
             }
+            shader.draw();
+        }
+
+        private void vertex(GlintVertexConsumer consumer, DrawRectCommand cmd, float x, float y) {
+            float width = cmd.x1 - cmd.x0;
+            float height = cmd.y1 - cmd.y0;
+            consumer.vertex(cmd.pose, x, y, 0f)
+                .color(cmd.color)
+                .radius(cmd.radius, width, height)
+                .size(width, height)
+                .endVertex();
         }
     }
 }

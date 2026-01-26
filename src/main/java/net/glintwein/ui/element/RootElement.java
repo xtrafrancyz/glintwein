@@ -3,6 +3,8 @@ package net.glintwein.ui.element;
 import org.lwjgl.util.yoga.Yoga;
 
 public class RootElement extends Element {
+    private float lastMouseX = -321;
+    private float lastMouseY = -321;
     private float lastWidth = -321;
     private float lastHeight = -321;
 
@@ -19,5 +21,27 @@ public class RootElement extends Element {
         Yoga.YGNodeCalculateLayout(yogaNode, width, height, Yoga.YGDirectionLTR);
 
         propagateLayoutRead();
+    }
+
+    public void updateMouse(float mouseX, float mouseY) {
+        if (mouseX == lastMouseX && mouseY == lastMouseY)
+            return;
+        this.lastMouseX = mouseX;
+        this.lastMouseY = mouseY;
+        handleMouseMoved(mouseX, mouseY);
+    }
+
+    @Override
+    public boolean handleMousePress(float mouseX, float mouseY, int button) {
+        return super.handleMousePress(mouseX, mouseY, button);
+    }
+
+    public boolean handleMouseRelease(float mouseX, float mouseY, int button) {
+        return super.handleMouseRelease(mouseX, mouseY, button, false);
+    }
+
+    @Override
+    public boolean handleMouseScroll(float mouseX, float mouseY, float amount, float vertical) {
+        return super.handleMouseScroll(mouseX, mouseY, amount, vertical);
     }
 }
