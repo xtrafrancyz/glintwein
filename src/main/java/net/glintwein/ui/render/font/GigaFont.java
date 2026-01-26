@@ -1,6 +1,5 @@
 package net.glintwein.ui.render.font;
 
-import com.google.gson.Gson;
 import com.mojang.blaze3d.platform.NativeImage;
 import it.unimi.dsi.fastutil.chars.Char2ObjectMap;
 import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap;
@@ -12,7 +11,6 @@ import org.joml.Matrix3x2f;
 import org.lwjgl.opengl.GL11;
 
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.util.List;
 

@@ -1,5 +1,6 @@
 package net.glintwein.ui.element;
 
+import net.glintwein.ui.data.BorderRadius;
 import net.glintwein.ui.data.Box;
 import net.glintwein.ui.data.Display;
 import net.glintwein.ui.render.command.Context;
@@ -24,6 +25,8 @@ public class Element extends YogaNode {
     private boolean pressed;
 
     private int backgroundColor = 0x00000000;
+    protected BorderRadius borderRadius = BorderRadius.ZERO;
+    private float opacity = 1.0f;
     private ClickHandler clickHandler;
     private MousePressHandler mousePressHandler;
     private MouseReleaseHandler mouseReleaseHandler;
@@ -31,6 +34,10 @@ public class Element extends YogaNode {
 
     public void setBackground(int color) {
         this.backgroundColor = color;
+    }
+
+    public void setBorderRadius(BorderRadius radius) {
+        this.borderRadius = radius;
     }
 
     public void setClickHandler(ClickHandler handler) {
@@ -169,11 +176,16 @@ public class Element extends YogaNode {
     protected boolean handleMouseScroll(float mouseX, float mouseY, float amount, float vertical) {
         float localX = mouseX - borderBox.x;
         float localY = mouseY - borderBox.y;
+        boolean handled = false;
         for (Element child : children) {
-            if (child.canHandleClick() && child.handleMouseScroll(localX, localY, amount, vertical))
-                return true;
+            if (child.canHandleClick() && child.handleMouseScroll(localX, localY, amount, vertical)) {
+                handled = true;
+                break;
+            }
         }
-        return false;
+        if (!handled && mouseScrollHandler != null)
+            handled = mouseScrollHandler.onMouseScroll(localX, localY, amount, vertical);
+        return handled;
     }
 
     public boolean canHandleClick() {
@@ -190,8 +202,15 @@ public class Element extends YogaNode {
     }
 
     public void draw(Context ctx) {
+        if (opacity != 1.0f) {
+            if (ctx.pushOpacity(opacity) == 0) {
+                ctx.popOpacity();
+                return;
+            }
+        }
+
         if (ARGB.alpha(backgroundColor) > 0)
-            ctx.drawRect(borderBox.x, borderBox.y, borderBox.width, borderBox.height, backgroundColor);
+            ctx.drawRect(borderBox.x, borderBox.y, borderBox.width, borderBox.height, borderRadius, backgroundColor);
 
         if (!children.isEmpty()) {
             ctx.pose().pushMatrix();
@@ -200,6 +219,9 @@ public class Element extends YogaNode {
                 child.draw(ctx);
             ctx.pose().popMatrix();
         }
+
+        if (opacity != 1)
+            ctx.popOpacity();
     }
 
     public boolean isHovered() {

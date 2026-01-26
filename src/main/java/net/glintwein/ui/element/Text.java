@@ -4,12 +4,11 @@ import net.glintwein.ui.data.Size;
 import net.glintwein.ui.render.command.Context;
 import net.glintwein.ui.render.font.Fonts;
 import net.glintwein.ui.render.font.GigaFont;
-import org.lwjgl.util.yoga.Yoga;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class Text extends Element {
+public class Text extends LeafElement {
     private String text = "";
     private GigaFont font;
     private float fontSize = 16.0f;
@@ -71,14 +70,14 @@ public class Text extends Element {
             return;
         this.font = font;
         this.fontSize = size;
-        Yoga.YGNodeMarkDirty(yogaNode);
+        markDirty();
     }
 
     public void setText(String text) {
         if (this.text.equals(text))
             return;
         this.text = text;
-        Yoga.YGNodeMarkDirty(yogaNode);
+        markDirty();
     }
 
     public void setColor(int color) {
@@ -88,9 +87,9 @@ public class Text extends Element {
     @Override
     public void draw(Context ctx) {
         super.draw(ctx);
-        float y = borderBox.y;
+        float y = contentBox.y;
         for (WrappedLine line : wrappedLines) {
-            ctx.drawText(font, line.text, borderBox.x, y, fontSize, color);
+            ctx.drawText(font, line.text, contentBox.x, y, fontSize, color);
             y += font.getHeight(fontSize);
         }
     }

@@ -24,6 +24,8 @@ public class RootElement extends Element {
     }
 
     public void updateMouse(float mouseX, float mouseY) {
+        if (lastWidth == -321)
+            return;
         if (mouseX == lastMouseX && mouseY == lastMouseY)
             return;
         this.lastMouseX = mouseX;

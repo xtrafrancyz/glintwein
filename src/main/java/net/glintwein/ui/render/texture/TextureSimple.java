@@ -5,18 +5,31 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.TextureUtil;
 
 public class TextureSimple implements Texture {
-    private final int textureId;
     private final Sprite sprite;
+    private final int width;
+    private final int height;
 
     public TextureSimple(NativeImage image) {
-        this.textureId = GlStateManager._genTexture();
-        TextureUtil.prepareImage(textureId, image.getWidth(), image.getHeight());
-        image.upload(0, 0, 0, 0, 0, image.getWidth(), image.getHeight(), true, false, false, true);
-        this.sprite = new Sprite(textureId, 0, 0, 1, 1);
+        this.width = image.getWidth();
+        this.height = image.getHeight();
+        this.sprite = new Sprite(GlStateManager._genTexture(), 0, 0, 1, 1);
+
+        TextureUtil.prepareImage(sprite.textureId, width, height);
+        image.upload(0, 0, 0, 0, 0, width, height, true, false, false, true);
     }
 
     @Override
     public Sprite getSprite() {
         return sprite;
+    }
+
+    @Override
+    public int getWidth() {
+        return width;
+    }
+
+    @Override
+    public int getHeight() {
+        return height;
     }
 }

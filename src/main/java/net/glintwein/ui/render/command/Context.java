@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.floats.FloatArrayFIFOQueue;
 import net.glintwein.ui.data.BorderRadius;
 import net.glintwein.ui.render.font.GigaFont;
 import net.glintwein.ui.render.texture.Sprite;
+import net.glintwein.ui.util.ARGB;
 import org.joml.Matrix3x2f;
 import org.joml.Matrix3x2fStack;
 
@@ -44,11 +45,21 @@ public class Context {
         opacityStack.dequeueFloat();
     }
 
+    public int mulOpacity(int color) {
+        float opacity = opacityStack.firstFloat();
+        if (opacity == 1)
+            return color;
+        return ARGB.setAlpha(color, ARGB.alphaF(color) * opacity);
+    }
+
     public void drawRect(float x, float y, float width, float height, int color) {
         drawRect(x, y, width, height, BorderRadius.ZERO, color);
     }
 
     public void drawRect(float x, float y, float width, float height, BorderRadius radius, int color) {
+        if (ARGB.alpha(color = mulOpacity(color)) == 0)
+            return;
+
         addCommand(new DrawRectCommand(
             new Matrix3x2f(transform),
             x, y, x + width, y + height,
@@ -62,6 +73,9 @@ public class Context {
     }
 
     public void drawTexture(Sprite sprite, float x, float y, float width, float height, BorderRadius radius, int color) {
+        if (ARGB.alpha(color = mulOpacity(color)) == 0)
+            return;
+
         addCommand(new DrawTextureCommand(
             new Matrix3x2f(transform),
             x, y, x + width, y + height,
@@ -72,6 +86,9 @@ public class Context {
     }
 
     public void drawText(GigaFont font, String text, float x, float y, float size, int color) {
+        if (ARGB.alpha(color = mulOpacity(color)) == 0)
+            return;
+
         addCommand(new DrawTextCommand(
             new Matrix3x2f(transform),
             font, text,

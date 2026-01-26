@@ -3,6 +3,7 @@ package net.glintwein.ui.test;
 import net.glintwein.ui.Window;
 import net.glintwein.ui.data.Edge;
 import net.glintwein.ui.element.Element;
+import net.glintwein.ui.element.Image;
 import net.glintwein.ui.element.Text;
 import net.glintwein.ui.render.command.Context;
 import net.glintwein.ui.render.texture.Textures;
@@ -24,7 +25,9 @@ public class TestWindow extends Window {
         list.setBackground(0x55ff0000);
         list.addChild(new Text("Item 1"));
         list.addChild(new SwitchOnClickText());
-        list.addChild(new Pout());
+        Image pout = new Image(Textures.POUT);
+        pout.setWidth(100);
+        list.addChild(pout);
         root.addChild(list);
     }
 
@@ -62,19 +65,6 @@ public class TestWindow extends Window {
             } else {
                 bgAnim.animateIfDifferent(0x00ffffff, 200, Easing.EASE);
             }
-        }
-    }
-
-    private static class Pout extends Element {
-        public Pout() {
-            float scale = 0.2f;
-            this.setSize(470 * scale, 663 * scale);
-        }
-
-        @Override
-        public void draw(Context ctx) {
-            super.draw(ctx);
-            ctx.drawTexture(Textures.POUT.getSprite(), contentBox.x, contentBox.y, contentBox.width, contentBox.height, 0xffffffff);
         }
     }
 }

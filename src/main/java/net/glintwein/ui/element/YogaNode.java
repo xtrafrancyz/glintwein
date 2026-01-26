@@ -29,6 +29,13 @@ public abstract class YogaNode {
         Yoga.YGNodeStyleSetDisplay(yogaNode, display.getValue());
     }
 
+    public void setAspectRatio(float width, float height) {
+        if (height == 0) {
+            throw new IllegalArgumentException("Height cannot be zero when setting aspect ratio.");
+        }
+        Yoga.YGNodeStyleSetAspectRatio(yogaNode, width / height);
+    }
+
     public void setAlignContent(Align align) {
         Yoga.YGNodeStyleSetAlignContent(yogaNode, align.getValue());
     }
