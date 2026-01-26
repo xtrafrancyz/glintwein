@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "glintwein",
+  "version": "${version}",
+  "name": "glintwein",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "unlicense",
+  "icon": "assets/glintwein/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "net.glintwein.GlintweinFabricMod"
+    ]
+  },
+  "mixins": [
+    "glintwein.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.8.9",
+    "fabric": "*",
+    "minecraft": "1.16.5"
+  }
+}
