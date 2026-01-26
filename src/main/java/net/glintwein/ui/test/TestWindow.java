@@ -5,7 +5,6 @@ import net.glintwein.ui.data.Edge;
 import net.glintwein.ui.element.Element;
 import net.glintwein.ui.element.Image;
 import net.glintwein.ui.element.Text;
-import net.glintwein.ui.render.command.Context;
 import net.glintwein.ui.render.texture.Textures;
 import net.glintwein.ui.util.Animated;
 import net.glintwein.ui.util.Easing;
@@ -17,6 +16,7 @@ public class TestWindow extends Window {
     public TestWindow() {
         root.setPadding(Edge.ALL, 5);
         root.setBackground(0x88ffffff);
+        root.setMaxWidth(200);
 
         root.addChild(new Text("Test Window"));
 

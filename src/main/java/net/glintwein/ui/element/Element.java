@@ -94,14 +94,14 @@ public class Element extends YogaNode {
     protected void propagateLayoutRead() {
         if (Yoga.YGNodeGetHasNewLayout(yogaNode)) {
             Yoga.YGNodeSetHasNewLayout(yogaNode, false);
-            readLayout();
+            readYogaLayout();
         }
 
         for (Element child : children)
             child.propagateLayoutRead();
     }
 
-    private void readLayout() {
+    protected void readYogaLayout() {
         borderBox.x = Yoga.YGNodeLayoutGetLeft(yogaNode);
         borderBox.y = Yoga.YGNodeLayoutGetTop(yogaNode);
         borderBox.width = Yoga.YGNodeLayoutGetWidth(yogaNode);

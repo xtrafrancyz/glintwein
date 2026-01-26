@@ -20,8 +20,8 @@ public class Window {
     public Window() {
         root = new RootElement();
         root.setPositionType(PositionType.ABSOLUTE);
-        root.setMargin(Edge.LEFT, 0);
-        root.setMargin(Edge.TOP, 0);
+        root.setPosition(Edge.LEFT, 0);
+        root.setPosition(Edge.TOP, 0);
     }
 
     public void tick() {
@@ -43,11 +43,11 @@ public class Window {
                 YGValue result = YGValue.mallocStack(stack);
                 long yogaNode = YogaNode.getYogaNodeHandle(root);
 
-                Yoga.YGNodeStyleGetMargin(yogaNode, Yoga.YGEdgeLeft, result);
-                root.setMargin(Edge.LEFT, result.value() + deltaX);
+                Yoga.YGNodeStyleGetPosition(yogaNode, Yoga.YGEdgeLeft, result);
+                root.setPosition(Edge.LEFT, result.value() + deltaX);
 
-                Yoga.YGNodeStyleGetMargin(yogaNode, Yoga.YGEdgeTop, result);
-                root.setMargin(Edge.TOP, result.value() + deltaY);
+                Yoga.YGNodeStyleGetPosition(yogaNode, Yoga.YGEdgeTop, result);
+                root.setPosition(Edge.TOP, result.value() + deltaY);
             }
 
             dragStartX = mouseX;

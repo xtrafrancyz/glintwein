@@ -13,8 +13,11 @@ public class Text extends LeafElement {
     private GigaFont font;
     private float fontSize = 16.0f;
     private int color = 0xFFFFFFFF;
+    private WrapMode wrapMode = WrapMode.WORD;
 
-    private List<WrappedLine> wrappedLines = new ArrayList<>();
+    private List<WrappedLine> splitLinesText;
+    private float splitLinesMaxWidth = 0;
+    private final List<WrappedLine> wrappedLines = new ArrayList<>();
 
     public Text(String text) {
         this.font = Fonts.REGULAR;
@@ -23,22 +26,27 @@ public class Text extends LeafElement {
             // wrap content
             wrappedLines.clear();
             float contentWidth = 0;
-            String[] lines = this.text.split("\n");
-            if (widthMode != SizeMode.UNDEFINED) {
+            if (widthMode != SizeMode.UNDEFINED && wrapMode == WrapMode.WORD) {
                 List<String> wrapped = new ArrayList<>();
-                for (String line : lines)
-                    font.trimToWidth(line, fontSize, width, wrapped);
+                font.wrapText(this.text, fontSize, width, wrapped);
                 for (String line : wrapped) {
                     float lineWidth = font.getWidth(line, fontSize);
                     wrappedLines.add(new WrappedLine(line, lineWidth));
                     contentWidth = Math.max(contentWidth, lineWidth);
                 }
             } else {
-                for (String line : lines) {
-                    float lineWidth = font.getWidth(line, fontSize);
-                    wrappedLines.add(new WrappedLine(line, lineWidth));
-                    contentWidth = Math.max(contentWidth, lineWidth);
+                if (splitLinesText == null) {
+                    String[] lines = this.text.split("\n");
+                    splitLinesMaxWidth = 0;
+                    splitLinesText = new ArrayList<>(lines.length);
+                    for (String line : lines) {
+                        float lineWidth = font.getWidth(line, fontSize);
+                        splitLinesText.add(new WrappedLine(line, lineWidth));
+                        splitLinesMaxWidth = Math.max(splitLinesMaxWidth, lineWidth);
+                    }
                 }
+                wrappedLines.addAll(splitLinesText);
+                contentWidth = splitLinesMaxWidth;
             }
             float contentHeight = font.getHeight(fontSize) * wrappedLines.size();
 
@@ -77,6 +85,15 @@ public class Text extends LeafElement {
         if (this.text.equals(text))
             return;
         this.text = text;
+        this.splitLinesText = null;
+        markDirty();
+    }
+
+    public void setWrapMode(WrapMode mode) {
+        if (this.wrapMode == mode)
+            return;
+        this.wrapMode = mode;
+        this.splitLinesText = null;
         markDirty();
     }
 
@@ -102,5 +119,10 @@ public class Text extends LeafElement {
             this.text = text;
             this.width = width;
         }
+    }
+
+    public enum WrapMode {
+        NONE,
+        WORD
     }
 }

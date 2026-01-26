@@ -60,26 +60,41 @@ public class GigaFont {
         return width;
     }
 
-    public void trimToWidth(String text, float size, float maxWidth, List<String> output) {
-        float width = 0;
-        int len = text.length();
-        char prevChar = 0;
-        for (int i = 0; i < len; i++) {
-            char c = text.charAt(i);
-            Glyph glyph = glyphs.get(c);
-            if (glyph != null) {
-                float kerning = this.kerning.getOrDefault(((prevChar << 16) | c), 0.0f);
-                float charWidth = (glyph.advance + kerning) * size;
-                if (width + charWidth > maxWidth) {
-                    output.add(text.substring(0, i));
-                    trimToWidth(text.substring(i), size, maxWidth, output);
-                    return;
+    /**
+     * Wraps the given text into multiple lines so that each line does not exceed the specified maxWidth. Text can include '\n'
+     * characters to indicate explicit line breaks.
+     */
+    public void wrapText(String text, float size, float maxWidth, List<String> output) {
+        String[] lines = text.split("\n");
+        for (String line : lines) {
+            StringBuilder currentLine = new StringBuilder();
+            float currentWidth = 0;
+
+            String[] words = line.split(" ");
+            for (int i = 0; i < words.length; i++) {
+                String word = words[i];
+                float wordWidth = getWidth(word, size);
+                float spaceWidth = (i == 0) ? 0 : getWidth(" ", size);
+
+                if (currentWidth + spaceWidth + wordWidth <= maxWidth) {
+                    if (i != 0) {
+                        currentLine.append(" ");
+                        currentWidth += spaceWidth;
+                    }
+                    currentLine.append(word);
+                    currentWidth += wordWidth;
+                } else {
+                    if (currentLine.length() > 0) {
+                        output.add(currentLine.toString());
+                    }
+                    currentLine = new StringBuilder(word);
+                    currentWidth = wordWidth;
                 }
-                width += charWidth;
-                prevChar = c;
+            }
+            if (currentLine.length() > 0) {
+                output.add(currentLine.toString());
             }
         }
-        output.add(text);
     }
 
     public void render(GlintVertexConsumer consumer, Matrix3x2f pose, String text, float x, float y, float size, int color) {
