@@ -1,6 +1,6 @@
 #version 130
 
-in vec3 Position;
+in vec2 Position;
 in vec4 Color;
 in vec2 UV0;
 in vec4 Radius; // Top-left, Top-right, Bottom-right, Bottom-left
@@ -32,5 +32,5 @@ void main() {
     FragCoord = rvertexcoord(gl_VertexID);
     FragColor = Color;
 
-    gl_Position = ProjMat * vec4(Position, 1.0);
+    gl_Position = ProjMat * vec4(Position, 0.0, 1.0);
 }

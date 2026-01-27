@@ -25,6 +25,7 @@ public class GlProgram {
         ATTRIBUTES.put(DefaultVertexFormat.ELEMENT_POSITION, new AttribProperties("Position", false));
         ATTRIBUTES.put(DefaultVertexFormat.ELEMENT_COLOR, new AttribProperties("Color", true));
         ATTRIBUTES.put(DefaultVertexFormat.ELEMENT_UV0, new AttribProperties("UV0", false));
+        ATTRIBUTES.put(GlintVertexFormat.ELEMENT_POSITION2, new AttribProperties("Position", false));
         ATTRIBUTES.put(GlintVertexFormat.ELEMENT_RADIUS, new AttribProperties("Radius", false));
         ATTRIBUTES.put(GlintVertexFormat.ELEMENT_SIZE, new AttribProperties("Size", false));
     }

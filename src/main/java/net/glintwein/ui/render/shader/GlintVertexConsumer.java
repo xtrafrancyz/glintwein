@@ -27,6 +27,14 @@ public class GlintVertexConsumer implements VertexConsumer {
         return this;
     }
 
+    public GlintVertexConsumer vertex2(Matrix3x2fc pose, float x, float y) {
+        Vector2f dest = pose.transformPosition(x, y, TEMP_VEC);
+        builder.putFloat(0, dest.x);
+        builder.putFloat(4, dest.y);
+        builder.nextElement();
+        return this;
+    }
+
     public GlintVertexConsumer color(int color) {
         int a = (color >> 24) & 0xFF;
         int r = (color >> 16) & 0xFF;

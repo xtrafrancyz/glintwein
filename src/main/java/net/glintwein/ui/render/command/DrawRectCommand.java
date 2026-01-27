@@ -58,7 +58,7 @@ public class DrawRectCommand extends DrawCommand {
         private void vertex(GlintVertexConsumer consumer, DrawRectCommand cmd, float x, float y) {
             float width = cmd.x1 - cmd.x0;
             float height = cmd.y1 - cmd.y0;
-            consumer.vertex(cmd.pose, x, y, 0f)
+            consumer.vertex2(cmd.pose, x, y)
                 .color(cmd.color)
                 .radius(cmd.radius, width, height)
                 .size(width, height)

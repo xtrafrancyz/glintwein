@@ -73,7 +73,7 @@ public class DrawTextureCommand extends DrawCommand {
         private void vertex(GlintVertexConsumer consumer, DrawTextureCommand cmd, float x, float y, float u, float v) {
             float width = cmd.x1 - cmd.x0;
             float height = cmd.y1 - cmd.y0;
-            consumer.vertex(cmd.pose, x, y, 0f)
+            consumer.vertex2(cmd.pose, x, y)
                 .color(cmd.color)
                 .uv(u, v)
                 .radius(cmd.radius, width, height)

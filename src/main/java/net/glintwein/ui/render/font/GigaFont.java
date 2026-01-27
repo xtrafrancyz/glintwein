@@ -118,10 +118,10 @@ public class GigaFont {
                 float x1 = x0 + glyph.width * size;
                 float y1 = y0 + glyph.height * size;
 
-                consumer.vertex(pose, x0, y0, 0).color(r, g, b, a).uv(glyph.minU, glyph.maxV).endVertex();
-                consumer.vertex(pose, x0, y1, 0).color(r, g, b, a).uv(glyph.minU, glyph.minV).endVertex();
-                consumer.vertex(pose, x1, y1, 0).color(r, g, b, a).uv(glyph.maxU, glyph.minV).endVertex();
-                consumer.vertex(pose, x1, y0, 0).color(r, g, b, a).uv(glyph.maxU, glyph.maxV).endVertex();
+                consumer.vertex2(pose, x0, y0).color(r, g, b, a).uv(glyph.minU, glyph.maxV).endVertex();
+                consumer.vertex2(pose, x0, y1).color(r, g, b, a).uv(glyph.minU, glyph.minV).endVertex();
+                consumer.vertex2(pose, x1, y1).color(r, g, b, a).uv(glyph.maxU, glyph.minV).endVertex();
+                consumer.vertex2(pose, x1, y0).color(r, g, b, a).uv(glyph.maxU, glyph.maxV).endVertex();
 
                 cursorX += glyph.advance * size;
                 prevChar = c;
