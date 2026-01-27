@@ -29,8 +29,8 @@ public class Window {
         loadPosition();
     }
 
-    public void tick() {
-        updateMouse(GlintweinFabricMod.getMouseX(), GlintweinFabricMod.getMouseY());
+    public void tick(float mouseX, float mouseY) {
+        updateMouse(mouseX, mouseY);
         root.tick();
         root.calculateLayout(-1, -1);
     }

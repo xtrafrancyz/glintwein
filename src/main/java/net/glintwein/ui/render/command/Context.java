@@ -24,7 +24,7 @@ public class Context {
     }
 
     private final List<DrawCommand> commands = new ArrayList<>();
-    private final Matrix3x2fStack transform = new Matrix3x2fStack(4);
+    private final Matrix3x2fStack transform = new Matrix3x2fStack(16);
     private final FloatArrayFIFOQueue opacityStack = new FloatArrayFIFOQueue();
 
     public Context() {
@@ -119,6 +119,9 @@ public class Context {
     }
 
     public void execute() {
+        if (commands.isEmpty())
+            return;
+
         RenderSystem.disableCull();
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
