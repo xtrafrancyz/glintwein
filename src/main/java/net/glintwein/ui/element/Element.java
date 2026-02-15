@@ -1,5 +1,6 @@
 package net.glintwein.ui.element;
 
+import net.glintwein.ui.GlobalUIState;
 import net.glintwein.ui.data.BorderRadius;
 import net.glintwein.ui.data.Box;
 import net.glintwein.ui.data.Display;
@@ -163,6 +164,8 @@ public class Element extends YogaNode {
         }
         if (!handled && mousePressHandler != null)
             handled = mousePressHandler.onMousePress(localX, localY, button);
+        if (isFocusable())
+            GlobalUIState.requestFocus(this);
         return handled;
     }
 
@@ -202,7 +205,30 @@ public class Element extends YogaNode {
         return getDisplayType() == Display.FLEX && hovered;
     }
 
+    public boolean handleKeyPress(int keyCode, int scanCode, int modifiers) {
+        return false;
+    }
+
+    public boolean handleCharTyped(char character, int keyCode) {
+        return false;
+    }
+
+    public void handleFocusGain() {
+    }
+
+    public void handleFocusLoss() {
+    }
+
+    public boolean isFocusable() {
+        return false;
+    }
+
+    public boolean isInFocus() {
+        return GlobalUIState.getFocusedElement() == this;
+    }
+
     public void tick() {
+        GlobalUIState.tickElement(this);
         for (Animated animation : animations)
             animation.update();
         for (Element child : children)

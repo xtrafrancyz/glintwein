@@ -1,5 +1,6 @@
 package net.glintwein;
 
+import net.glintwein.ui.GlobalUIState;
 import net.glintwein.ui.WindowManager;
 import net.glintwein.ui.util.NativeCleaner;
 import net.glintwein.util.KVStore;
@@ -40,7 +41,9 @@ public class Glintwein {
     }
 
     public void postRender() {
+        GlobalUIState.startFocusAliveCheck();
         windowManager.render();
+        GlobalUIState.stopFocusAliveCheck();
     }
 
     public void updateTime() {
@@ -48,7 +51,10 @@ public class Glintwein {
     }
 
     public boolean onMousePress(Screen s, float mouseX, float mouseY, int button) {
-        return windowManager.onMousePress(mouseX, mouseY, button);
+        GlobalUIState.startFocusCapturing();
+        boolean cancel = windowManager.onMousePress(mouseX, mouseY, button);
+        GlobalUIState.stopFocusCapturing();
+        return cancel;
     }
 
     public boolean onMouseRelease(Screen s, float mouseX, float mouseY, int button) {
@@ -57,5 +63,19 @@ public class Glintwein {
 
     public boolean onMouseScroll(Screen s, float mouseX, float mouseY, float amount, float vertical) {
         return windowManager.onMouseScroll(mouseX, mouseY, amount, vertical);
+    }
+
+    public boolean onKeyPress(Screen s, int keyCode, int scanCode, int modifiers) {
+        if (GlobalUIState.getFocusedElement() != null) {
+            return GlobalUIState.getFocusedElement().handleKeyPress(keyCode, scanCode, modifiers);
+        }
+        return false;
+    }
+
+    public boolean onCharTyped(char character, int keyCode) {
+        if (GlobalUIState.getFocusedElement() != null) {
+            return GlobalUIState.getFocusedElement().handleCharTyped(character, keyCode);
+        }
+        return false;
     }
 }

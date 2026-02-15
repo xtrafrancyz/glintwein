@@ -5,6 +5,7 @@ import net.glintwein.ui.WindowManager;
 import net.glintwein.ui.data.Edge;
 import net.glintwein.ui.element.Image;
 import net.glintwein.ui.element.Text;
+import net.glintwein.ui.element.TextInput;
 import net.glintwein.ui.element.VerticalScrollView;
 import net.glintwein.ui.render.texture.Textures;
 import net.glintwein.ui.util.Animated;
@@ -37,6 +38,12 @@ public class TestWindow extends Window {
         list.addChild(pout);
         list.addChild(new SwitchOnClickText());
         root.addChild(list);
+
+        TextInput input = new TextInput();
+        input.setMaxWidthPercent(100);
+        input.setBackground(0x5500ff00);
+        input.setPadding(Edge.ALL, 5);
+        root.addChild(input);
     }
 
     private static class SwitchOnClickText extends Text {

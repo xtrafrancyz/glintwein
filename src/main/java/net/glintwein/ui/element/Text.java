@@ -4,43 +4,50 @@ import net.glintwein.ui.data.Size;
 import net.glintwein.ui.render.command.Context;
 import net.glintwein.ui.render.font.Fonts;
 import net.glintwein.ui.render.font.GigaFont;
+import net.glintwein.ui.render.font.SizedFont;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Text extends LeafElement {
     private String text = "";
-    private GigaFont font;
-    private float fontSize = 16.0f;
-    private int color = 0xFFFFFFFF;
+    protected SizedFont font;
+    protected int color = 0xFFFFFFFF;
     private WrapMode wrapMode = WrapMode.WORD;
+    private Align align = Align.LEFT;
 
     private List<WrappedLine> splitLinesText;
     private float splitLinesMaxWidth = 0;
     private final List<WrappedLine> wrappedLines = new ArrayList<>();
+    private final List<RenderLine> renderLines = new ArrayList<>();
+
+    public Text() {
+        this("");
+    }
 
     public Text(String text) {
-        this.font = Fonts.REGULAR;
+        this.font = new SizedFont(Fonts.REGULAR, 16);
 
         setMeasureFunction((width, widthMode, height, heightMode) -> {
             // wrap content
             wrappedLines.clear();
+            renderLines.clear();
             float contentWidth = 0;
             if (widthMode != SizeMode.UNDEFINED && wrapMode == WrapMode.WORD) {
                 List<String> wrapped = new ArrayList<>();
-                font.wrapText(this.text, fontSize, width, wrapped);
+                font.wrapText(this.text, width, wrapped);
                 for (String line : wrapped) {
-                    float lineWidth = font.getWidth(line, fontSize);
+                    float lineWidth = font.getWidth(line);
                     wrappedLines.add(new WrappedLine(line, lineWidth));
                     contentWidth = Math.max(contentWidth, lineWidth);
                 }
             } else {
                 if (splitLinesText == null) {
-                    String[] lines = this.text.split("\n");
+                    String[] lines = this.text.split("\n", -1);
                     splitLinesMaxWidth = 0;
                     splitLinesText = new ArrayList<>(lines.length);
                     for (String line : lines) {
-                        float lineWidth = font.getWidth(line, fontSize);
+                        float lineWidth = font.getWidth(line);
                         splitLinesText.add(new WrappedLine(line, lineWidth));
                         splitLinesMaxWidth = Math.max(splitLinesMaxWidth, lineWidth);
                     }
@@ -48,7 +55,9 @@ public class Text extends LeafElement {
                 wrappedLines.addAll(splitLinesText);
                 contentWidth = splitLinesMaxWidth;
             }
-            float contentHeight = font.getHeight(fontSize) * wrappedLines.size();
+            if (wrappedLines.isEmpty())
+                wrappedLines.add(new WrappedLine("", 0));
+            float contentHeight = font.getHeight() * wrappedLines.size();
 
             float measuredWidth;
             if (widthMode == SizeMode.EXACTLY) {
@@ -73,11 +82,17 @@ public class Text extends LeafElement {
         setText(text);
     }
 
-    public void setFont(GigaFont font, float size) {
-        if (this.font == font && this.fontSize == size)
+    public void setAlign(Align align) {
+        if (this.align == align)
             return;
-        this.font = font;
-        this.fontSize = size;
+        this.align = align;
+        markDirty();
+    }
+
+    public void setFont(GigaFont font, float size) {
+        if (this.font.font() == font && this.font.size() == size)
+            return;
+        this.font = new SizedFont(font, size);
         markDirty();
     }
 
@@ -87,6 +102,10 @@ public class Text extends LeafElement {
         this.text = text;
         this.splitLinesText = null;
         markDirty();
+    }
+
+    public String getText() {
+        return text;
     }
 
     public void setWrapMode(WrapMode mode) {
@@ -101,14 +120,48 @@ public class Text extends LeafElement {
         this.color = color;
     }
 
+    protected int getTextColor() {
+        return color;
+    }
+
+    protected List<RenderLine> getRenderLines() {
+        if (renderLines.isEmpty()) {
+            float y = contentBox.y;
+            for (WrappedLine line : wrappedLines) {
+                float x;
+                switch (align) {
+                    case LEFT:
+                        x = contentBox.x;
+                        break;
+                    case CENTER:
+                        x = contentBox.x + (contentBox.width - line.width) / 2f;
+                        break;
+                    case RIGHT:
+                        x = contentBox.x + contentBox.width - line.width;
+                        break;
+                    default:
+                        throw new IllegalStateException("Unexpected value: " + align);
+                }
+                renderLines.add(new RenderLine(line.text, line.width, x, y));
+                y += font.getHeight();
+            }
+            if (renderLines.isEmpty())
+                throw new IllegalStateException("There should always be at least one render line");
+        }
+        return renderLines;
+    }
+
+    @Override
+    protected void markDirty() {
+        super.markDirty();
+        renderLines.clear();
+    }
+
     @Override
     public void draw(Context ctx) {
         super.draw(ctx);
-        float y = contentBox.y;
-        for (WrappedLine line : wrappedLines) {
-            ctx.drawText(font, line.text, contentBox.x, y, fontSize, color);
-            y += font.getHeight(fontSize);
-        }
+        for (RenderLine line : getRenderLines())
+            ctx.drawText(font.font(), line.text, line.x, line.y, font.size(), color);
     }
 
     private static class WrappedLine {
@@ -119,6 +172,26 @@ public class Text extends LeafElement {
             this.text = text;
             this.width = width;
         }
+    }
+
+    protected static class RenderLine {
+        String text;
+        float width;
+        float x;
+        float y;
+
+        RenderLine(String text, float width, float x, float y) {
+            this.text = text;
+            this.width = width;
+            this.x = x;
+            this.y = y;
+        }
+    }
+
+    public enum Align {
+        LEFT,
+        CENTER,
+        RIGHT
     }
 
     public enum WrapMode {

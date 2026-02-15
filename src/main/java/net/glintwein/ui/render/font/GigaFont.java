@@ -12,6 +12,7 @@ import org.lwjgl.opengl.GL11;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.List;
 
 public class GigaFont {
@@ -60,13 +61,36 @@ public class GigaFont {
         return width;
     }
 
+    public String trimToWidth(String text, float size, float maxWidth) {
+        float width = 0;
+        int len = text.length();
+        char prevChar = 0;
+        for (int i = 0; i < len; i++) {
+            char c = text.charAt(i);
+            Glyph glyph = glyphs.get(c);
+            if (glyph != null) {
+                float kerning = this.kerning.getOrDefault(((prevChar << 16) | c), 0.0f);
+                float charWidth = (glyph.advance + kerning) * size;
+                if (width + charWidth > maxWidth) {
+                    return text.substring(0, i);
+                }
+                width += charWidth;
+                prevChar = c;
+            }
+        }
+        return text;
+    }
+
     /**
      * Wraps the given text into multiple lines so that each line does not exceed the specified maxWidth. Text can include '\n'
      * characters to indicate explicit line breaks.
      */
     public void wrapText(String text, float size, float maxWidth, List<String> output) {
-        String[] lines = text.split("\n");
+        String[] lines = text.split("\n", -1);
         for (String line : lines) {
+            if (line.isEmpty())
+                output.add("");
+
             StringBuilder currentLine = new StringBuilder();
             float currentWidth = 0;
 
