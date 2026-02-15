@@ -50,6 +50,6 @@ public class Image extends LeafElement {
     @Override
     public void draw(Context ctx) {
         super.draw(ctx);
-        ctx.drawTexture(texture.getSprite(), contentBox.x, contentBox.y, contentBox.width, contentBox.height, borderRadius, 0xFFFFFFFF);
+        ctx.drawTexture(texture.getSprite(), contentBox, borderRadius, 0xFFFFFFFF);
     }
 }

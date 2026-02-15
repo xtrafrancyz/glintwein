@@ -4,6 +4,8 @@ import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.floats.FloatArrayFIFOQueue;
 import net.glintwein.ui.data.BorderRadius;
+import net.glintwein.ui.data.Box;
+import net.glintwein.ui.data.Gradient;
 import net.glintwein.ui.render.font.GigaFont;
 import net.glintwein.ui.render.texture.Sprite;
 import net.glintwein.ui.util.ARGB;
@@ -66,11 +68,26 @@ public class Context {
         float opacity = opacityStack.firstFloat();
         if (opacity == 1)
             return color;
-        return ARGB.setAlpha(color, ARGB.alphaF(color) * opacity);
+        return ARGB.mulAlpha(color, opacity);
+    }
+
+    public Gradient mulOpacity(Gradient gradient) {
+        float opacity = opacityStack.firstFloat();
+        if (opacity == 1)
+            return gradient;
+        return gradient.mulAlpha(opacity);
+    }
+
+    public void drawRect(Box box, int color) {
+        drawRect(box.x, box.y, box.width, box.height, BorderRadius.ZERO, color);
     }
 
     public void drawRect(float x, float y, float width, float height, int color) {
         drawRect(x, y, width, height, BorderRadius.ZERO, color);
+    }
+
+    public void drawRect(Box box, BorderRadius radius, int color) {
+        drawRect(box.x, box.y, box.width, box.height, radius, color);
     }
 
     public void drawRect(float x, float y, float width, float height, BorderRadius radius, int color) {
@@ -85,8 +102,32 @@ public class Context {
         ));
     }
 
+    public void drawRect(Box box, BorderRadius radius, Gradient color) {
+        drawRect(box.x, box.y, box.width, box.height, radius, color);
+    }
+
+    public void drawRect(float x, float y, float width, float height, BorderRadius radius, Gradient color) {
+        color = mulOpacity(color);
+        if (color.isFullyTransparent())
+            return;
+        addCommand(new DrawRectCommand(
+            new Matrix3x2f(transform),
+            x, y, x + width, y + height,
+            radius,
+            color.topLeft(), color.topRight(), color.bottomRight(), color.bottomLeft()
+        ));
+    }
+
+    public void drawTexture(Sprite sprite, Box box, int color) {
+        drawTexture(sprite, box.x, box.y, box.width, box.height, BorderRadius.ZERO, color);
+    }
+
     public void drawTexture(Sprite sprite, float x, float y, float width, float height, int color) {
         drawTexture(sprite, x, y, width, height, BorderRadius.ZERO, color);
+    }
+
+    public void drawTexture(Sprite sprite, Box box, BorderRadius radius, int color) {
+        drawTexture(sprite, box.x, box.y, box.width, box.height, radius, color);
     }
 
     public void drawTexture(Sprite sprite, float x, float y, float width, float height, BorderRadius radius, int color) {

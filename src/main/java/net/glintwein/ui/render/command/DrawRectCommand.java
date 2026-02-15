@@ -14,9 +14,13 @@ public class DrawRectCommand extends DrawCommand {
     private final Matrix3x2fc pose;
     private final float x0, y0, x1, y1;
     private final BorderRadius radius;
-    private final int color;
+    private final int colorTL, colorTR, colorBR, colorBL;
 
     public DrawRectCommand(Matrix3x2fc pose, float x0, float y0, float x1, float y1, BorderRadius radius, int color) {
+        this(pose, x0, y0, x1, y1, radius, color, color, color, color);
+    }
+
+    public DrawRectCommand(Matrix3x2fc pose, float x0, float y0, float x1, float y1, BorderRadius radius, int colorTL, int colorTR, int colorBR, int colorBL) {
         this.bounds = Bounds.fromMinMax(x0, y0, x1, y1).transformMaxBounds(pose);
         this.pose = pose;
         this.x0 = x0;
@@ -24,7 +28,10 @@ public class DrawRectCommand extends DrawCommand {
         this.x1 = x1;
         this.y1 = y1;
         this.radius = radius;
-        this.color = color;
+        this.colorTL = colorTL;
+        this.colorTR = colorTR;
+        this.colorBR = colorBR;
+        this.colorBL = colorBL;
     }
 
     @Override
@@ -47,19 +54,19 @@ public class DrawRectCommand extends DrawCommand {
             shader.getUniform("ProjMat").setMat4(GlobalRender.getGuiProxMatrix());
             GlintVertexConsumer consumer = shader.begin();
             for (DrawRectCommand cmd : commands) {
-                vertex(consumer, cmd, cmd.x0, cmd.y0);
-                vertex(consumer, cmd, cmd.x0, cmd.y1);
-                vertex(consumer, cmd, cmd.x1, cmd.y1);
-                vertex(consumer, cmd, cmd.x1, cmd.y0);
+                vertex(consumer, cmd, cmd.x0, cmd.y0, cmd.colorTL);
+                vertex(consumer, cmd, cmd.x0, cmd.y1, cmd.colorBL);
+                vertex(consumer, cmd, cmd.x1, cmd.y1, cmd.colorBR);
+                vertex(consumer, cmd, cmd.x1, cmd.y0, cmd.colorTR);
             }
             shader.draw();
         }
 
-        private void vertex(GlintVertexConsumer consumer, DrawRectCommand cmd, float x, float y) {
+        private void vertex(GlintVertexConsumer consumer, DrawRectCommand cmd, float x, float y, int color) {
             float width = cmd.x1 - cmd.x0;
             float height = cmd.y1 - cmd.y0;
             consumer.vertex2(cmd.pose, x, y)
-                .color(cmd.color)
+                .color(color)
                 .radius(cmd.radius, width, height)
                 .size(width, height)
                 .endVertex();

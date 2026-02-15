@@ -241,7 +241,7 @@ public class VerticalScrollView extends Element {
             paddingBox.height,
             barColor
         );
-        ctx.drawRect(barThumbBox.x, barThumbBox.y, barThumbBox.width, barThumbBox.height, new BorderRadius(3), barThumbColorComputed);
+        ctx.drawRect(barThumbBox, new BorderRadius(3), barThumbColorComputed);
     }
 
     private static class ScrollableContent extends Element {

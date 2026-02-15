@@ -220,7 +220,7 @@ public class Element extends YogaNode {
         }
 
         if (ARGB.alpha(backgroundColor) > 0)
-            ctx.drawRect(borderBox.x, borderBox.y, borderBox.width, borderBox.height, borderRadius, backgroundColor);
+            ctx.drawRect(borderBox, borderRadius, backgroundColor);
 
         if (!children.isEmpty()) {
             ctx.pose().pushMatrix();
