@@ -27,6 +27,10 @@ public abstract class Animated {
         private float value;
         private float targetValue;
 
+        public Float(float value) {
+            this(null, value);
+        }
+
         public Float(FloatConsumer set, float value) {
             this.setter = set;
             this.value = value;
@@ -84,7 +88,8 @@ public abstract class Animated {
 
         @Override
         public void update() {
-            setter.accept(get());
+            if (setter != null)
+                setter.accept(get());
         }
     }
 
@@ -92,6 +97,10 @@ public abstract class Animated {
         private final IntConsumer setter;
         private int value;
         private int targetValue;
+
+        public Color(int value) {
+            this(null, value);
+        }
 
         public Color(IntConsumer set, int value) {
             this.setter = set;
@@ -146,7 +155,8 @@ public abstract class Animated {
 
         @Override
         public void update() {
-            setter.accept(get());
+            if (setter != null)
+                setter.accept(get());
         }
 
         public static int lerp(float t, int a, int b) {

@@ -13,9 +13,7 @@ import net.glintwein.ui.util.GMath;
 import java.awt.*;
 
 public class ColorPicker extends Element {
-    private final SVBox svBox;
-    private final HueSlider hueSlider;
-    private int outlineColor = 0xFF3B2F54;
+    private final int outlineColor = 0xFF3B2F54;
 
     private final float[] hsb = new float[3]; // h, s, b (0.0 to 1.0)
 
@@ -27,8 +25,8 @@ public class ColorPicker extends Element {
         setPadding(Edge.ALL, 5);
 
         addChild(new Text(name));
-        addChild(svBox = new SVBox());
-        addChild(hueSlider = new HueSlider());
+        addChild(new SVBox());
+        addChild(new HueSlider());
         addChild(new PreviewBox());
     }
 

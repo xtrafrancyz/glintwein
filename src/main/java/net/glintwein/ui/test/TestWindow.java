@@ -2,8 +2,12 @@ package net.glintwein.ui.test;
 
 import net.glintwein.ui.Window;
 import net.glintwein.ui.WindowManager;
+import net.glintwein.ui.data.Align;
 import net.glintwein.ui.data.Edge;
+import net.glintwein.ui.data.Gradient;
 import net.glintwein.ui.element.*;
+import net.glintwein.ui.render.command.Context;
+import net.glintwein.ui.render.command.DrawRectBuilder;
 import net.glintwein.ui.render.texture.Textures;
 import net.glintwein.ui.util.Animated;
 import net.glintwein.ui.util.Easing;
@@ -64,23 +68,45 @@ public class TestWindow extends Window {
     }
 
     private static class Button extends Element {
-        private final Animated.Color bgAnim;
+        private static final int BG = 0xff15101E;
+        private static final int RIGHT_COLOR = 0xff7C66CD;
+        private static final int LEFT_COLOR = 0xff26166C;
+
+        private final Animated.Color rightColor;
+        private final Animated.Color leftColor;
+        private final Animated.Float outlineWidth;
 
         public Button(String text) {
             this.addChild(new Text(text));
-            this.setBackground(0x550000ff);
-            this.setPadding(Edge.ALL, 5);
-            trackAnimation(bgAnim = new Animated.Color(this::setBackground, 0xffff00ff));
+            this.setPadding(Edge.ALL, 7);
+            this.setAlignSelf(Align.FLEX_START);
+            rightColor = new Animated.Color(0x550000ff);
+            leftColor = new Animated.Color(0x550000ff);
+            outlineWidth = new Animated.Float(1);
         }
 
         @Override
         public void tick() {
             super.tick();
             if (isHovered()) {
-                bgAnim.animateIfDifferent(0xffff0000, 200, Easing.EASE);
+                rightColor.animateIfDifferent(RIGHT_COLOR, 200, Easing.EASE);
+                leftColor.animateIfDifferent(LEFT_COLOR, 200, Easing.EASE);
+                outlineWidth.animateIfDifferent(0, 200, Easing.EASE);
             } else {
-                bgAnim.animateIfDifferent(0xffff00ff, 200, Easing.EASE);
+                rightColor.animateIfDifferent(BG, 200, Easing.EASE);
+                leftColor.animateIfDifferent(BG, 200, Easing.EASE);
+                outlineWidth.animateIfDifferent(2, 200, Easing.EASE);
             }
+        }
+
+        @Override
+        public void draw(Context ctx) {
+            ctx.drawRect(DrawRectBuilder.fromBox(paddingBox)
+                .color(Gradient.leftToRight(leftColor.get(), rightColor.get()))
+                .outline(0xff261D3B, outlineWidth.get())
+                .radius(8)
+            );
+            super.draw(ctx);
         }
     }
 
