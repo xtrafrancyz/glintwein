@@ -1,6 +1,7 @@
 package net.glintwein.ui.render.command;
 
 import net.glintwein.ui.data.BorderRadius;
+import net.glintwein.ui.data.Bounds;
 import net.glintwein.ui.render.GlobalRender;
 import net.glintwein.ui.render.shader.GlProgram;
 import net.glintwein.ui.render.shader.GlintVertexConsumer;
@@ -17,12 +18,15 @@ public class DrawTextureCommand extends DrawCommand {
     private final BorderRadius radius;
     private final int textureId;
     private final int color;
+    private final int outlineColor;
+    private final float outlineWidth;
 
     public DrawTextureCommand(
         Matrix3x2fc pose,
         float x0, float y0, float x1, float y1,
         float u0, float v0, float u1, float v1,
-        BorderRadius radius, int textureId, int color
+        BorderRadius radius, int textureId, int color,
+        int outlineColor, float outlineWidth
     ) {
         this.bounds = Bounds.fromMinMax(x0, y0, x1, y1).transformMaxBounds(pose);
         this.pose = pose;
@@ -37,6 +41,8 @@ public class DrawTextureCommand extends DrawCommand {
         this.radius = radius;
         this.textureId = textureId;
         this.color = color;
+        this.outlineColor = outlineColor;
+        this.outlineWidth = outlineWidth;
     }
 
     @Override
@@ -76,7 +82,8 @@ public class DrawTextureCommand extends DrawCommand {
                 .color(cmd.color)
                 .uv(u, v)
                 .radius(cmd.radius, width, height)
-                .size(width, height)
+                .size(width, height, cmd.outlineWidth)
+                .color(cmd.outlineColor)
                 .endVertex();
         }
     }

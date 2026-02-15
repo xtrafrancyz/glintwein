@@ -1,10 +1,10 @@
 package net.glintwein.ui.render.command;
 
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.floats.FloatArrayFIFOQueue;
 import net.glintwein.ui.data.BorderRadius;
+import net.glintwein.ui.data.Bounds;
 import net.glintwein.ui.data.Box;
 import net.glintwein.ui.data.Gradient;
 import net.glintwein.ui.render.font.GigaFont;
@@ -14,7 +14,6 @@ import net.glintwein.ui.util.GMath;
 import net.minecraft.client.Minecraft;
 import org.joml.Matrix3x2f;
 import org.joml.Matrix3x2fStack;
-import org.lwjgl.opengl.GL11;
 
 import java.util.*;
 
@@ -100,7 +99,8 @@ public class Context {
             new Matrix3x2f(transform),
             x, y, x + width, y + height,
             radius,
-            color
+            color,
+            0, 0
         ));
     }
 
@@ -116,7 +116,36 @@ public class Context {
             new Matrix3x2f(transform),
             x, y, x + width, y + height,
             radius,
-            color.topLeft(), color.topRight(), color.bottomRight(), color.bottomLeft()
+            color.topLeft(), color.topRight(), color.bottomRight(), color.bottomLeft(),
+            0, 0
+        ));
+    }
+
+    public void drawRect(DrawRectBuilder builder) {
+        int outlineColor = mulOpacity(builder.outlineColor);
+        boolean hasOutline = ARGB.alpha(outlineColor) != 0 && builder.outlineWidth > 0;
+        int color00, color10, color11, color01;
+        if (builder.gradient != null) {
+            builder.gradient = mulOpacity(builder.gradient);
+            if (builder.gradient.isFullyTransparent() && !hasOutline)
+                return;
+            color00 = builder.gradient.topLeft();
+            color10 = builder.gradient.topRight();
+            color11 = builder.gradient.bottomRight();
+            color01 = builder.gradient.bottomLeft();
+        } else {
+            builder.color = mulOpacity(builder.color);
+            if (ARGB.alpha(builder.color) == 0 && !hasOutline)
+                return;
+            color00 = color10 = color11 = color01 = builder.color;
+        }
+
+        addCommand(new DrawRectCommand(
+            new Matrix3x2f(transform),
+            builder.x0, builder.y0, builder.x1, builder.y1,
+            builder.radius,
+            color00, color10, color11, color01,
+            outlineColor, builder.outlineWidth
         ));
     }
 
@@ -141,7 +170,25 @@ public class Context {
             x, y, x + width, y + height,
             sprite.u0, sprite.v0, sprite.u1, sprite.v1,
             radius, sprite.textureId,
-            color
+            color,
+            0, 0
+        ));
+    }
+
+    public void drawTexture(DrawTextureBuilder builder) {
+        int outlineColor = mulOpacity(builder.outlineColor);
+        boolean hasOutline = ARGB.alpha(outlineColor) != 0 && builder.outlineWidth > 0;
+        int color = mulOpacity(builder.color);
+        if (ARGB.alpha(color) == 0 && !hasOutline)
+            return;
+
+        addCommand(new DrawTextureCommand(
+            new Matrix3x2f(transform),
+            builder.x0, builder.y0, builder.x1, builder.y1,
+            builder.u0, builder.v0, builder.u1, builder.v1,
+            builder.radius,
+            builder.texture, color,
+            outlineColor, builder.outlineWidth
         ));
     }
 

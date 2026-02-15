@@ -61,4 +61,9 @@ public class BorderRadius {
         this.bottomLeft = radius;
         return this;
     }
+
+    public static BorderRadius of(float radius) {
+        if (radius == 0) return ZERO;
+        return new BorderRadius(radius);
+    }
 }

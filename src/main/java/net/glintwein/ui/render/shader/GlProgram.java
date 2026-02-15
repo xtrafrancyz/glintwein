@@ -28,6 +28,7 @@ public class GlProgram {
         ATTRIBUTES.put(GlintVertexFormat.ELEMENT_POSITION2, new AttribProperties("Position", false));
         ATTRIBUTES.put(GlintVertexFormat.ELEMENT_RADIUS, new AttribProperties("Radius", false));
         ATTRIBUTES.put(GlintVertexFormat.ELEMENT_SIZE, new AttribProperties("Size", false));
+        ATTRIBUTES.put(GlintVertexFormat.ELEMENT_OUTLINE_COLOR, new AttribProperties("OutlineColor", true));
     }
 
     private final VertexFormat format;

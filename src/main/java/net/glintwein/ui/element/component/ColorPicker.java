@@ -5,6 +5,7 @@ import net.glintwein.ui.element.Element;
 import net.glintwein.ui.element.Text;
 import net.glintwein.ui.element.TextInput;
 import net.glintwein.ui.render.command.Context;
+import net.glintwein.ui.render.command.DrawRectBuilder;
 import net.glintwein.ui.render.font.Fonts;
 import net.glintwein.ui.util.ARGB;
 import net.glintwein.ui.util.GMath;
@@ -14,6 +15,7 @@ import java.awt.*;
 public class ColorPicker extends Element {
     private final SVBox svBox;
     private final HueSlider hueSlider;
+    private int outlineColor = 0xFF3B2F54;
 
     private final float[] hsb = new float[3]; // h, s, b (0.0 to 1.0)
 
@@ -41,6 +43,10 @@ public class ColorPicker extends Element {
         return ARGB.setAlpha(Color.HSBtoRGB(hsb[0], hsb[1], hsb[2]), 255);
     }
 
+    private int getPureHueRGB() {
+        return ARGB.setAlpha(Color.HSBtoRGB(hsb[0], 1.0f, 1.0f), 255);
+    }
+
     private class SVBox extends Element {
         public SVBox() {
             setSize(200, 100);
@@ -50,10 +56,6 @@ public class ColorPicker extends Element {
                 setByMouse(x + borderBox.x, y + borderBox.y);
                 return true; // Consume clicks to prevent them from propagating to the parent
             });
-        }
-
-        private int getPureHueRGB() {
-            return ARGB.setAlpha(Color.HSBtoRGB(hsb[0], 1.0f, 1.0f), 255);
         }
 
         @Override
@@ -78,13 +80,23 @@ public class ColorPicker extends Element {
 
             // 2. Draw the Value Overlay: Transparent -> Black (Vertical)
             // Top is 0% Black (100% Value), Bottom is 100% Black (0% Value)
-            ctx.drawRect(contentBox.copy().expand(0.1f), borderRadius, Gradient.topToBottom(0x00000000, 0xFF000000));
+            ctx.drawRect(DrawRectBuilder.fromBox(contentBox)
+                .radius(borderRadius)
+                .color(Gradient.topToBottom(0x00000000, 0xFF000000))
+                .outline(outlineColor, 1)
+                .expandByOutline()
+            );
 
             // 3. Cursor
             float cursorX = contentBox.x + (hsb[1] * contentBox.width);
             float cursorY = contentBox.y + ((1.0f - hsb[2]) * contentBox.height);
             // Draw white ring for cursor
-            ctx.drawRect(cursorX - 3, cursorY - 3, 6, 6, new BorderRadius(3), 0xFFFFFFFF);
+            float size = 10;
+            ctx.drawRect(DrawRectBuilder.fromXYWH(cursorX - size / 2, cursorY - size / 2, size, size)
+                .radius(5)
+                .color(getSelectedColor())
+                .outline(0xffffffff, 2)
+            );
         }
     }
 
@@ -112,6 +124,13 @@ public class ColorPicker extends Element {
 
         @Override
         public void draw(Context ctx) {
+            ctx.drawRect(DrawRectBuilder.fromBox(contentBox)
+                .radius(10)
+                .color(0)
+                .outline(outlineColor, 1)
+                .expandByOutline()
+            );
+
             // Draw a horizontal gradient representing the hue spectrum
             // Red -> Yellow -> Green -> Cyan -> Blue -> Magenta -> Red
             // segmented into 6 parts, each representing a transition between two primary/secondary colors
@@ -137,7 +156,11 @@ public class ColorPicker extends Element {
 
             // Hue Cursor (Current H position)
             float thumbX = contentBox.x + (hsb[0] * contentBox.width);
-            ctx.drawRect(thumbX - 2, contentBox.y - 1, 4, contentBox.height + 2, new BorderRadius(2), 0xFFFFFFFF);
+            ctx.drawRect(DrawRectBuilder.fromXYWH(thumbX - 4f, contentBox.y - 2, 8, contentBox.height + 4f)
+                .radius(BorderRadius.of(4))
+                .color(getPureHueRGB())
+                .outline(0xffffffff, 2)
+            );
         }
     }
 
@@ -149,7 +172,6 @@ public class ColorPicker extends Element {
             setBorderRadius(new BorderRadius(5));
             setMargin(Edge.TOP, 10);
             setPadding(Edge.ALL, 5);
-            setBackground(0xff000000);
             setFlexDirection(FlexDirection.ROW);
 
             addChild(colorBox = new Element());
@@ -179,6 +201,12 @@ public class ColorPicker extends Element {
 
         @Override
         public void draw(Context ctx) {
+            ctx.drawRect(DrawRectBuilder.fromBox(paddingBox)
+                .radius(borderRadius)
+                .color(0xff000000)
+                .outline(outlineColor, 1)
+                .expandByOutline()
+            );
             super.draw(ctx);
         }
     }

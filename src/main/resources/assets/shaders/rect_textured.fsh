@@ -1,10 +1,11 @@
 #version 130
 
-in vec2 FragSize;
+in vec3 FragSize;
 in vec4 FragRadius; // x: top-left, y: top-right, z: bottom-right, w: bottom-left
 in vec2 TexCoord;
 in vec2 FragCoord;
 in vec4 FragColor;
+in vec4 FragOutlineColor;
 
 uniform sampler2D Texture;
 
@@ -20,14 +21,14 @@ float get_radius(vec2 p, vec4 r) {
 
 void main() {
     // Convert normalized 0->1 coordinates to pixel space
-    vec2 pixel_pos = FragCoord * FragSize;
+    vec2 pixel_pos = FragCoord * FragSize.xy;
 
     // Pick the correct radius based on which corner we are closer to
     float radius = get_radius(FragCoord, FragRadius);
 
     // Calculate the center-relative position
     // We use the absolute distance from the center to mirror the logic across axes
-    vec2 half_size = FragSize * 0.5;
+    vec2 half_size = FragSize.xy * 0.5;
     vec2 q = abs(pixel_pos - half_size) - half_size + radius;
 
     // Standard SDF for a rounded corner
@@ -42,7 +43,27 @@ void main() {
 
     vec4 tex_sample = texture(Texture, TexCoord);
 
-    // Combine texture color, vertex color, and the SDF alpha mask
-    OutColor = tex_sample * FragColor;
-    OutColor.a *= alpha_mask;
+    float outline_width = FragSize.z;
+    if (outline_width > 0.0) {
+        // Distance to the inner edge of the outline
+        float inner_dist = dist + outline_width;
+
+        // Alpha for the inner edge (where textured fill starts)
+        float inner_alpha = 1.0 - smoothstep(-softness, softness, inner_dist);
+
+        // Determine if we're in the outline region
+        float outline_alpha = alpha_mask - inner_alpha;
+
+        // In outline region: use outline color
+        // In fill region: use texture * FragColor
+        vec4 fill_color = tex_sample * FragColor;
+        vec4 final_color = mix(fill_color, FragOutlineColor, outline_alpha);
+
+        OutColor = final_color;
+        OutColor.a *= alpha_mask;
+    } else {
+        // No outline, just use the textured fill
+        OutColor = tex_sample * FragColor;
+        OutColor.a *= alpha_mask;
+    }
 }

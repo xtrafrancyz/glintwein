@@ -88,9 +88,10 @@ public class GlintVertexConsumer implements VertexConsumer {
         return this;
     }
 
-    public GlintVertexConsumer size(float width, float height) {
+    public GlintVertexConsumer size(float width, float height, float outlineWidth) {
         builder.putFloat(0, width);
         builder.putFloat(4, height);
+        builder.putFloat(8, outlineWidth);
         builder.nextElement();
         return this;
     }

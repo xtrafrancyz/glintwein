@@ -1,6 +1,7 @@
 package net.glintwein.ui.render.command;
 
 import net.glintwein.ui.data.BorderRadius;
+import net.glintwein.ui.data.Bounds;
 import net.glintwein.ui.render.GlobalRender;
 import net.glintwein.ui.render.shader.GlProgram;
 import net.glintwein.ui.render.shader.GlintVertexConsumer;
@@ -15,12 +16,14 @@ public class DrawRectCommand extends DrawCommand {
     private final float x0, y0, x1, y1;
     private final BorderRadius radius;
     private final int colorTL, colorTR, colorBR, colorBL;
+    private final int outlineColor;
+    private final float outlineWidth;
 
-    public DrawRectCommand(Matrix3x2fc pose, float x0, float y0, float x1, float y1, BorderRadius radius, int color) {
-        this(pose, x0, y0, x1, y1, radius, color, color, color, color);
+    public DrawRectCommand(Matrix3x2fc pose, float x0, float y0, float x1, float y1, BorderRadius radius, int color, int outlineColor, float outlineWidth) {
+        this(pose, x0, y0, x1, y1, radius, color, color, color, color, outlineColor, outlineWidth);
     }
 
-    public DrawRectCommand(Matrix3x2fc pose, float x0, float y0, float x1, float y1, BorderRadius radius, int colorTL, int colorTR, int colorBR, int colorBL) {
+    public DrawRectCommand(Matrix3x2fc pose, float x0, float y0, float x1, float y1, BorderRadius radius, int colorTL, int colorTR, int colorBR, int colorBL, int outlineColor, float outlineWidth) {
         this.bounds = Bounds.fromMinMax(x0, y0, x1, y1).transformMaxBounds(pose);
         this.pose = pose;
         this.x0 = x0;
@@ -32,6 +35,8 @@ public class DrawRectCommand extends DrawCommand {
         this.colorTR = colorTR;
         this.colorBR = colorBR;
         this.colorBL = colorBL;
+        this.outlineColor = outlineColor;
+        this.outlineWidth = outlineWidth;
     }
 
     @Override
@@ -68,7 +73,8 @@ public class DrawRectCommand extends DrawCommand {
             consumer.vertex2(cmd.pose, x, y)
                 .color(color)
                 .radius(cmd.radius, width, height)
-                .size(width, height)
+                .size(width, height, cmd.outlineWidth)
+                .color(cmd.outlineColor)
                 .endVertex();
         }
     }

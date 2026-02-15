@@ -1,6 +1,5 @@
-package net.glintwein.ui.render.command;
+package net.glintwein.ui.data;
 
-import net.glintwein.ui.data.Box;
 import org.joml.Matrix3x2fc;
 import org.joml.Vector2f;
 

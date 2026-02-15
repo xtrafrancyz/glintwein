@@ -1,5 +1,7 @@
 package net.glintwein.ui.render.command;
 
+import net.glintwein.ui.data.Bounds;
+
 import java.util.List;
 import java.util.Objects;
 

@@ -3,7 +3,7 @@ package net.glintwein.ui.element;
 import net.glintwein.ui.data.BorderRadius;
 import net.glintwein.ui.data.Box;
 import net.glintwein.ui.data.Overflow;
-import net.glintwein.ui.render.command.Bounds;
+import net.glintwein.ui.data.Bounds;
 import net.glintwein.ui.render.command.Context;
 import net.glintwein.ui.util.Animated;
 import net.glintwein.ui.util.Easing;
