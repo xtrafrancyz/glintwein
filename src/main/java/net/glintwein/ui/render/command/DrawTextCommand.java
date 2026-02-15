@@ -38,8 +38,7 @@ public class DrawTextCommand extends DrawCommand {
 
     @Override
     public boolean isSimilar(DrawCommand other) {
-        if (!(other instanceof DrawTextCommand))
-            return false;
+        if (!super.isSimilar(other)) return false;
         DrawTextCommand cmd = (DrawTextCommand) other;
         return this.font == cmd.font;
     }

@@ -46,8 +46,7 @@ public class DrawTextureCommand extends DrawCommand {
 
     @Override
     public boolean isSimilar(DrawCommand other) {
-        if (!(other instanceof DrawTextureCommand))
-            return false;
+        if (!super.isSimilar(other)) return false;
         DrawTextureCommand cmd = (DrawTextureCommand) other;
         return this.textureId == cmd.textureId;
     }

@@ -1,6 +1,5 @@
 package net.glintwein.ui;
 
-import net.glintwein.GlintweinFabricMod;
 import net.glintwein.ui.data.PositionType;
 import net.glintwein.ui.element.RootElement;
 import net.glintwein.ui.render.command.Context;
@@ -29,8 +28,8 @@ public class Window {
         loadPosition();
     }
 
-    public void tick(float mouseX, float mouseY) {
-        updateMouse(mouseX, mouseY);
+    public void tick(float mouseX, float mouseY, boolean canHover) {
+        updateMouse(mouseX, mouseY, canHover);
         root.tick();
         root.calculateLayout(-1, -1);
     }
@@ -97,7 +96,7 @@ public class Window {
         ctx.pose().popMatrix();
     }
 
-    private void updateMouse(float mouseX, float mouseY) {
+    private void updateMouse(float mouseX, float mouseY, boolean canHover) {
         if (dragged) {
             float deltaX = mouseX - dragStartX;
             float deltaY = mouseY - dragStartY;
@@ -107,11 +106,10 @@ public class Window {
             dragCurrentPosX += deltaX;
             dragCurrentPosY += deltaY;
             setWindowPosition(dragCurrentPosX, dragCurrentPosY);
-
         }
 
         Vector2f xy = getScreenXY();
-        root.updateMouse(mouseX - xy.x, mouseY - xy.y);
+        root.updateMouse(mouseX - xy.x, mouseY - xy.y, canHover);
     }
 
     private void setWindowPosition(float x, float y) {

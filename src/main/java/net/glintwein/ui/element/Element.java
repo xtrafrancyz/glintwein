@@ -114,37 +114,39 @@ public class Element extends YogaNode {
     }
 
     protected void readYogaLayout() {
+        // The Border Box (Outer dimensions)
         borderBox.x = Yoga.YGNodeLayoutGetLeft(yogaNode);
         borderBox.y = Yoga.YGNodeLayoutGetTop(yogaNode);
         borderBox.width = Yoga.YGNodeLayoutGetWidth(yogaNode);
         borderBox.height = Yoga.YGNodeLayoutGetHeight(yogaNode);
-        float paddingLeft = Yoga.YGNodeLayoutGetPadding(yogaNode, Yoga.YGEdgeLeft);
-        float paddingTop = Yoga.YGNodeLayoutGetPadding(yogaNode, Yoga.YGEdgeTop);
-        paddingBox.x = borderBox.x + paddingLeft;
-        paddingBox.y = borderBox.y + paddingTop;
-        paddingBox.width = borderBox.width - paddingLeft - Yoga.YGNodeLayoutGetPadding(yogaNode, Yoga.YGEdgeRight);
-        paddingBox.height = borderBox.height - paddingTop - Yoga.YGNodeLayoutGetPadding(yogaNode, Yoga.YGEdgeBottom);
+
+        // The Padding Box
         float borderLeft = Yoga.YGNodeLayoutGetBorder(yogaNode, Yoga.YGEdgeLeft);
         float borderTop = Yoga.YGNodeLayoutGetBorder(yogaNode, Yoga.YGEdgeTop);
-        contentBox.x = paddingBox.x + borderLeft;
-        contentBox.y = paddingBox.y + borderTop;
-        contentBox.width = paddingBox.width - borderLeft - Yoga.YGNodeLayoutGetBorder(yogaNode, Yoga.YGEdgeRight);
-        contentBox.height = paddingBox.height - borderTop - Yoga.YGNodeLayoutGetBorder(yogaNode, Yoga.YGEdgeBottom);
+        paddingBox.x = borderBox.x + borderLeft;
+        paddingBox.y = borderBox.y + borderTop;
+        paddingBox.width = borderBox.width - borderLeft - Yoga.YGNodeLayoutGetBorder(yogaNode, Yoga.YGEdgeRight);
+        paddingBox.height = borderBox.height - borderTop - Yoga.YGNodeLayoutGetBorder(yogaNode, Yoga.YGEdgeBottom);
+
+        // The Content Box
+        float paddingLeft = Yoga.YGNodeLayoutGetPadding(yogaNode, Yoga.YGEdgeLeft);
+        float paddingTop = Yoga.YGNodeLayoutGetPadding(yogaNode, Yoga.YGEdgeTop);
+        contentBox.x = paddingBox.x + paddingLeft;
+        contentBox.y = paddingBox.y + paddingTop;
+        contentBox.width = paddingBox.width - paddingLeft - Yoga.YGNodeLayoutGetPadding(yogaNode, Yoga.YGEdgeRight);
+        contentBox.height = paddingBox.height - paddingTop - Yoga.YGNodeLayoutGetPadding(yogaNode, Yoga.YGEdgeBottom);
+
         if (layoutLerp != null)
             layoutLerp.animate(borderBox, paddingBox, contentBox);
     }
 
-    protected void handleMouseMoved(float mouseX, float mouseY) {
-        float x = borderBox.x;
-        float y = borderBox.y;
-        float width = borderBox.width;
-        float height = borderBox.height;
-        hovered = mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
+    protected void handleMouseMoved(float mouseX, float mouseY, boolean canHover) {
+        hovered = canHover && borderBox.contains(mouseX, mouseY);
 
         float localX = mouseX - borderBox.x;
         float localY = mouseY - borderBox.y;
         for (Element child : children) {
-            child.handleMouseMoved(localX, localY);
+            child.handleMouseMoved(localX, localY, canHover);
         }
     }
 
@@ -168,7 +170,7 @@ public class Element extends YogaNode {
         float localX = mouseX - borderBox.x;
         float localY = mouseY - borderBox.y;
         for (Element child : children) {
-            if (child.canHandleClick() && child.handleMouseRelease(localX, localY, button, blocked))
+            if (child.handleMouseRelease(localX, localY, button, blocked))
                 blocked = true;
         }
         if (pressed) {

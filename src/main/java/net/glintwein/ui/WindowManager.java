@@ -25,21 +25,22 @@ public class WindowManager {
     public void render() {
         float mouseX = GlintweinFabricMod.getMouseX();
         float mouseY = GlintweinFabricMod.getMouseY();
+        boolean mouseGrabbed = Minecraft.getInstance().mouseHandler.isMouseGrabbed();
         screenWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
         screenHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
-        scale = (float) Minecraft.getInstance().getWindow().getGuiScale();
+        scale = 1 / (float) Minecraft.getInstance().getWindow().getGuiScale();
 
         // change scale?
 
-        screenWidth *= scale;
-        screenHeight *= scale;
-        mouseX *= scale;
-        mouseY *= scale;
+        screenWidth /= scale;
+        screenHeight /= scale;
+        mouseX /= scale;
+        mouseY /= scale;
 
         Context ctx = new Context();
-        ctx.pose().scale(1 / scale);
+        ctx.pose().scale(scale);
         for (Window w : new ArrayList<>(windows)) {
-            w.tick(mouseX, mouseY);
+            w.tick(mouseX, mouseY, !mouseGrabbed);
         }
         for (Window window : windows) {
             window.draw(ctx);
@@ -48,8 +49,8 @@ public class WindowManager {
     }
 
     public boolean onMousePress(float mouseX, float mouseY, int button) {
-        mouseX *= scale;
-        mouseY *= scale;
+        mouseX /= scale;
+        mouseY /= scale;
         for (int i = windows.size() - 1; i >= 0; i--) {
             Window window = windows.get(i);
             if (window.onMousePress(mouseX, mouseY, button)) {
@@ -65,8 +66,8 @@ public class WindowManager {
     }
 
     public boolean onMouseRelease(float mouseX, float mouseY, int button) {
-        mouseX *= scale;
-        mouseY *= scale;
+        mouseX /= scale;
+        mouseY /= scale;
         for (int i = windows.size() - 1; i >= 0; i--) {
             Window window = windows.get(i);
             if (window.onMouseRelease(mouseX, mouseY, button)) {
@@ -77,8 +78,8 @@ public class WindowManager {
     }
 
     public boolean onMouseScroll(float mouseX, float mouseY, float amount, float vertical) {
-        mouseX *= scale;
-        mouseY *= scale;
+        mouseX /= scale;
+        mouseY /= scale;
         for (int i = windows.size() - 1; i >= 0; i--) {
             Window window = windows.get(i);
             if (window.onMouseScroll(mouseX, mouseY, amount, vertical)) {

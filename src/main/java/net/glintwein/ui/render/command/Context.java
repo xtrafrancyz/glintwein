@@ -1,18 +1,18 @@
 package net.glintwein.ui.render.command;
 
+import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.floats.FloatArrayFIFOQueue;
 import net.glintwein.ui.data.BorderRadius;
 import net.glintwein.ui.render.font.GigaFont;
 import net.glintwein.ui.render.texture.Sprite;
 import net.glintwein.ui.util.ARGB;
+import net.glintwein.ui.util.GMath;
+import net.minecraft.client.Minecraft;
 import org.joml.Matrix3x2f;
 import org.joml.Matrix3x2fStack;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Context {
     private static final Map<Class<? extends DrawCommand>, DrawCommand.Executor<?>> EXECUTORS = new HashMap<>();
@@ -26,6 +26,7 @@ public class Context {
     private final List<DrawCommand> commands = new ArrayList<>();
     private final Matrix3x2fStack transform = new Matrix3x2fStack(16);
     private final FloatArrayFIFOQueue opacityStack = new FloatArrayFIFOQueue();
+    private final Deque<Bounds> scissorStack = new ArrayDeque<>();
 
     public Context() {
         this.opacityStack.enqueue(1.0f);
@@ -43,6 +44,22 @@ public class Context {
 
     public void popOpacity() {
         opacityStack.dequeueFloat();
+    }
+
+    public boolean pushScissor(Bounds bounds) {
+        bounds.transformAxisAligned(transform);
+        Bounds last = scissorStack.peekLast();
+        if (last != null) {
+            bounds = last.intersection(bounds);
+            if (bounds == null)
+                return false;
+        }
+        scissorStack.addLast(bounds);
+        return true;
+    }
+
+    public void popScissor() {
+        scissorStack.removeLast();
     }
 
     public int mulOpacity(int color) {
@@ -98,6 +115,10 @@ public class Context {
     }
 
     private void addCommand(DrawCommand cmd) {
+        cmd.scissor = scissorStack.peekLast();
+        if (cmd.scissor != null && !cmd.scissor.intersects(cmd.getBounds()))
+            return;
+
         // Inspiration
         // https://github.com/nxp-imx/gtec-demo-framework/blob/master/Doc/FslSimpleUI.md#imbatch-flexrendersystem
         // https://github.com/nxp-imx/gtec-demo-framework/blob/e8840f58de1ebd0233391a663d15c4ca8a45d35c/DemoFramework/FslSimpleUI/Render/IMBatch/source/FslSimpleUI/Render/IMBatch/Preprocess/Linear/LinearPreprocessor.hpp#L142
@@ -119,32 +140,62 @@ public class Context {
     }
 
     public void execute() {
-        if (commands.isEmpty())
-            return;
-
-        RenderSystem.disableCull();
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-
-        int startIndex = 0;
-        DrawCommand currentCommand = commands.get(0);
-        for (int i = 1; i < commands.size(); i++) {
-            DrawCommand cmd = commands.get(i);
-            if (!currentCommand.isSimilar(cmd)) {
-                executeBatch(currentCommand.getClass(), commands.subList(startIndex, i));
-                startIndex = i;
-                currentCommand = cmd;
-            }
-        }
-        executeBatch(currentCommand.getClass(), commands.subList(startIndex, commands.size()));
+        new ListExecutor(commands).execute();
         commands.clear();
     }
 
-    @SuppressWarnings("unchecked")
-    private <T extends DrawCommand> void executeBatch(Class<? extends DrawCommand> cmdClass, List<DrawCommand> batch) {
-        DrawCommand.Executor<T> executor = (DrawCommand.Executor<T>) EXECUTORS.get(cmdClass);
-        if (executor != null) {
-            executor.execute((List<T>) batch);
+    private static class ListExecutor {
+        private final List<DrawCommand> commands;
+
+        public ListExecutor(List<DrawCommand> commands) {
+            this.commands = commands;
+        }
+
+        public void execute() {
+            if (commands.isEmpty())
+                return;
+
+            RenderSystem.disableCull();
+            RenderSystem.enableBlend();
+            RenderSystem.defaultBlendFunc();
+
+            int startIndex = 0;
+            DrawCommand currentCommand = commands.get(0);
+            for (int i = 1; i < commands.size(); i++) {
+                DrawCommand cmd = commands.get(i);
+                if (!currentCommand.isSimilar(cmd)) {
+                    executeBatch(currentCommand.getClass(), commands.subList(startIndex, i));
+                    startIndex = i;
+                    currentCommand = cmd;
+                }
+            }
+            executeBatch(currentCommand.getClass(), commands.subList(startIndex, commands.size()));
+
+            RenderSystem.disableScissor();
+        }
+
+        @SuppressWarnings("unchecked")
+        private <T extends DrawCommand> void executeBatch(Class<? extends DrawCommand> cmdClass, List<DrawCommand> batch) {
+            DrawCommand.Executor<T> executor = (DrawCommand.Executor<T>) EXECUTORS.get(cmdClass);
+            if (executor != null) {
+                DrawCommand cmd = batch.get(0);
+                if (cmd.scissor != null) {
+                    enableScissor(cmd.scissor);
+                } else {
+                    RenderSystem.disableScissor();
+                }
+                executor.execute((List<T>) batch);
+            }
+        }
+
+        private static void enableScissor(Bounds bounds) {
+            Window window = Minecraft.getInstance().getWindow();
+            float scale = (float) window.getGuiScale();
+            int width = GMath.ceil((bounds.maxX - bounds.minX) * scale);
+            int height = GMath.ceil((bounds.maxY - bounds.minY) * scale);
+            int x = GMath.floor(bounds.minX * scale);
+            int y = GMath.floor(window.getHeight() - bounds.maxY * scale);
+            RenderSystem.enableScissor(x, y, width, height);
         }
     }
 }

@@ -23,14 +23,14 @@ public class RootElement extends Element {
         propagateLayoutRead();
     }
 
-    public void updateMouse(float mouseX, float mouseY) {
+    public void updateMouse(float mouseX, float mouseY, boolean canHover) {
         if (lastWidth == -321)
             return;
         if (mouseX == lastMouseX && mouseY == lastMouseY)
             return;
         this.lastMouseX = mouseX;
         this.lastMouseY = mouseY;
-        handleMouseMoved(mouseX, mouseY);
+        handleMouseMoved(mouseX, mouseY, canHover);
     }
 
     @Override

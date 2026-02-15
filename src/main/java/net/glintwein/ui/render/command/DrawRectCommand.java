@@ -34,7 +34,7 @@ public class DrawRectCommand extends DrawCommand {
 
     @Override
     public boolean isSimilar(DrawCommand other) {
-        if (!(other instanceof DrawRectCommand)) return false;
+        if (!super.isSimilar(other)) return false;
         DrawRectCommand o = (DrawRectCommand) other;
         return true; // All rects are similar for batching
     }

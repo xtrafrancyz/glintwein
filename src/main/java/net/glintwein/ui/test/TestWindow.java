@@ -3,8 +3,8 @@ package net.glintwein.ui.test;
 import net.glintwein.ui.Window;
 import net.glintwein.ui.WindowManager;
 import net.glintwein.ui.data.Edge;
-import net.glintwein.ui.element.Element;
 import net.glintwein.ui.element.Image;
+import net.glintwein.ui.element.VerticalScrollView;
 import net.glintwein.ui.element.Text;
 import net.glintwein.ui.render.texture.Textures;
 import net.glintwein.ui.util.Animated;
@@ -22,15 +22,20 @@ public class TestWindow extends Window {
 
         root.addChild(new Text("Test Window"));
 
-        Element list = new Element();
+        VerticalScrollView list = new VerticalScrollView();
+        list.setHeight(70);
         list.setMousePressHandler((button, x, y) -> true); // To prevent clicks from propagating to the window
         list.setPadding(Edge.ALL, 5);
+        list.setPadding(Edge.RIGHT, 10);
+        list.setBarWidth(6);
+        list.setBarPadding(2);
         list.setBackground(0x55ff0000);
-        list.addChild(new Text("Item 1"));
         list.addChild(new SwitchOnClickText());
+        list.addChild(new Text("Item 1"));
         Image pout = new Image(Textures.POUT);
         pout.setWidth(100);
         list.addChild(pout);
+        list.addChild(new SwitchOnClickText());
         root.addChild(list);
     }
 

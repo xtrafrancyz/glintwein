@@ -12,4 +12,8 @@ public class Box {
         this.width = other.width;
         this.height = other.height;
     }
+
+    public boolean contains(float px, float py) {
+        return px >= x && px <= x + width && py >= y && py <= y + height;
+    }
 }

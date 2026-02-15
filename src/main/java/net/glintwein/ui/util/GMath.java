@@ -25,4 +25,18 @@ public class GMath {
     public static float lerp(float delta, float start, float end) {
         return start + delta * (end - start);
     }
+
+    public static int floor(float value) {
+		int i = (int)value;
+		return value < i ? i - 1 : i;
+    }
+
+    public static int ceil(float value) {
+        int i = (int) value;
+        return value > i ? i + 1 : i;
+    }
+
+    public static float clamp(float value, float min, float max) {
+        return Math.max(min, Math.min(max, value));
+    }
 }
