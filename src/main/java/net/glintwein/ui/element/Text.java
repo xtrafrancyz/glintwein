@@ -152,6 +152,12 @@ public class Text extends LeafElement {
     }
 
     @Override
+    protected void readYogaLayout() {
+        super.readYogaLayout();
+        renderLines.clear();
+    }
+
+    @Override
     protected void markDirty() {
         super.markDirty();
         renderLines.clear();
