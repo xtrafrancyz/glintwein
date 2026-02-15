@@ -227,6 +227,10 @@ public class Element extends YogaNode {
         return GlobalUIState.getFocusedElement() == this;
     }
 
+    public boolean isPressed() {
+        return pressed;
+    }
+
     public void tick() {
         GlobalUIState.tickElement(this);
         for (Animated animation : animations)

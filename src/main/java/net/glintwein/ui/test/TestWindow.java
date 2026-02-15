@@ -3,10 +3,7 @@ package net.glintwein.ui.test;
 import net.glintwein.ui.Window;
 import net.glintwein.ui.WindowManager;
 import net.glintwein.ui.data.Edge;
-import net.glintwein.ui.element.Image;
-import net.glintwein.ui.element.Text;
-import net.glintwein.ui.element.TextInput;
-import net.glintwein.ui.element.VerticalScrollView;
+import net.glintwein.ui.element.*;
 import net.glintwein.ui.render.texture.Textures;
 import net.glintwein.ui.util.Animated;
 import net.glintwein.ui.util.Easing;
@@ -44,6 +41,47 @@ public class TestWindow extends Window {
         input.setBackground(0x5500ff00);
         input.setPadding(Edge.ALL, 5);
         root.addChild(input);
+
+        root.addChild(new OpenColorPickerButton(manager));
+    }
+
+    private static class OpenColorPickerButton extends Button {
+        private ColorPickerWindow colorPicker;
+
+        public OpenColorPickerButton(WindowManager manager) {
+            super("Color Picker");
+
+            this.setClickHandler((button) -> {
+                if (colorPicker == null) {
+                    manager.addWindow(colorPicker = new ColorPickerWindow(manager));
+                } else {
+                    manager.removeWindow(colorPicker);
+                    colorPicker = null;
+                }
+                return true;
+            });
+        }
+    }
+
+    private static class Button extends Element {
+        private final Animated.Color bgAnim;
+
+        public Button(String text) {
+            this.addChild(new Text(text));
+            this.setBackground(0x550000ff);
+            this.setPadding(Edge.ALL, 5);
+            trackAnimation(bgAnim = new Animated.Color(this::setBackground, 0xffff00ff));
+        }
+
+        @Override
+        public void tick() {
+            super.tick();
+            if (isHovered()) {
+                bgAnim.animateIfDifferent(0xffff0000, 200, Easing.EASE);
+            } else {
+                bgAnim.animateIfDifferent(0xffff00ff, 200, Easing.EASE);
+            }
+        }
     }
 
     private static class SwitchOnClickText extends Text {

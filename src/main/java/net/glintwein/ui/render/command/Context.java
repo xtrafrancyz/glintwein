@@ -1,5 +1,6 @@
 package net.glintwein.ui.render.command;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.floats.FloatArrayFIFOQueue;
@@ -13,6 +14,7 @@ import net.glintwein.ui.util.GMath;
 import net.minecraft.client.Minecraft;
 import org.joml.Matrix3x2f;
 import org.joml.Matrix3x2fStack;
+import org.lwjgl.opengl.GL11;
 
 import java.util.*;
 
@@ -199,6 +201,7 @@ public class Context {
             RenderSystem.disableCull();
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
+            RenderSystem.disableAlphaTest();
 
             int startIndex = 0;
             DrawCommand currentCommand = commands.get(0);
@@ -213,6 +216,7 @@ public class Context {
             executeBatch(currentCommand.getClass(), commands.subList(startIndex, commands.size()));
 
             RenderSystem.disableScissor();
+            RenderSystem.enableAlphaTest();
         }
 
         @SuppressWarnings("unchecked")

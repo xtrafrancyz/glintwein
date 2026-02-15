@@ -22,6 +22,10 @@ public class WindowManager {
         windows.add(window);
     }
 
+    public void removeWindow(Window window) {
+        windows.remove(window);
+    }
+
     public void render() {
         float mouseX = GlintweinFabricMod.getMouseX();
         float mouseY = GlintweinFabricMod.getMouseY();

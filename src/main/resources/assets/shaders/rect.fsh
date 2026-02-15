@@ -30,8 +30,9 @@ void main() {
     // Standard SDF for a rounded corner
     float dist = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - radius;
 
-    // Smoothstep for anti-aliasing
-	float softness = fwidth(dist);
+    // Smoothstep for anti-aliasing. AA size is 0.5 pixels in the corners, and 0 in the straight edges
+    float corner_factor = step(0.0, q.x) * step(0.0, q.y);
+    float softness = mix(0.0, fwidth(dist) * 0.5, corner_factor);
     float alpha = 1.0 - smoothstep(-softness, softness, dist);
 
     if (alpha <= 0.0) discard;
