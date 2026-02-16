@@ -137,7 +137,7 @@ public class GigaFont {
             if (glyph != null) {
                 float kerning = this.kerning.getOrDefault(((prevChar << 16) | c), 0.0f);
                 cursorX += kerning * size;
-                float x0 = cursorX;
+                float x0 = cursorX + glyph.leftPosition * size;
                 float y0 = cursorY - glyph.topPosition * size;
                 float x1 = x0 + glyph.width * size;
                 float y1 = y0 + glyph.height * size;
@@ -196,6 +196,7 @@ public class GigaFont {
         final float maxV;
         final float advance;
         final float topPosition;
+        final float leftPosition;
         final float width;
         final float height;
 
@@ -217,10 +218,12 @@ public class GigaFont {
 
             if (data.planeBounds != null) {
                 this.topPosition = data.planeBounds.top;
+                this.leftPosition = data.planeBounds.left;
                 this.width = data.planeBounds.right - data.planeBounds.left;
                 this.height = data.planeBounds.top - data.planeBounds.bottom;
             } else {
                 this.topPosition = 0;
+                this.leftPosition = 0;
                 this.width = 0;
                 this.height = 0;
             }
