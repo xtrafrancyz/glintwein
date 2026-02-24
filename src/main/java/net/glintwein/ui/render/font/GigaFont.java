@@ -12,7 +12,6 @@ import org.lwjgl.opengl.GL11;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.List;
 
 public class GigaFont {

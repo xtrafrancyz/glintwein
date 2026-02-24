@@ -49,7 +49,7 @@ void main() {
         float inner_dist = dist + outline_width;
 
         // Alpha for the inner edge (where textured fill starts)
-        float inner_alpha = 1.0 - smoothstep(-softness, softness, inner_dist);
+        float inner_alpha = 1.0 - smoothstep(-softness * 2.0, 0.0, inner_dist);
 
         // Determine if we're in the outline region
         float outline_alpha = alpha_mask - inner_alpha;
@@ -57,7 +57,7 @@ void main() {
         // In outline region: use outline color
         // In fill region: use texture * FragColor
         vec4 fill_color = tex_sample * FragColor;
-        vec4 final_color = mix(fill_color, FragOutlineColor, min(1, max(outline_alpha, inner_dist)));
+        vec4 final_color = mix(fill_color, FragOutlineColor, min(1.0, max(outline_alpha, inner_dist)));
 
         OutColor = final_color;
         OutColor.a *= alpha_mask;

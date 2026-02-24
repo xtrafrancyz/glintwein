@@ -1,6 +1,5 @@
 package net.glintwein.ui;
 
-import net.glintwein.GlintweinFabricMod;
 import net.glintwein.ui.render.command.Context;
 import net.glintwein.ui.test.TestWindow;
 import net.minecraft.client.Minecraft;
@@ -27,14 +26,19 @@ public class WindowManager {
     }
 
     public void render() {
-        float mouseX = GlintweinFabricMod.getMouseX();
-        float mouseY = GlintweinFabricMod.getMouseY();
-        boolean mouseGrabbed = Minecraft.getInstance().mouseHandler.isMouseGrabbed();
-        screenWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
-        screenHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
-        scale = 1 / (float) Minecraft.getInstance().getWindow().getGuiScale();
+        Minecraft mc = Minecraft.getInstance();
+        float mouseX = (float) mc.mouseHandler.xpos();
+        float mouseY = (float) mc.mouseHandler.ypos();
+        boolean mouseGrabbed = mc.mouseHandler.isMouseGrabbed();
+        screenWidth = mc.getWindow().getWidth();
+        screenHeight = mc.getWindow().getHeight();
 
-        // change scale?
+        scale = Math.min(screenWidth / 1920f, screenHeight / 1080f);
+        if (GlobalUIState.updateYogaPixelScale(scale)) {
+            for (Window w : windows) {
+                w.invalidateLayout();
+            }
+        }
 
         screenWidth /= scale;
         screenHeight /= scale;
@@ -81,12 +85,12 @@ public class WindowManager {
         return false;
     }
 
-    public boolean onMouseScroll(float mouseX, float mouseY, float amount, float vertical) {
+    public boolean onMouseScroll(float mouseX, float mouseY, float horizontal, float vertical) {
         mouseX /= scale;
         mouseY /= scale;
         for (int i = windows.size() - 1; i >= 0; i--) {
             Window window = windows.get(i);
-            if (window.onMouseScroll(mouseX, mouseY, amount, vertical)) {
+            if (window.onMouseScroll(mouseX, mouseY, horizontal, vertical)) {
                 return true;
             }
         }
@@ -99,5 +103,9 @@ public class WindowManager {
 
     public float getScreenHeight() {
         return screenHeight;
+    }
+
+    public float getScale() {
+        return scale;
     }
 }

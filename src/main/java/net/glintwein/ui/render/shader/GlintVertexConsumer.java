@@ -74,16 +74,24 @@ public class GlintVertexConsumer implements VertexConsumer {
         return this;
     }
 
-    public GlintVertexConsumer radius(BorderRadius radius, float width, float height) {
+    public static int packRadius(BorderRadius radius, float scale, float width, float height) {
         float maxRadius = Math.min(width, height) / 2f;
-        float topLeft = Math.min(radius.topLeft, maxRadius);
-        float topRight = Math.min(radius.topRight, maxRadius);
-        float bottomRight = Math.min(radius.bottomRight, maxRadius);
-        float bottomLeft = Math.min(radius.bottomLeft, maxRadius);
-        builder.putByte(0, (byte) topLeft);
-        builder.putByte(1, (byte) topRight);
-        builder.putByte(2, (byte) bottomRight);
-        builder.putByte(3, (byte) bottomLeft);
+        int topLeft = (int) Math.min(radius.topLeft * scale, maxRadius);
+        int topRight = (int) Math.min(radius.topRight * scale, maxRadius);
+        int bottomRight = (int) Math.min(radius.bottomRight * scale, maxRadius);
+        int bottomLeft = (int) Math.min(radius.bottomLeft * scale, maxRadius);
+        return (topLeft & 0xFF) | ((topRight & 0xFF) << 8) | ((bottomRight & 0xFF) << 16) | ((bottomLeft & 0xFF) << 24);
+    }
+
+    public GlintVertexConsumer radius(int packedRadius) {
+        byte topLeft = (byte) (packedRadius & 0xFF);
+        byte topRight = (byte) ((packedRadius >> 8) & 0xFF);
+        byte bottomRight = (byte) ((packedRadius >> 16) & 0xFF);
+        byte bottomLeft = (byte) ((packedRadius >> 24) & 0xFF);
+        builder.putByte(0, topLeft);
+        builder.putByte(1, topRight);
+        builder.putByte(2, bottomRight);
+        builder.putByte(3, bottomLeft);
         builder.nextElement();
         return this;
     }

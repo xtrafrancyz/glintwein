@@ -186,18 +186,18 @@ public class Element extends YogaNode {
         return blocked;
     }
 
-    protected boolean handleMouseScroll(float mouseX, float mouseY, float amount, float vertical) {
+    protected boolean handleMouseScroll(float mouseX, float mouseY, float horizontal, float vertical) {
         float localX = mouseX - borderBox.x;
         float localY = mouseY - borderBox.y;
         boolean handled = false;
         for (Element child : children) {
-            if (child.canHandleClick() && child.handleMouseScroll(localX, localY, amount, vertical)) {
+            if (child.canHandleClick() && child.handleMouseScroll(localX, localY, horizontal, vertical)) {
                 handled = true;
                 break;
             }
         }
         if (!handled && mouseScrollHandler != null)
-            handled = mouseScrollHandler.onMouseScroll(localX, localY, amount, vertical);
+            handled = mouseScrollHandler.onMouseScroll(localX, localY, horizontal, vertical);
         return handled;
     }
 

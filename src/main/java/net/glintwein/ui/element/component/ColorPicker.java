@@ -6,7 +6,7 @@ import net.glintwein.ui.element.Text;
 import net.glintwein.ui.element.TextInput;
 import net.glintwein.ui.render.command.Context;
 import net.glintwein.ui.render.command.DrawRectBuilder;
-import net.glintwein.ui.render.font.Fonts;
+import net.glintwein.ui.render.font.SFPro;
 import net.glintwein.ui.util.ARGB;
 import net.glintwein.ui.util.GMath;
 
@@ -185,7 +185,7 @@ public class ColorPicker extends Element {
 
             Text hexLabel = new Text("HEX");
             hexLabel.setColor(0xFFAAAAAA);
-            hexLabel.setFont(Fonts.REGULAR, 12);
+            hexLabel.setFont(SFPro.REGULAR, 12);
             hexLabel.setAlignSelf(Align.CENTER);
             addChild(hexLabel);
         }

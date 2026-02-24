@@ -23,6 +23,7 @@ public class Glintwein {
             throw new IllegalStateException("Glintwein instance already exists!");
         instance = this;
         KVStore.load();
+        GlobalUIState.init();
 
         windowManager = new WindowManager();
     }
@@ -52,17 +53,30 @@ public class Glintwein {
 
     public boolean onMousePress(Screen s, float mouseX, float mouseY, int button) {
         GlobalUIState.startFocusCapturing();
-        boolean cancel = windowManager.onMousePress(mouseX, mouseY, button);
+        boolean cancel = windowManager.onMousePress(
+            mouseX * GlintweinFabricMod.getGuiScale(),
+            mouseY * GlintweinFabricMod.getGuiScale(),
+            button
+        );
         GlobalUIState.stopFocusCapturing();
         return cancel;
     }
 
     public boolean onMouseRelease(Screen s, float mouseX, float mouseY, int button) {
-        return windowManager.onMouseRelease(mouseX, mouseY, button);
+        return windowManager.onMouseRelease(
+            mouseX * GlintweinFabricMod.getGuiScale(),
+            mouseY * GlintweinFabricMod.getGuiScale(),
+            button
+        );
     }
 
-    public boolean onMouseScroll(Screen s, float mouseX, float mouseY, float amount, float vertical) {
-        return windowManager.onMouseScroll(mouseX, mouseY, amount, vertical);
+    public boolean onMouseScroll(Screen s, float mouseX, float mouseY, float horizontal, float vertical) {
+        return windowManager.onMouseScroll(
+            mouseX * GlintweinFabricMod.getGuiScale(),
+            mouseY * GlintweinFabricMod.getGuiScale(),
+            horizontal * GlintweinFabricMod.getGuiScale(),
+            vertical * GlintweinFabricMod.getGuiScale()
+        );
     }
 
     public boolean onKeyPress(Screen s, int keyCode, int scanCode, int modifiers) {

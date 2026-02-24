@@ -25,17 +25,7 @@ public class GlintweinFabricMod implements ClientModInitializer {
         });
     }
 
-    public static float getMouseX() {
-        Minecraft mc = Minecraft.getInstance();
-        double xpos = mc.mouseHandler.xpos();
-        xpos = xpos * mc.getWindow().getGuiScaledWidth() / mc.getWindow().getScreenWidth();
-        return (float) xpos;
-    }
-
-    public static float getMouseY() {
-        Minecraft mc = Minecraft.getInstance();
-        double ypos = mc.mouseHandler.ypos();
-        ypos = ypos * mc.getWindow().getGuiScaledHeight() / mc.getWindow().getScreenHeight();
-        return (float) ypos;
+    public static float getGuiScale() {
+        return (float) Minecraft.getInstance().getWindow().getGuiScale();
     }
 }

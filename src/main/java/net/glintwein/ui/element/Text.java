@@ -2,8 +2,8 @@ package net.glintwein.ui.element;
 
 import net.glintwein.ui.data.Size;
 import net.glintwein.ui.render.command.Context;
-import net.glintwein.ui.render.font.Fonts;
 import net.glintwein.ui.render.font.GigaFont;
+import net.glintwein.ui.render.font.SFPro;
 import net.glintwein.ui.render.font.SizedFont;
 
 import java.util.ArrayList;
@@ -26,7 +26,7 @@ public class Text extends LeafElement {
     }
 
     public Text(String text) {
-        this.font = new SizedFont(Fonts.REGULAR, 16);
+        this.font = new SizedFont(SFPro.REGULAR, 16);
 
         setMeasureFunction((width, widthMode, height, heightMode) -> {
             // wrap content

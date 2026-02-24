@@ -1,6 +1,7 @@
 package net.glintwein.ui;
 
 import net.glintwein.ui.element.Element;
+import org.lwjgl.util.yoga.Yoga;
 
 public class GlobalUIState {
     private static Element focusedElement;
@@ -8,6 +9,13 @@ public class GlobalUIState {
     private static boolean captureFocus = false;
     private static boolean focusAliveCheck = false;
     private static boolean focusAlive = false;
+    private static long yogaConfigHandle;
+    private static float yogaCurrentPixelScale = 1;
+
+    public static void init() {
+        yogaConfigHandle = Yoga.YGConfigNew();
+        Yoga.YGConfigSetPointScaleFactor(yogaConfigHandle, 1);
+    }
 
     public static void startFocusCapturing() {
         if (captureFocus)
@@ -63,5 +71,18 @@ public class GlobalUIState {
     public static void tickElement(Element element) {
         if (focusAliveCheck && element == focusedElement)
             focusAlive = true;
+    }
+
+    public static long getYogaConfigHandle() {
+        return yogaConfigHandle;
+    }
+
+    public static boolean updateYogaPixelScale(float scale) {
+        if (scale != yogaCurrentPixelScale) {
+            Yoga.YGConfigSetPointScaleFactor(yogaConfigHandle, scale);
+            yogaCurrentPixelScale = scale;
+            return true;
+        }
+        return false;
     }
 }

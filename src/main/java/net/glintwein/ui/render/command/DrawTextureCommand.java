@@ -67,22 +67,28 @@ public class DrawTextureCommand extends DrawCommand {
             shader.getUniform("ProjMat").setMat4(GlobalRender.getGuiProxMatrix());
             GlintVertexConsumer consumer = shader.begin();
             for (DrawTextureCommand cmd : commands) {
-                vertex(consumer, cmd, cmd.x0, cmd.y0, cmd.u0, cmd.v0);
-                vertex(consumer, cmd, cmd.x0, cmd.y1, cmd.u0, cmd.v1);
-                vertex(consumer, cmd, cmd.x1, cmd.y1, cmd.u1, cmd.v1);
-                vertex(consumer, cmd, cmd.x1, cmd.y0, cmd.u1, cmd.v0);
+                float sx = (float) Math.sqrt(cmd.pose.m00() * cmd.pose.m00() + cmd.pose.m01() * cmd.pose.m01());
+                float sy = (float) Math.sqrt(cmd.pose.m10() * cmd.pose.m10() + cmd.pose.m11() * cmd.pose.m11());
+                float w = (cmd.x1 - cmd.x0) * sx;
+                float h = (cmd.y1 - cmd.y0) * sy;
+                float avg = (sx + sy) / 2.0f;
+                int radiusPacked = GlintVertexConsumer.packRadius(cmd.radius, avg, w, h);
+                float outlineWidth = cmd.outlineWidth * avg;
+
+                vertex(consumer, cmd, cmd.x0, cmd.y0, cmd.u0, cmd.v0, w, h, radiusPacked, outlineWidth);
+                vertex(consumer, cmd, cmd.x0, cmd.y1, cmd.u0, cmd.v1, w, h, radiusPacked, outlineWidth);
+                vertex(consumer, cmd, cmd.x1, cmd.y1, cmd.u1, cmd.v1, w, h, radiusPacked, outlineWidth);
+                vertex(consumer, cmd, cmd.x1, cmd.y0, cmd.u1, cmd.v0, w, h, radiusPacked, outlineWidth);
             }
             shader.draw();
         }
 
-        private void vertex(GlintVertexConsumer consumer, DrawTextureCommand cmd, float x, float y, float u, float v) {
-            float width = cmd.x1 - cmd.x0;
-            float height = cmd.y1 - cmd.y0;
+        private void vertex(GlintVertexConsumer consumer, DrawTextureCommand cmd, float x, float y, float u, float v, float w, float h, int radiusPacked, float outlineWidth) {
             consumer.vertex2(cmd.pose, x, y)
                 .color(cmd.color)
                 .uv(u, v)
-                .radius(cmd.radius, width, height)
-                .size(width, height, cmd.outlineWidth)
+                .radius(radiusPacked)
+                .size(w, h, outlineWidth)
                 .color(cmd.outlineColor)
                 .endVertex();
         }

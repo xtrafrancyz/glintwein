@@ -32,8 +32,11 @@ void main() {
     float dist = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - radius;
 
     // Smoothstep for anti-aliasing. AA size is 0.5 pixels in the corners, and 0 in the straight edges
-    float corner_factor = step(0.0, q.x) * step(0.0, q.y);
-    float softness = mix(0.0, fwidth(dist) * 0.5, corner_factor);
+	float pix_size = fwidth(dist);
+	float aa_corner_spread = pix_size * 5.0;
+	vec2 q0 = q + aa_corner_spread;
+	float corner_factor = smoothstep(0.0, aa_corner_spread, min(q0.x,q0.y)) * min(step(0.0, q0.x), step(0.0, q0.y));
+    float softness = mix(0.0, pix_size * 0.5, corner_factor);
     float alpha = 1.0 - smoothstep(-softness, softness, dist);
 
     if (alpha <= 0.0) discard;
@@ -46,14 +49,23 @@ void main() {
         float inner_dist = dist + outline_width;
 
         // Alpha for the inner edge (where fill starts)
-        float inner_alpha = 1.0 - smoothstep(-softness, softness, inner_dist);
+        float inner_alpha = 1.0 - smoothstep(-softness * 2.0, 0.0, inner_dist);
 
         // Determine if we're in the outline region
         float outline_alpha = alpha - inner_alpha;
 
+		// Clip inner body to it's bounds
+		vec2 inner_pixel_pos = pixel_pos - outline_width;
+		vec2 inner_size = FragSize.xy - outline_width * 2.0;
+		//if (inner_pixel_pos.x < 0 || inner_pixel_pos.y < 0 ||
+		//	inner_pixel_pos.x > inner_size.x || inner_pixel_pos.y > inner_size.y)
+		//	outline_alpha = 1;
+		float outside_inner = 1.0 - step(0.0, inner_pixel_pos.x) * step(0.0, inner_pixel_pos.y) * step(inner_pixel_pos.x, inner_size.x) * step(inner_pixel_pos.y, inner_size.y);
+		outline_alpha = max(outline_alpha, outside_inner);
+
         // Mix between outline color and fill color
 		// min(1, max(outline_alpha, inner_dist)) -- inner_dist here is to eliminate blending with inner color on the outside
-        vec3 final_color = mix(FragColor.rgb, FragOutlineColor.rgb, min(1, max(outline_alpha, inner_dist)));
+        vec3 final_color = mix(FragColor.rgb, FragOutlineColor.rgb, min(1.0, max(outline_alpha, inner_dist)));
         float final_alpha = alpha * mix(FragColor.a, FragOutlineColor.a, outline_alpha);
 
         OutColor = vec4(final_color, final_alpha);
@@ -61,4 +73,5 @@ void main() {
         // No outline, just use the fill color
         OutColor = vec4(FragColor.rgb, FragColor.a * alpha);
     }
+	//OutColor = vec4(fract(pixel_pos),0,1);
 }

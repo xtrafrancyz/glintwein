@@ -249,6 +249,7 @@ public class Context {
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
             RenderSystem.disableAlphaTest();
+            RenderSystem.disableDepthTest();
 
             int startIndex = 0;
             DrawCommand currentCommand = commands.get(0);
@@ -264,6 +265,7 @@ public class Context {
 
             RenderSystem.disableScissor();
             RenderSystem.enableAlphaTest();
+            RenderSystem.enableDepthTest();
         }
 
         @SuppressWarnings("unchecked")
@@ -282,7 +284,7 @@ public class Context {
 
         private static void enableScissor(Bounds bounds) {
             Window window = Minecraft.getInstance().getWindow();
-            float scale = (float) window.getGuiScale();
+            float scale = 1;//(float) window.getGuiScale();
             int width = GMath.ceil((bounds.maxX - bounds.minX) * scale);
             int height = GMath.ceil((bounds.maxY - bounds.minY) * scale);
             int x = GMath.floor(bounds.minX * scale);

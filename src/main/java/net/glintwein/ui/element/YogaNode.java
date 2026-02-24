@@ -1,5 +1,6 @@
 package net.glintwein.ui.element;
 
+import net.glintwein.ui.GlobalUIState;
 import net.glintwein.ui.data.*;
 import net.glintwein.ui.util.NativeCleaner;
 import org.lwjgl.util.yoga.YGMeasureFunc;
@@ -14,7 +15,7 @@ public abstract class YogaNode {
     private Display display = Display.FLEX;
 
     public YogaNode() {
-        this.yogaNode = Yoga.YGNodeNew();
+        this.yogaNode = Yoga.YGNodeNewWithConfig(GlobalUIState.getYogaConfigHandle());
 
         long yogaNodeFinal = this.yogaNode;
         cleanerHandlers.add(NativeCleaner.register(() -> Yoga.YGNodeFree(yogaNodeFinal)));

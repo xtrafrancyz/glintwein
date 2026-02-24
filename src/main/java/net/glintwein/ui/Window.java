@@ -112,6 +112,10 @@ public class Window {
         root.updateMouse(mouseX - xy.x, mouseY - xy.y, canHover);
     }
 
+    public void invalidateLayout() {
+        root.invalidateLayout();
+    }
+
     private void setWindowPosition(float x, float y) {
         // Choose the anchor whose screen reference point is closest to the supplied
         // top-left screen coordinates (x,y), and compute posX/posY so that
@@ -235,9 +239,9 @@ public class Window {
         return root.handleMouseRelease(mouseX - xy.x, mouseY - xy.y, button);
     }
 
-    public boolean onMouseScroll(float mouseX, float mouseY, float amount, float vertical) {
+    public boolean onMouseScroll(float mouseX, float mouseY, float horizontal, float vertical) {
         Vector2f xy = getScreenXY();
-        return root.handleMouseScroll(mouseX - xy.x, mouseY - xy.y, amount, vertical);
+        return root.handleMouseScroll(mouseX - xy.x, mouseY - xy.y, horizontal, vertical);
     }
 
     private Vector2f getScreenXY() {
@@ -288,6 +292,9 @@ public class Window {
                 break;
         }
 
+        float scale = manager.getScale();
+        x = Math.round(x * scale) / scale;
+        y = Math.round(y * scale) / scale;
         return new Vector2f(x, y);
     }
 

@@ -136,13 +136,13 @@ public class VerticalScrollView extends Element {
     }
 
     @Override
-    protected boolean handleMouseScroll(float mouseX, float mouseY, float amount, float vertical) {
+    protected boolean handleMouseScroll(float mouseX, float mouseY, float horizontal, float vertical) {
         if (vertical != 0 && hasOverflow) {
             float newOffsetY = clampScrollOffsetY(barThumbOffsetYAnim.getFinal() - vertical * 20);
             barThumbOffsetYAnim.animateIfDifferent(clampScrollOffsetY(newOffsetY), 150, Easing.IN_SINE);
             return true;
         }
-        return super.handleMouseScroll(mouseX, mouseY, amount, vertical);
+        return super.handleMouseScroll(mouseX, mouseY, horizontal, vertical);
     }
 
     @Override

@@ -43,7 +43,11 @@ public class RootElement extends Element {
     }
 
     @Override
-    public boolean handleMouseScroll(float mouseX, float mouseY, float amount, float vertical) {
-        return super.handleMouseScroll(mouseX, mouseY, amount, vertical);
+    public boolean handleMouseScroll(float mouseX, float mouseY, float horizontal, float vertical) {
+        return super.handleMouseScroll(mouseX, mouseY, horizontal, vertical);
+    }
+
+    public void invalidateLayout() {
+        Yoga.nYGNodeMarkDirtyAndPropogateToDescendants(getYogaNodeHandle(this));
     }
 }

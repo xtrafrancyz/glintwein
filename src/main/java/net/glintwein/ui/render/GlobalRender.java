@@ -17,8 +17,8 @@ public class GlobalRender {
 
     public static float[] getGuiProxMatrix() {
         Window window = Minecraft.getInstance().getWindow();
-        int width = window.getGuiScaledWidth();
-        int height = window.getGuiScaledHeight();
+        int width = window.getWidth();
+        int height = window.getHeight();
         if (width != projMatrixWidth || height != projMatrixHeight) {
             projMatrixWidth = width;
             projMatrixHeight = height;
