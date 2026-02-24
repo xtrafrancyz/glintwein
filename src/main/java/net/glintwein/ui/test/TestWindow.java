@@ -2,9 +2,7 @@ package net.glintwein.ui.test;
 
 import net.glintwein.ui.Window;
 import net.glintwein.ui.WindowManager;
-import net.glintwein.ui.data.Align;
-import net.glintwein.ui.data.Edge;
-import net.glintwein.ui.data.Gradient;
+import net.glintwein.ui.data.*;
 import net.glintwein.ui.element.*;
 import net.glintwein.ui.render.command.Context;
 import net.glintwein.ui.render.command.DrawRectBuilder;
@@ -26,7 +24,7 @@ public class TestWindow extends Window {
 
         VerticalScrollView list = new VerticalScrollView();
         list.setHeight(70);
-        list.setMousePressHandler((button, x, y) -> true); // To prevent clicks from propagating to the window
+        list.setOnMousePress((button, x, y) -> true); // To prevent clicks from propagating to the window
         list.setPadding(Edge.ALL, 5);
         list.setPadding(Edge.RIGHT, 10);
         list.setBarWidth(6);
@@ -46,7 +44,13 @@ public class TestWindow extends Window {
         input.setPadding(Edge.ALL, 5);
         root.addChild(input);
 
-        root.addChild(new OpenColorPickerButton(manager));
+        Element colorPickerRow = new Element();
+        colorPickerRow.setPadding(Edge.ALL, 5);
+        colorPickerRow.setAlignSelf(Align.FLEX_START);
+        colorPickerRow.setFlexDirection(FlexDirection.ROW);
+        colorPickerRow.addChild(new OpenColorPickerButton(manager));
+        colorPickerRow.addChild(new InfoHover("Click the button to open/close the color picker window"));
+        root.addChild(colorPickerRow);
     }
 
     private static class OpenColorPickerButton extends Button {
@@ -55,7 +59,7 @@ public class TestWindow extends Window {
         public OpenColorPickerButton(WindowManager manager) {
             super("Color Picker");
 
-            this.setClickHandler((button) -> {
+            this.setOnClick((button) -> {
                 if (colorPicker == null) {
                     manager.addWindow(colorPicker = new ColorPickerWindow(manager));
                 } else {
@@ -63,6 +67,39 @@ public class TestWindow extends Window {
                     colorPicker = null;
                 }
                 return true;
+            });
+        }
+    }
+
+    private static class InfoHover extends Element {
+        private final Element infoContainer;
+
+        public InfoHover(String info) {
+            this.setPadding(Edge.ALL, 5);
+            this.setBackground(0x550000ff);
+            this.setBorderRadius(BorderRadius.of(5));
+            this.setAlignSelf(Align.CENTER);
+            this.setMargin(Edge.LEFT, 5);
+            this.setSize(20);
+
+            infoContainer = new Element();
+            Text infoText = new Text(info);
+            infoContainer.addChild(infoText);
+            infoContainer.setPositionType(PositionType.ABSOLUTE);
+            infoContainer.setBackground(0x550000ff);
+            infoContainer.setWidth(200);
+            infoContainer.setPosition(Edge.BOTTOM, 10);
+            infoContainer.setPosition(Edge.LEFT, 10);
+            infoContainer.setPadding(Edge.ALL, 5);
+            infoContainer.setDisplay(Display.NONE);
+            this.addChild(infoContainer);
+
+            setOnMouseEnter(() -> {
+                infoContainer.setDisplay(Display.FLEX);
+            });
+
+            setOnMouseExit(() -> {
+                infoContainer.setDisplay(Display.NONE);
             });
         }
     }
@@ -128,7 +165,7 @@ public class TestWindow extends Window {
 
         public SwitchOnClickText() {
             super("Click me to change text");
-            this.setClickHandler(button -> {
+            this.setOnClick(button -> {
                 int index = (int) (Math.random() * loremList.size());
                 this.setText(loremList.get(index));
                 return true;

@@ -1,5 +1,6 @@
 package net.glintwein.ui.element;
 
+import net.glintwein.ui.data.Display;
 import net.glintwein.ui.data.Size;
 import net.glintwein.ui.render.command.Context;
 import net.glintwein.ui.render.font.GigaFont;
@@ -166,6 +167,8 @@ public class Text extends LeafElement {
     @Override
     public void draw(Context ctx) {
         super.draw(ctx);
+        if (getDisplayType() == Display.NONE)
+            return;
         for (RenderLine line : getRenderLines())
             ctx.drawText(font.font(), line.text, line.x, line.y, font.size(), color);
     }

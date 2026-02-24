@@ -50,7 +50,7 @@ public class ColorPicker extends Element {
             setSize(200, 100);
             setBorderRadius(new BorderRadius(5));
             setMargin(Edge.VERTICAL, 10);
-            setMousePressHandler((x, y, button) -> {
+            setOnMousePress((x, y, button) -> {
                 setByMouse(x + borderBox.x, y + borderBox.y);
                 return true; // Consume clicks to prevent them from propagating to the parent
             });
@@ -102,7 +102,7 @@ public class ColorPicker extends Element {
         public HueSlider() {
             setSize(200, 10);
             setBorderRadius(new BorderRadius(5));
-            setMousePressHandler((x, y, button) -> {
+            setOnMousePress((x, y, button) -> {
                 setByMouse(x + borderBox.x);
                 return true; // Consume clicks to prevent them from propagating to the parent
             });

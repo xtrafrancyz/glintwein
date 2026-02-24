@@ -5,10 +5,7 @@ import net.glintwein.ui.data.BorderRadius;
 import net.glintwein.ui.data.Box;
 import net.glintwein.ui.data.Display;
 import net.glintwein.ui.render.command.Context;
-import net.glintwein.ui.util.ARGB;
-import net.glintwein.ui.util.Animated;
-import net.glintwein.ui.util.Easing;
-import net.glintwein.ui.util.LayoutBoxLerp;
+import net.glintwein.ui.util.*;
 import org.lwjgl.util.yoga.Yoga;
 
 import java.util.ArrayList;
@@ -28,10 +25,13 @@ public class Element extends YogaNode {
     private int backgroundColor = 0x00000000;
     protected BorderRadius borderRadius = BorderRadius.ZERO;
     private float opacity = 1.0f;
-    private ClickHandler clickHandler;
-    private MousePressHandler mousePressHandler;
-    private MouseReleaseHandler mouseReleaseHandler;
-    private MouseScrollHandler mouseScrollHandler;
+
+    private ClickHandler onClick;
+    private MousePressHandler onMousePress;
+    private MouseReleaseHandler onMouseRelease;
+    private MouseScrollHandler onMouseScroll;
+    private Runnable onMouseEnter;
+    private Runnable onMouseExit;
 
     public void setBackground(int color) {
         this.backgroundColor = color;
@@ -41,20 +41,32 @@ public class Element extends YogaNode {
         this.borderRadius = radius;
     }
 
-    public void setClickHandler(ClickHandler handler) {
-        this.clickHandler = handler;
+    public void setOpacity(float opacity) {
+        this.opacity = GMath.clamp(opacity, 0, 1);
     }
 
-    public void setMousePressHandler(MousePressHandler handler) {
-        this.mousePressHandler = handler;
+    public void setOnClick(ClickHandler handler) {
+        this.onClick = handler;
     }
 
-    public void setMouseReleaseHandler(MouseReleaseHandler handler) {
-        this.mouseReleaseHandler = handler;
+    public void setOnMousePress(MousePressHandler handler) {
+        this.onMousePress = handler;
     }
 
-    public void setMouseScrollHandler(MouseScrollHandler handler) {
-        this.mouseScrollHandler = handler;
+    public void setOnMouseRelease(MouseReleaseHandler handler) {
+        this.onMouseRelease = handler;
+    }
+
+    public void setOnMouseScroll(MouseScrollHandler handler) {
+        this.onMouseScroll = handler;
+    }
+
+    public void setOnMouseEnter(Runnable handler) {
+        this.onMouseEnter = handler;
+    }
+
+    public void setOnMouseExit(Runnable handler) {
+        this.onMouseExit = handler;
     }
 
     public void trackAnimation(Animated animation) {
@@ -142,7 +154,15 @@ public class Element extends YogaNode {
     }
 
     protected void handleMouseMoved(float mouseX, float mouseY, boolean canHover) {
+        boolean wasHovered = hovered;
         hovered = canHover && borderBox.contains(mouseX, mouseY);
+
+        if (wasHovered != hovered) {
+            if (hovered && onMouseEnter != null)
+                onMouseEnter.run();
+            else if (!hovered && onMouseExit != null)
+                onMouseExit.run();
+        }
 
         float localX = mouseX - borderBox.x;
         float localY = mouseY - borderBox.y;
@@ -162,8 +182,10 @@ public class Element extends YogaNode {
                 break;
             }
         }
-        if (!handled && mousePressHandler != null)
-            handled = mousePressHandler.onMousePress(localX, localY, button);
+        if (!handled && onMousePress != null)
+            handled = onMousePress.onMousePress(localX, localY, button);
+        if (onClick != null)
+            handled = true;
         if (isFocusable())
             GlobalUIState.requestFocus(this);
         return handled;
@@ -178,10 +200,10 @@ public class Element extends YogaNode {
         }
         if (pressed) {
             pressed = false;
-            if (mouseReleaseHandler != null)
-                blocked |= mouseReleaseHandler.onMouseRelease(localX, localY, button);
-            if (hovered && !blocked && clickHandler != null)
-                blocked = clickHandler.onClick(button);
+            if (onMouseRelease != null)
+                blocked |= onMouseRelease.onMouseRelease(localX, localY, button);
+            if (hovered && !blocked && onClick != null)
+                blocked = onClick.onClick(button);
         }
         return blocked;
     }
@@ -196,13 +218,13 @@ public class Element extends YogaNode {
                 break;
             }
         }
-        if (!handled && mouseScrollHandler != null)
-            handled = mouseScrollHandler.onMouseScroll(localX, localY, horizontal, vertical);
+        if (!handled && onMouseScroll != null)
+            handled = onMouseScroll.onMouseScroll(localX, localY, horizontal, vertical);
         return handled;
     }
 
     public boolean canHandleClick() {
-        return getDisplayType() == Display.FLEX && hovered;
+        return getDisplayType() != Display.NONE && hovered;
     }
 
     public boolean handleKeyPress(int keyCode, int scanCode, int modifiers) {
@@ -242,6 +264,8 @@ public class Element extends YogaNode {
     }
 
     public void draw(Context ctx) {
+        if (getDisplayType() == Display.NONE)
+            return;
         if (opacity != 1.0f) {
             if (ctx.pushOpacity(opacity) == 0) {
                 ctx.popOpacity();
