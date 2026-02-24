@@ -52,8 +52,8 @@ void main() {
         float outline_alpha = alpha - inner_alpha;
 
         // Mix between outline color and fill color
-		// max(outline_alpha, inner_dist) -- inner_dist here is to eliminate blending with inner color on the outside
-        vec3 final_color = mix(FragColor.rgb, FragOutlineColor.rgb, max(outline_alpha, inner_dist));
+		// min(1, max(outline_alpha, inner_dist)) -- inner_dist here is to eliminate blending with inner color on the outside
+        vec3 final_color = mix(FragColor.rgb, FragOutlineColor.rgb, min(1, max(outline_alpha, inner_dist)));
         float final_alpha = alpha * mix(FragColor.a, FragOutlineColor.a, outline_alpha);
 
         OutColor = vec4(final_color, final_alpha);
