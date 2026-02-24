@@ -57,7 +57,7 @@ void main() {
         // In outline region: use outline color
         // In fill region: use texture * FragColor
         vec4 fill_color = tex_sample * FragColor;
-        vec4 final_color = mix(fill_color, FragOutlineColor, outline_alpha);
+        vec4 final_color = mix(fill_color, FragOutlineColor, max(outline_alpha, inner_dist));
 
         OutColor = final_color;
         OutColor.a *= alpha_mask;
