@@ -126,6 +126,7 @@ public class VerticalScrollView extends Element {
         float clamped = clampScrollOffsetY(scrollOffsetY);
         if (oldOffsetY != clamped)
             barThumbOffsetYAnim.animateIfDifferent(clamped, 150, Easing.IN_SINE);
+        modifyContentBoxes();
     }
 
     @Override
@@ -211,7 +212,6 @@ public class VerticalScrollView extends Element {
         else if (thumbHovered)
             thumbColor = barThumbHoverColor;
         barThumbColorAnim.animateIfDifferent(thumbColor, 100, Easing.EASE);
-        modifyContentBoxes();
     }
 
     @Override
