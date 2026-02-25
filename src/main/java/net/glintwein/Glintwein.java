@@ -2,6 +2,7 @@ package net.glintwein;
 
 import net.glintwein.ui.GlobalUIState;
 import net.glintwein.ui.WindowManager;
+import net.glintwein.ui.render.PipAtlasManager;
 import net.glintwein.ui.util.NativeCleaner;
 import net.glintwein.util.KVStore;
 import net.minecraft.Util;
@@ -34,6 +35,7 @@ public class Glintwein {
     }
 
     public void preRender() {
+        PipAtlasManager.tickStart();
         updateTime();
         if (timeStart == 0) {
             timeStart = time;

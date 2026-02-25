@@ -1,19 +1,28 @@
 package net.glintwein.ui.render.command;
 
-import com.mojang.blaze3d.platform.Window;
+import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.floats.FloatArrayFIFOQueue;
 import net.glintwein.ui.data.BorderRadius;
 import net.glintwein.ui.data.Bounds;
 import net.glintwein.ui.data.Box;
 import net.glintwein.ui.data.Gradient;
+import net.glintwein.ui.render.PipAtlasManager;
 import net.glintwein.ui.render.font.GigaFont;
+import net.glintwein.ui.render.texture.AtlasPacker;
 import net.glintwein.ui.render.texture.Sprite;
 import net.glintwein.ui.util.ARGB;
 import net.glintwein.ui.util.GMath;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.LoadingOverlay;
+import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix3x2f;
 import org.joml.Matrix3x2fStack;
+import org.joml.Vector2f;
+import org.lwjgl.opengl.GL11;
 
 import java.util.*;
 
@@ -27,6 +36,7 @@ public class Context {
     }
 
     private final List<DrawCommand> commands = new ArrayList<>();
+    private final PriorityQueue<PipCommand> pipCommands = new PriorityQueue<>();
     private final Matrix3x2fStack transform = new Matrix3x2fStack(16);
     private final FloatArrayFIFOQueue opacityStack = new FloatArrayFIFOQueue();
     private final Deque<Bounds> scissorStack = new ArrayDeque<>();
@@ -192,6 +202,24 @@ public class Context {
         ));
     }
 
+    public void drawItem(ItemStack is, float x, float y, float size, boolean decoration) {
+        // Item models are not loaded during loading screen, leading to crash
+        if (Minecraft.getInstance().overlay instanceof LoadingOverlay)
+            return;
+        addPipCommand(
+            () -> {
+                // default size for items in GUI is 16, so we need to scale it down to 1
+                GlStateManager._scalef(0.0625f, 0.0625f, 0.0625f);
+                ItemRenderer itemRenderer = Minecraft.getInstance().getItemRenderer();
+                itemRenderer.renderGuiItem(is, 0, 0);
+                if (decoration) {
+                    itemRenderer.renderGuiItemDecorations(Minecraft.getInstance().font, is, 0, 0);
+                }
+            },
+            x, y, size, size
+        );
+    }
+
     public void drawText(GigaFont font, String text, float x, float y, float size, int color) {
         if (ARGB.alpha(color = mulOpacity(color)) == 0)
             return;
@@ -201,6 +229,28 @@ public class Context {
             font, text,
             x, y, size,
             color
+        ));
+    }
+
+    private void addPipCommand(Runnable render, float x, float y, float width, float height) {
+        Matrix3x2f pose = new Matrix3x2f(pose());
+
+        Vector2f screenSize = pose.transformDirection(width, height, new Vector2f());
+        PipAtlasManager.Sprite sprite = PipAtlasManager.insert(
+            GMath.ceil(screenSize.x),
+            GMath.ceil(screenSize.y)
+        );
+
+        pipCommands.add(new PipCommand(render, sprite));
+
+        addCommand(new DrawTextureCommand(
+            pose,
+            x, y, x + width, y + height,
+            sprite.sprite.u0, sprite.sprite.v0, sprite.sprite.u1, sprite.sprite.v1,
+            //0, 1, 1, 0,
+            BorderRadius.ZERO, sprite.target.getColorTextureId(),
+            0xFFFFFFFF,
+            0, 0
         ));
     }
 
@@ -229,9 +279,52 @@ public class Context {
         commands.add(cmd);
     }
 
+    @SuppressWarnings("deprecation")
     public void execute() {
+        if (!pipCommands.isEmpty()) {
+            RenderTarget firstTarget = pipCommands.peek().sprite.target;
+
+            GlStateManager._matrixMode(GL11.GL_PROJECTION);
+            GlStateManager._pushMatrix();
+            GlStateManager._loadIdentity();
+            GlStateManager._ortho(0.0, firstTarget.width, firstTarget.height, 0.0, -3000, 3000.0);
+            GlStateManager._matrixMode(GL11.GL_MODELVIEW);
+            GlStateManager._pushMatrix();
+            GlStateManager._loadIdentity();
+
+            RenderTarget target = null;
+            for (PipCommand cmd : pipCommands) {
+                if (cmd.sprite.target != target) {
+                    target = cmd.sprite.target;
+                    target.clear(false);
+                    target.bindWrite(true);
+                }
+
+                AtlasPacker.Sprite sprite = cmd.sprite.sprite;
+                enableScissor(Bounds.fromMinMax(sprite.left, sprite.top, sprite.right, sprite.bottom), target.height);
+                GlStateManager._pushMatrix();
+                GlStateManager._translatef(sprite.left, sprite.top, -3000);
+                float sx = sprite.right - sprite.left;
+                float sy = sprite.bottom - sprite.top;
+                GlStateManager._scalef(sx, sy, (sx + sy) / 2f);
+                cmd.render.run();
+                GlStateManager._popMatrix();
+            }
+
+
+            GlStateManager._matrixMode(GL11.GL_PROJECTION);
+            GlStateManager._popMatrix();
+            GlStateManager._matrixMode(GL11.GL_MODELVIEW);
+            GlStateManager._popMatrix();
+
+            RenderSystem.disableScissor();
+            Minecraft.getInstance().getMainRenderTarget().bindWrite(true);
+        }
+
         new ListExecutor(commands).execute();
         commands.clear();
+
+        PipAtlasManager.reset();
     }
 
     private static class ListExecutor {
@@ -274,22 +367,35 @@ public class Context {
             if (executor != null) {
                 DrawCommand cmd = batch.get(0);
                 if (cmd.scissor != null) {
-                    enableScissor(cmd.scissor);
+                    enableScissor(cmd.scissor, Minecraft.getInstance().getWindow().getHeight());
                 } else {
                     RenderSystem.disableScissor();
                 }
                 executor.execute((List<T>) batch);
             }
         }
+    }
 
-        private static void enableScissor(Bounds bounds) {
-            Window window = Minecraft.getInstance().getWindow();
-            float scale = 1;//(float) window.getGuiScale();
-            int width = GMath.ceil((bounds.maxX - bounds.minX) * scale);
-            int height = GMath.ceil((bounds.maxY - bounds.minY) * scale);
-            int x = GMath.floor(bounds.minX * scale);
-            int y = GMath.floor(window.getHeight() - bounds.maxY * scale);
-            RenderSystem.enableScissor(x, y, width, height);
+    private static void enableScissor(Bounds bounds, float frameHeight) {
+        int width = GMath.ceil((bounds.maxX - bounds.minX));
+        int height = GMath.ceil((bounds.maxY - bounds.minY));
+        int x = GMath.floor(bounds.minX);
+        int y = GMath.floor(frameHeight - bounds.maxY);
+        RenderSystem.enableScissor(x, y, width, height);
+    }
+
+    private static class PipCommand implements Comparable<PipCommand> {
+        final Runnable render;
+        final PipAtlasManager.Sprite sprite;
+
+        public PipCommand(Runnable render, PipAtlasManager.Sprite sprite) {
+            this.render = render;
+            this.sprite = sprite;
+        }
+
+        @Override
+        public int compareTo(@NotNull Context.PipCommand o) {
+            return Integer.compare(this.sprite.target.getColorTextureId(), o.sprite.target.getColorTextureId());
         }
     }
 }
