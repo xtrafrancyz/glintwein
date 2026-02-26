@@ -146,8 +146,10 @@ public class Text extends LeafElement {
                 renderLines.add(new RenderLine(line.text, line.width, x, y));
                 y += font.getHeight();
             }
-            if (renderLines.isEmpty())
-                throw new IllegalStateException("There should always be at least one render line");
+            if (renderLines.isEmpty()) {
+                // ensure phantom empty string, not to crash
+                renderLines.add(new RenderLine("", 0, 0, 0));
+            }
         }
         return renderLines;
     }
