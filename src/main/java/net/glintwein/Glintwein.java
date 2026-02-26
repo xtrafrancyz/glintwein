@@ -1,7 +1,8 @@
 package net.glintwein;
 
+import net.glintwein.devtest.DevTest;
 import net.glintwein.ui.GlobalUIState;
-import net.glintwein.ui.WindowManager;
+import net.glintwein.ui.UILayer;
 import net.glintwein.ui.render.PipAtlasManager;
 import net.glintwein.ui.util.NativeCleaner;
 import net.glintwein.util.KVStore;
@@ -10,6 +11,9 @@ import net.minecraft.client.gui.screens.Screen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Glintwein {
     public static final Logger LOGGER = LogManager.getLogger();
 
@@ -17,7 +21,9 @@ public class Glintwein {
     private static long timeStart;
     public static long time;
 
-    private final WindowManager windowManager;
+    private final List<UILayer> uiLayers = new ArrayList<>();
+    public final UILayer layerAlwaysOnTop;
+    public final UILayer layerIngame;
 
     public Glintwein() {
         if (instance != null)
@@ -26,7 +32,13 @@ public class Glintwein {
         KVStore.load();
         GlobalUIState.init();
 
-        windowManager = new WindowManager();
+        layerAlwaysOnTop = new UILayer();
+        layerIngame = new UILayer();
+        uiLayers.add(layerAlwaysOnTop);
+        uiLayers.add(layerIngame);
+
+        if (Boolean.getBoolean("glintwein.devtest"))
+            DevTest.init();
     }
 
     public void tick() {
@@ -34,19 +46,34 @@ public class Glintwein {
         KVStore.save();
     }
 
-    public void preRender() {
-        PipAtlasManager.tickStart();
+    public void tickStart() {
         updateTime();
         if (timeStart == 0) {
             timeStart = time;
             updateTime();
         }
+
+        if (GlobalUIState.updateUIScale()) {
+            for (UILayer layer : uiLayers) {
+                layer.invalidateLayout();
+            }
+        }
+        PipAtlasManager.tickStart();
+    }
+
+    public void preRender() {
+        GlobalUIState.startFocusAliveCheck();
+        for (UILayer layer : uiLayers)
+            layer.tick();
+        GlobalUIState.stopFocusAliveCheck();
+    }
+
+    public void renderHud() {
+        layerIngame.render();
     }
 
     public void postRender() {
-        GlobalUIState.startFocusAliveCheck();
-        windowManager.render();
-        GlobalUIState.stopFocusAliveCheck();
+        layerAlwaysOnTop.render();
     }
 
     public void updateTime() {
@@ -55,30 +82,47 @@ public class Glintwein {
 
     public boolean onMousePress(Screen s, float mouseX, float mouseY, int button) {
         GlobalUIState.startFocusCapturing();
-        boolean cancel = windowManager.onMousePress(
-            mouseX * GlintweinFabricMod.getGuiScale(),
-            mouseY * GlintweinFabricMod.getGuiScale(),
-            button
-        );
+        mouseX = scaleMouseCoord(mouseX);
+        mouseY = scaleMouseCoord(mouseY);
+        boolean cancel = false;
+        for (UILayer layer : uiLayers) {
+            if (layer.onMousePress(mouseX, mouseY, button)) {
+                cancel = true;
+                break;
+            }
+        }
         GlobalUIState.stopFocusCapturing();
         return cancel;
     }
 
     public boolean onMouseRelease(Screen s, float mouseX, float mouseY, int button) {
-        return windowManager.onMouseRelease(
-            mouseX * GlintweinFabricMod.getGuiScale(),
-            mouseY * GlintweinFabricMod.getGuiScale(),
-            button
-        );
+        mouseX = scaleMouseCoord(mouseX);
+        mouseY = scaleMouseCoord(mouseY);
+        boolean cancel = false;
+        for (UILayer layer : uiLayers) {
+            if (layer.onMouseRelease(mouseX, mouseY, button)) {
+                cancel = true;
+                break;
+            }
+        }
+        return cancel;
     }
 
     public boolean onMouseScroll(Screen s, float mouseX, float mouseY, float horizontal, float vertical) {
-        return windowManager.onMouseScroll(
-            mouseX * GlintweinFabricMod.getGuiScale(),
-            mouseY * GlintweinFabricMod.getGuiScale(),
-            horizontal * GlintweinFabricMod.getGuiScale(),
-            vertical * GlintweinFabricMod.getGuiScale()
-        );
+        mouseX = scaleMouseCoord(mouseX);
+        mouseY = scaleMouseCoord(mouseY);
+        boolean cancel = false;
+        for (UILayer layer : uiLayers) {
+            if (layer.onMouseScroll(mouseX, mouseY, horizontal, vertical)) {
+                cancel = true;
+                break;
+            }
+        }
+        return cancel;
+    }
+
+    private static float scaleMouseCoord(float coord) {
+        return coord * GlintweinFabricMod.getGuiScale() / GlobalUIState.getScale();
     }
 
     public boolean onKeyPress(Screen s, int keyCode, int scanCode, int modifiers) {

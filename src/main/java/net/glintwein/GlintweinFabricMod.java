@@ -1,6 +1,7 @@
 package net.glintwein;
 
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenMouseEvents;
@@ -22,6 +23,9 @@ public class GlintweinFabricMod implements ClientModInitializer {
             ScreenKeyboardEvents.allowKeyPress(screen).register((s, keyCode, scanCode, modifiers) -> {
                 return !Glintwein.instance.onKeyPress(s, keyCode, scanCode, modifiers);
             });
+        });
+        HudRenderCallback.EVENT.register((pose, tickDelta) -> {
+            Glintwein.instance.renderHud();
         });
     }
 

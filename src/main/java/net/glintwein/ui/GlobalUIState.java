@@ -1,6 +1,7 @@
 package net.glintwein.ui;
 
 import net.glintwein.ui.element.Element;
+import net.minecraft.client.Minecraft;
 import org.lwjgl.util.yoga.Yoga;
 
 public class GlobalUIState {
@@ -10,7 +11,9 @@ public class GlobalUIState {
     private static boolean focusAliveCheck = false;
     private static boolean focusAlive = false;
     private static long yogaConfigHandle;
-    private static float yogaCurrentPixelScale = 1;
+    private static float scale = 1;
+    private static int screenWidth;
+    private static int screenHeight;
 
     public static void init() {
         yogaConfigHandle = Yoga.YGConfigNew();
@@ -77,12 +80,55 @@ public class GlobalUIState {
         return yogaConfigHandle;
     }
 
-    public static boolean updateYogaPixelScale(float scale) {
-        if (scale != yogaCurrentPixelScale) {
+    public static int getWindowWidth() {
+        return screenWidth;
+    }
+
+    public static int getWindowHeight() {
+        return screenHeight;
+    }
+
+    public static float getScaledWidth() {
+        return (float) screenWidth / scale;
+    }
+
+    public static float getScaledHeight() {
+        return (float) screenHeight / scale;
+    }
+
+    public static float getScale() {
+        return scale;
+    }
+
+    public static float getMouseX() {
+        Minecraft mc = Minecraft.getInstance();
+        return (float) mc.mouseHandler.xpos() / scale;
+    }
+
+    public static float getMouseY() {
+        Minecraft mc = Minecraft.getInstance();
+        return (float) mc.mouseHandler.ypos() / scale;
+    }
+
+    public static boolean isMouseGrabbed() {
+        Minecraft mc = Minecraft.getInstance();
+        return mc.mouseHandler.isMouseGrabbed();
+    }
+
+    public static boolean updateUIScale() {
+        Minecraft mc = Minecraft.getInstance();
+        screenWidth = mc.getWindow().getWidth();
+        screenHeight = mc.getWindow().getHeight();
+
+        float oldScale = scale;
+        scale = Math.min(screenWidth / 1920f, screenHeight / 1080f);
+        if (scale != oldScale) {
             Yoga.YGConfigSetPointScaleFactor(yogaConfigHandle, scale);
-            yogaCurrentPixelScale = scale;
-            return true;
         }
-        return false;
+        return scale != oldScale;
+    }
+
+    public static float snapToPixel(float value) {
+        return Math.round(value * scale) / scale;
     }
 }

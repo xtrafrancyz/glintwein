@@ -21,6 +21,11 @@ public class MixinMinecraft {
 
     @Inject(at = @At("HEAD"), method = "runTick(Z)V")
     private void runTickHead(boolean renderLevel, CallbackInfo info) {
+        Glintwein.instance.tickStart();
+    }
+
+    @Inject(at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/pipeline/RenderTarget;bindWrite(Z)V"), method = "runTick(Z)V")
+    private void runTickBeforeRender(boolean renderLevel, CallbackInfo info) {
         Glintwein.instance.preRender();
     }
 

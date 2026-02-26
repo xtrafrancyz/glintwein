@@ -1,5 +1,6 @@
-package net.glintwein.ui.test;
+package net.glintwein.devtest;
 
+import net.glintwein.Glintwein;
 import net.glintwein.ui.Window;
 import net.glintwein.ui.WindowManager;
 import net.glintwein.ui.data.*;
@@ -14,8 +15,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class TestWindow extends Window {
-    public TestWindow(WindowManager manager) {
-        super(manager, "test_window");
+    public TestWindow() {
+        super("test_window");
         root.setPadding(Edge.ALL, 5);
         root.setBackground(0x88ffffff);
         root.setMaxWidth(200);
@@ -48,7 +49,7 @@ public class TestWindow extends Window {
         colorPickerRow.setPadding(Edge.ALL, 5);
         colorPickerRow.setAlignSelf(Align.FLEX_START);
         colorPickerRow.setFlexDirection(FlexDirection.ROW);
-        colorPickerRow.addChild(new OpenColorPickerButton(manager));
+        colorPickerRow.addChild(new OpenColorPickerButton());
         colorPickerRow.addChild(new InfoHover("Click the button to open/close the color picker window"));
         root.addChild(colorPickerRow);
     }
@@ -56,12 +57,13 @@ public class TestWindow extends Window {
     private static class OpenColorPickerButton extends Button {
         private ColorPickerWindow colorPicker;
 
-        public OpenColorPickerButton(WindowManager manager) {
+        public OpenColorPickerButton() {
             super("Color Picker");
 
+            WindowManager manager = Glintwein.instance.layerAlwaysOnTop.getWindowManager();
             this.setOnClick((button) -> {
                 if (colorPicker == null) {
-                    manager.addWindow(colorPicker = new ColorPickerWindow(manager));
+                    manager.addWindow(colorPicker = new ColorPickerWindow());
                 } else {
                     manager.removeWindow(colorPicker);
                     colorPicker = null;

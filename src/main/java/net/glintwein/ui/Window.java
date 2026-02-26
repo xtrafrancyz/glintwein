@@ -7,7 +7,6 @@ import net.glintwein.util.KVStore;
 import org.joml.Vector2f;
 
 public class Window {
-    public final WindowManager manager;
     private final String id;
     public final RootElement root;
 
@@ -20,8 +19,7 @@ public class Window {
     private float posX = 0f;
     private float posY = 0f;
 
-    public Window(WindowManager manager, String id) {
-        this.manager = manager;
+    public Window(String id) {
         this.id = id;
         root = new RootElement();
         root.setPositionType(PositionType.ABSOLUTE);
@@ -39,8 +37,8 @@ public class Window {
 
         // When dragging, highlight the current anchor reference point on the screen
         if (dragged) {
-            float screenWidth = manager.getScreenWidth();
-            float screenHeight = manager.getScreenHeight();
+            float screenWidth = GlobalUIState.getScaledWidth();
+            float screenHeight = GlobalUIState.getScaledHeight();
 
             float ax = 0f;
             float ay = 0f;
@@ -121,8 +119,8 @@ public class Window {
         // top-left screen coordinates (x,y), and compute posX/posY so that
         // getScreenXY() will return the same top-left coordinates for that anchor.
 
-        float screenWidth = manager.getScreenWidth();
-        float screenHeight = manager.getScreenHeight();
+        float screenWidth = GlobalUIState.getScaledWidth();
+        float screenHeight = GlobalUIState.getScaledHeight();
         float width = root.getComputedWidth();
         float height = root.getComputedHeight();
 
@@ -245,8 +243,8 @@ public class Window {
     }
 
     private Vector2f getScreenXY() {
-        float screenWidth = manager.getScreenWidth();
-        float screenHeight = manager.getScreenHeight();
+        float screenWidth = GlobalUIState.getScaledWidth();
+        float screenHeight = GlobalUIState.getScaledHeight();
         float width = root.getComputedWidth();
         float height = root.getComputedHeight();
 
@@ -292,10 +290,7 @@ public class Window {
                 break;
         }
 
-        float scale = manager.getScale();
-        x = Math.round(x * scale) / scale;
-        y = Math.round(y * scale) / scale;
-        return new Vector2f(x, y);
+        return new Vector2f(GlobalUIState.snapToPixel(x), GlobalUIState.snapToPixel(y));
     }
 
     private String savePrefix() {

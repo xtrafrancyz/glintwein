@@ -1,9 +1,10 @@
 package net.glintwein.ui.element;
 
+import net.glintwein.ui.GlobalUIState;
 import net.glintwein.ui.data.BorderRadius;
+import net.glintwein.ui.data.Bounds;
 import net.glintwein.ui.data.Box;
 import net.glintwein.ui.data.Overflow;
-import net.glintwein.ui.data.Bounds;
 import net.glintwein.ui.render.command.Context;
 import net.glintwein.ui.util.Animated;
 import net.glintwein.ui.util.Easing;
@@ -197,9 +198,10 @@ public class VerticalScrollView extends Element {
     }
 
     private void modifyContentBoxes() {
-        content.borderBox.y = content.origBorderBoxY - scrollOffsetY;
-        content.paddingBox.y = content.origPaddingBoxY - scrollOffsetY;
-        content.contentBox.y = content.origContentBoxY - scrollOffsetY;
+        float snapped = GlobalUIState.snapToPixel(scrollOffsetY);
+        content.borderBox.y = content.origBorderBoxY - snapped;
+        content.paddingBox.y = content.origPaddingBoxY - snapped;
+        content.contentBox.y = content.origContentBoxY - snapped;
     }
 
     @Override
