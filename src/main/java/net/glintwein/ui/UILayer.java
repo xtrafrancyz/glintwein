@@ -33,6 +33,7 @@ public class UILayer {
         windowManager.tick(mouseX, mouseY, !mouseGrabbed);
         root.updateMouse(mouseX, mouseY, !mouseGrabbed);
         root.tick();
+        root.calculateLayout(GlobalUIState.getScaledWidth(), GlobalUIState.getScaledHeight());
     }
 
     public void render() {
