@@ -7,6 +7,7 @@ import net.glintwein.ui.data.*;
 import net.glintwein.ui.element.*;
 import net.glintwein.ui.render.command.Context;
 import net.glintwein.ui.render.command.DrawRectBuilder;
+import net.glintwein.ui.render.command.DrawTextBuilder;
 import net.glintwein.ui.render.texture.Textures;
 import net.glintwein.ui.util.Animated;
 import net.glintwein.ui.util.Easing;
@@ -183,6 +184,13 @@ public class TestWindow extends Window {
             } else {
                 bgAnim.animateIfDifferent(0x00ffffff, 200, Easing.EASE);
             }
+        }
+
+        @Override
+        protected void drawLine(Context ctx, RenderLine line) {
+            ctx.drawText(DrawTextBuilder.of(line, font)
+                .color(Gradient.topToBottom(0xff7C66CD, 0xff26166C))
+            );
         }
     }
 }

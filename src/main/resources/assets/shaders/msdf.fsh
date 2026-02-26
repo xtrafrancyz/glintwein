@@ -7,7 +7,6 @@ uniform sampler2D Atlas;
 uniform float Range;
 uniform float Thickness;
 uniform float Smoothness;
-uniform bool Outline;
 uniform float OutlineThickness;
 uniform vec4 OutlineColor;
 
@@ -25,7 +24,7 @@ void main() {
     float alpha = smoothstep(-Smoothness, Smoothness, dist * pixels);
     vec4 color = vec4(FragColor.rgb, FragColor.a * alpha);
 
-    if (Outline) {
+    if (OutlineThickness > 0.0) {
         color = mix(OutlineColor, FragColor, alpha);
         color.a *= smoothstep(-Smoothness, Smoothness, (dist + OutlineThickness) * pixels);
     }

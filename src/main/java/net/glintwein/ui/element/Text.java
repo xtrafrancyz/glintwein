@@ -172,7 +172,11 @@ public class Text extends LeafElement {
         if (getDisplayType() == Display.NONE)
             return;
         for (RenderLine line : getRenderLines())
-            ctx.drawText(font.font(), line.text, line.x, line.y, font.size(), color);
+            drawLine(ctx, line);
+    }
+
+    protected void drawLine(Context ctx, RenderLine line) {
+        ctx.drawText(font.font(), line.text, line.x, line.y, font.size(), color);
     }
 
     private static class WrappedLine {
@@ -185,11 +189,11 @@ public class Text extends LeafElement {
         }
     }
 
-    protected static class RenderLine {
-        String text;
-        float width;
-        float x;
-        float y;
+    public static class RenderLine {
+        public String text;
+        public float width;
+        public float x;
+        public float y;
 
         RenderLine(String text, float width, float x, float y) {
             this.text = text;

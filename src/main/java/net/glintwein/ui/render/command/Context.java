@@ -232,6 +232,34 @@ public class Context {
         ));
     }
 
+    public void drawText(DrawTextBuilder builder) {
+        int outlineColor = mulOpacity(builder.outlineColor);
+        boolean hasOutline = ARGB.alpha(outlineColor) != 0 && builder.outlineWidth > 0;
+        int color00, color10, color11, color01;
+        if (builder.gradient != null) {
+            builder.gradient = mulOpacity(builder.gradient);
+            if (builder.gradient.isFullyTransparent() && !hasOutline)
+                return;
+            color00 = builder.gradient.topLeft();
+            color10 = builder.gradient.topRight();
+            color11 = builder.gradient.bottomRight();
+            color01 = builder.gradient.bottomLeft();
+        } else {
+            builder.color = mulOpacity(builder.color);
+            if (ARGB.alpha(builder.color) == 0 && !hasOutline)
+                return;
+            color00 = color10 = color11 = color01 = builder.color;
+        }
+
+        addCommand(new DrawTextCommand(
+            new Matrix3x2f(transform),
+            builder.font, builder.text,
+            builder.x, builder.y, builder.size,
+            color00, color10, color11, color01,
+            outlineColor, builder.outlineWidth
+        ));
+    }
+
     private void addPipCommand(Runnable render, float x, float y, float width, float height) {
         Matrix3x2f pose = new Matrix3x2f(pose());
 

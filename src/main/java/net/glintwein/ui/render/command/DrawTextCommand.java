@@ -17,11 +17,23 @@ public class DrawTextCommand extends DrawCommand {
     private final float x;
     private final float y;
     private final float size;
-    private final int color;
+    private final int colorTL, colorTR, colorBR, colorBL;
+    private final boolean solidColor;
+    private final float outlineWidth;
+    private final int outlineColor;
 
     private final Bounds bounds;
 
     public DrawTextCommand(Matrix3x2f pose, GigaFont font, String text, float x, float y, float size, int color) {
+        this(pose, font, text, x, y, size, color, color, color, color, 0, 0f);
+    }
+
+    public DrawTextCommand(
+        Matrix3x2f pose, GigaFont font, String text,
+        float x, float y, float size,
+        int colorTL, int colorTR, int colorBR, int colorBL,
+        int outlineColor, float outlineWidth
+    ) {
         this.pose = pose;
         this.bounds = Bounds.fromXYWH(x, y, font.getWidth(text, size), font.getHeight(size)).transformMaxBounds(pose);
         this.font = font;
@@ -29,7 +41,13 @@ public class DrawTextCommand extends DrawCommand {
         this.x = x;
         this.y = y;
         this.size = size;
-        this.color = color;
+        this.colorTL = colorTL;
+        this.colorTR = colorTR;
+        this.colorBR = colorBR;
+        this.colorBL = colorBL;
+        this.solidColor = (colorTL == colorTR) && (colorTL == colorBR) && (colorTL == colorBL);
+        this.outlineWidth = Math.max(0, outlineWidth);
+        this.outlineColor = this.outlineWidth <= 0 ? 0 : outlineColor;
     }
 
     @Override
@@ -41,7 +59,7 @@ public class DrawTextCommand extends DrawCommand {
     public boolean isSimilar(DrawCommand other) {
         if (!super.isSimilar(other)) return false;
         DrawTextCommand cmd = (DrawTextCommand) other;
-        return this.font == cmd.font;
+        return this.font == cmd.font && this.outlineWidth == cmd.outlineWidth && this.outlineColor == cmd.outlineColor;
     }
 
     public static class Executor implements DrawCommand.Executor<DrawTextCommand> {
@@ -54,13 +72,15 @@ public class DrawTextCommand extends DrawCommand {
             msdf.getUniform("Range").setFloat(first.font.getPixelRange());
             msdf.getUniform("Thickness").setFloat(0f);
             msdf.getUniform("Smoothness").setFloat(0.5f);
-            msdf.getUniform("Outline").setBool(false);
-            msdf.getUniform("OutlineThickness").setFloat(0f);
-            msdf.getUniform("OutlineColor").setColor4f(0xff000000);
+            msdf.getUniform("OutlineThickness").setFloat(first.outlineWidth);
+            msdf.getUniform("OutlineColor").setColor4f(first.outlineColor);
             msdf.getUniform("ProjMat").setMat4(GlobalRender.getGuiProxMatrix());
             GlintVertexConsumer consumer = msdf.begin();
             for (DrawTextCommand cmd : commands) {
-                cmd.font.render(consumer, cmd.pose, cmd.text, cmd.x, cmd.y, cmd.size, cmd.color);
+                if (cmd.solidColor)
+                    cmd.font.render(consumer, cmd.pose, cmd.text, cmd.x, cmd.y, cmd.size, cmd.colorTL);
+                else
+                    cmd.font.renderGlyphColor(consumer, cmd.pose, cmd.text, cmd.x, cmd.y, cmd.size, cmd.colorTL, cmd.colorTR, cmd.colorBR, cmd.colorBL);
             }
             msdf.draw();
         }

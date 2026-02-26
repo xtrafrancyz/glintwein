@@ -152,6 +152,34 @@ public class GigaFont {
         }
     }
 
+    public void renderGlyphColor(GlintVertexConsumer consumer, Matrix3x2f pose, String text, float x, float y, float size, int colorTL, int colorTR, int colorBR, int colorBL) {
+        float cursorX = x;
+        float cursorY = y + metrics.ascender * size;
+        char prevChar = 0;
+
+        int len = text.length();
+        for (int i = 0; i < len; i++) {
+            char c = text.charAt(i);
+            Glyph glyph = glyphs.get(c);
+            if (glyph != null) {
+                float kerning = this.kerning.getOrDefault(((prevChar << 16) | c), 0.0f);
+                cursorX += kerning * size;
+                float x0 = cursorX + glyph.leftPosition * size;
+                float y0 = cursorY - glyph.topPosition * size;
+                float x1 = x0 + glyph.width * size;
+                float y1 = y0 + glyph.height * size;
+
+                consumer.vertex2(pose, x0, y0).color(colorTL).uv(glyph.minU, glyph.maxV).endVertex();
+                consumer.vertex2(pose, x0, y1).color(colorBL).uv(glyph.minU, glyph.minV).endVertex();
+                consumer.vertex2(pose, x1, y1).color(colorBR).uv(glyph.maxU, glyph.minV).endVertex();
+                consumer.vertex2(pose, x1, y0).color(colorTR).uv(glyph.maxU, glyph.maxV).endVertex();
+
+                cursorX += glyph.advance * size;
+                prevChar = c;
+            }
+        }
+    }
+
     public float getHeight(float size) {
         return metrics.lineHeight * size;
     }
