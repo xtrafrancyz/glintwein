@@ -6,4 +6,6 @@ public interface Texture {
     int getWidth();
 
     int getHeight();
+
+    void close();
 }

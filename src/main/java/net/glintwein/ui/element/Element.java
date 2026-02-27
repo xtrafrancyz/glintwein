@@ -276,6 +276,8 @@ public class Element extends YogaNode {
         if (ARGB.alpha(backgroundColor) > 0)
             ctx.drawRect(borderBox, borderRadius, backgroundColor);
 
+        drawContent(ctx);
+
         if (!children.isEmpty()) {
             ctx.pose().pushMatrix();
             ctx.pose().translate(borderBox.x, borderBox.y);
@@ -286,6 +288,10 @@ public class Element extends YogaNode {
 
         if (opacity != 1)
             ctx.popOpacity();
+    }
+
+    protected void drawContent(Context ctx) {
+        // for override
     }
 
     public boolean isHovered() {

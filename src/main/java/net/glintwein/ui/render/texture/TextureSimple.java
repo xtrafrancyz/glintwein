@@ -32,4 +32,9 @@ public class TextureSimple implements Texture {
     public int getHeight() {
         return height;
     }
+
+    @Override
+    public void close() {
+        GlStateManager._deleteTexture(sprite.textureId);
+    }
 }

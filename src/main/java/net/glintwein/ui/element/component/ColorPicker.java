@@ -71,7 +71,7 @@ public class ColorPicker extends Element {
         }
 
         @Override
-        public void draw(Context ctx) {
+        public void drawContent(Context ctx) {
             // 1. Draw the Base: White -> Selected Hue (Horizontal)
             // Left side is White (0% Sat), Right side is the Pure Color (100% Sat)
             ctx.drawRect(contentBox, borderRadius, Gradient.leftToRight(0xFFFFFFFF, getPureHueRGB()));
@@ -121,7 +121,7 @@ public class ColorPicker extends Element {
         }
 
         @Override
-        public void draw(Context ctx) {
+        public void drawContent(Context ctx) {
             ctx.drawRect(DrawRectBuilder.fromBox(contentBox)
                 .radius(10)
                 .color(0)
@@ -198,14 +198,13 @@ public class ColorPicker extends Element {
         }
 
         @Override
-        public void draw(Context ctx) {
+        public void drawContent(Context ctx) {
             ctx.drawRect(DrawRectBuilder.fromBox(paddingBox)
                 .radius(borderRadius)
                 .color(0xff000000)
                 .outline(outlineColor, 1)
                 .expandByOutline()
             );
-            super.draw(ctx);
         }
     }
 

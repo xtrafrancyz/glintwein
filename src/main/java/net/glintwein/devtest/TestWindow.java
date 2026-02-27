@@ -140,13 +140,12 @@ public class TestWindow extends Window {
         }
 
         @Override
-        public void draw(Context ctx) {
+        public void drawContent(Context ctx) {
             ctx.drawRect(DrawRectBuilder.fromBox(paddingBox)
                 .color(Gradient.leftToRight(leftColor.get(), rightColor.get()))
                 .outline(0xff261D3B, outlineWidth.get())
                 .radius(8)
             );
-            super.draw(ctx);
         }
     }
 

@@ -202,6 +202,10 @@ public class Context {
         ));
     }
 
+    public void drawPlayerHead(int textureId, float x, float y, float size, float radius) {
+
+    }
+
     public void drawItem(ItemStack is, float x, float y, float size, boolean decoration) {
         // Item models are not loaded during loading screen, leading to crash
         if (Minecraft.getInstance().overlay instanceof LoadingOverlay)

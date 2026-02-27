@@ -210,10 +210,8 @@ public class TextInput extends Text {
     }
 
     @Override
-    public void draw(Context ctx) {
-        super.draw(ctx);
-
-        multiline = true;
+    protected void drawContent(Context ctx) {
+        super.drawContent(ctx);
 
         if (isInFocus()) {
             Vector2i cursor = translatePosToRowCol(cursorPos);
