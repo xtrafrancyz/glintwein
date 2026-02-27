@@ -96,6 +96,10 @@ public class GlobalUIState {
         return (float) screenHeight / scale;
     }
 
+    public static float getPixelSize() {
+        return 1 / scale;
+    }
+
     public static float getScale() {
         return scale;
     }

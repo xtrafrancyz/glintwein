@@ -1,5 +1,6 @@
 package net.glintwein.ui.element.component;
 
+import net.glintwein.ui.GlobalUIState;
 import net.glintwein.ui.data.*;
 import net.glintwein.ui.element.Element;
 import net.glintwein.ui.element.Text;
@@ -23,6 +24,7 @@ public class ColorPicker extends Element {
         setBorderRadius(new BorderRadius(5));
         setBackground(0xFF1A142E);
         setPadding(Edge.ALL, 5);
+        setAlignSelf(Align.FLEX_START);
 
         addChild(new Text(name));
         addChild(new SVBox());
@@ -143,13 +145,14 @@ public class ColorPicker extends Element {
             };
 
             float width = contentBox.width / 6f;
+            float half_pixel = GlobalUIState.getPixelSize() * 0.5f;
             for (int i = 0; i < hueColors.length - 1; i++) {
                 BorderRadius radius = BorderRadius.ZERO;
                 if (i == 0)
                     radius = new BorderRadius().left(5);
                 else if (i == hueColors.length - 2)
                     radius = new BorderRadius().right(5);
-                ctx.drawRect(contentBox.x + width * i, contentBox.y, width, contentBox.height, radius, Gradient.leftToRight(hueColors[i], hueColors[i + 1]));
+                ctx.drawRect(contentBox.x + width * i, contentBox.y, width + half_pixel, contentBox.height, radius, Gradient.leftToRight(hueColors[i], hueColors[i + 1]));
             }
 
             // Hue Cursor (Current H position)
