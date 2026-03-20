@@ -17,7 +17,7 @@ public class Slider extends LeafElement {
     private float maxValue;
     private FloatConsumer onValueChanged;
     private float thumbSize = 16;
-    private float trackHeight = 4;
+    private float trackHeight = 8;
 
     public Slider(float minValue, float maxValue, float initialValue) {
         this.minValue = minValue;
@@ -64,7 +64,6 @@ public class Slider extends LeafElement {
         float relativeX = x - thumbSize / 2; // Center the thumb on the mouse position
         float newValue = minValue + (relativeX / (contentBox.width - thumbSize)) * (maxValue - minValue);
         setValue(newValue);
-        System.out.println("Slider value: " + value);
         if (onValueChanged != null) {
             onValueChanged.accept(value);
         }
@@ -72,8 +71,6 @@ public class Slider extends LeafElement {
 
     @Override
     protected void drawContent(Context ctx) {
-        trackHeight = 8;
-
         BorderRadius radius = BorderRadius.of(trackHeight / 2);
         float trackY = contentBox.y + (contentBox.height - trackHeight) / 2;
         // background track
