@@ -2,6 +2,7 @@ package net.glintwein.ui.element;
 
 import net.glintwein.ui.GlobalUIState;
 import net.glintwein.ui.data.BorderRadius;
+import net.glintwein.ui.data.Bounds;
 import net.glintwein.ui.data.Box;
 import net.glintwein.ui.data.Display;
 import net.glintwein.ui.render.command.Context;
@@ -10,9 +11,11 @@ import org.lwjgl.util.yoga.Yoga;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Element extends YogaNode {
-    private final List<Element> children = new ArrayList<>();
+    private Element parent;
+    private final List<Element> children = new CopyOnWriteArrayList<>();
     protected final Box borderBox = new Box();
     protected final Box paddingBox = new Box();
     protected final Box contentBox = new Box();
@@ -84,11 +87,13 @@ public class Element extends YogaNode {
     public void addChild(Element child) {
         Yoga.YGNodeInsertChild(yogaNode, child.yogaNode, children.size());
         children.add(child);
+        child.parent = this;
     }
 
     public void addChild(Element child, int index) {
         Yoga.YGNodeInsertChild(yogaNode, child.yogaNode, index);
         children.add(index, child);
+        child.parent = this;
     }
 
     public void removeChild(Element child) {
@@ -97,6 +102,7 @@ public class Element extends YogaNode {
             return;
         Yoga.YGNodeRemoveChild(yogaNode, child.yogaNode);
         children.remove(index);
+        child.parent = null;
     }
 
     public List<Element> getChildren() {
@@ -105,6 +111,8 @@ public class Element extends YogaNode {
 
     public void clearChildren() {
         Yoga.YGNodeRemoveAllChildren(yogaNode);
+        for (Element child : children)
+            child.parent = null;
         children.clear();
     }
 
@@ -114,6 +122,18 @@ public class Element extends YogaNode {
 
     public float getComputedHeight() {
         return borderBox.height;
+    }
+
+    public Bounds getAbsoluteBorderBox() {
+        float absX = borderBox.x;
+        float absY = borderBox.y;
+        Element current = parent;
+        while (current != null) {
+            absX += current.borderBox.x;
+            absY += current.borderBox.y;
+            current = current.parent;
+        }
+        return Bounds.fromXYWH(absX, absY, borderBox.width, borderBox.height);
     }
 
     protected void propagateLayoutRead() {
@@ -151,6 +171,35 @@ public class Element extends YogaNode {
 
         if (layoutLerp != null)
             layoutLerp.animate(borderBox, paddingBox, contentBox);
+    }
+
+    public Element getSharedParent(Element other) {
+        Element sharedParent = null;
+        Element current = this;
+        outer:
+        while (current != null) {
+            Element otherCurrent = other;
+            while (otherCurrent != null) {
+                if (current == otherCurrent) {
+                    sharedParent = current;
+                    break outer;
+                }
+                otherCurrent = otherCurrent.parent;
+            }
+            current = current.parent;
+        }
+        return sharedParent;
+    }
+
+    public Element getRoot() {
+        Element root = this;
+        while (root.parent != null)
+            root = root.parent;
+        return root;
+    }
+
+    public Element getParent() {
+        return parent;
     }
 
     protected void handleMouseMoved(float mouseX, float mouseY, boolean canHover) {

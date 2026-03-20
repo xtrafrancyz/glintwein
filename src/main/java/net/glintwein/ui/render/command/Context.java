@@ -4,6 +4,8 @@ import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.floats.FloatArrayFIFOQueue;
+import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectSortedMap;
 import net.glintwein.ui.data.BorderRadius;
 import net.glintwein.ui.data.Bounds;
 import net.glintwein.ui.data.Box;
@@ -27,6 +29,7 @@ import org.lwjgl.opengl.GL11;
 import java.util.*;
 
 public class Context {
+    private static final Bounds UNBOUNDED = Bounds.fromMinMax(Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY);
     private static final Map<Class<? extends DrawCommand>, DrawCommand.Executor<?>> EXECUTORS = new HashMap<>();
 
     static {
@@ -41,12 +44,20 @@ public class Context {
     private final FloatArrayFIFOQueue opacityStack = new FloatArrayFIFOQueue();
     private final Deque<Bounds> scissorStack = new ArrayDeque<>();
 
+    private final Int2ObjectSortedMap<List<DrawCommand>> priorityCommandMap = new Int2ObjectLinkedOpenHashMap<>(4);
+    private int currentPriority = 0;
+
     public Context() {
         this.opacityStack.enqueue(1.0f);
     }
 
     public Matrix3x2fStack pose() {
         return transform;
+    }
+
+    public float pushOpacityExact(float opacity) {
+        opacityStack.enqueueFirst(opacity);
+        return opacity;
     }
 
     public float pushOpacity(float opacity) {
@@ -75,18 +86,28 @@ public class Context {
         scissorStack.removeLast();
     }
 
-    public int mulOpacity(int color) {
+    private int mulOpacity(int color) {
         float opacity = opacityStack.firstFloat();
         if (opacity == 1)
             return color;
         return ARGB.mulAlpha(color, opacity);
     }
 
-    public Gradient mulOpacity(Gradient gradient) {
+    private Gradient mulOpacity(Gradient gradient) {
         float opacity = opacityStack.firstFloat();
         if (opacity == 1)
             return gradient;
         return gradient.mulAlpha(opacity);
+    }
+
+    public void pushDrawPriority(int addedPriority) {
+        currentPriority += addedPriority;
+        scissorStack.push(UNBOUNDED);
+    }
+
+    public void popDrawPriority(int subtractedPriority) {
+        currentPriority -= subtractedPriority;
+        scissorStack.pop();
     }
 
     public void drawRect(Box box, int color) {
@@ -283,9 +304,16 @@ public class Context {
     }
 
     private void addCommand(DrawCommand cmd) {
-        cmd.scissor = scissorStack.peekLast();
+        cmd.scissor = nullIfUnbounded(scissorStack.peekLast());
         if (cmd.scissor != null && !cmd.scissor.intersects(cmd.getBounds()))
             return;
+
+        if (currentPriority != 0) {
+            priorityCommandMap
+                .computeIfAbsent(currentPriority, k -> new ArrayList<>())
+                .add(cmd);
+            return;
+        }
 
         // Inspiration
         // https://github.com/nxp-imx/gtec-demo-framework/blob/master/Doc/FslSimpleUI.md#imbatch-flexrendersystem
@@ -349,6 +377,16 @@ public class Context {
             Minecraft.getInstance().getMainRenderTarget().bindWrite(true);
         }
 
+        currentPriority = 0;
+        if (!priorityCommandMap.isEmpty()) {
+            for (List<DrawCommand> list : priorityCommandMap.values()) {
+                for (DrawCommand cmd : list) {
+                    addCommand(cmd);
+                }
+            }
+            priorityCommandMap.clear();
+        }
+
         new ListExecutor(commands).execute();
         commands.clear();
 
@@ -410,6 +448,10 @@ public class Context {
         int x = GMath.floor(bounds.minX);
         int y = GMath.floor(frameHeight - bounds.maxY);
         RenderSystem.enableScissor(x, y, width, height);
+    }
+
+    private static Bounds nullIfUnbounded(Bounds bounds) {
+        return bounds == UNBOUNDED ? null : bounds;
     }
 
     private static class PipCommand implements Comparable<PipCommand> {

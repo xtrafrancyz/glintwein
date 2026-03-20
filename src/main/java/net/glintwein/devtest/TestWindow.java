@@ -5,6 +5,7 @@ import net.glintwein.ui.Window;
 import net.glintwein.ui.WindowManager;
 import net.glintwein.ui.data.*;
 import net.glintwein.ui.element.*;
+import net.glintwein.ui.element.component.Dropdown;
 import net.glintwein.ui.element.component.Slider;
 import net.glintwein.ui.render.command.Context;
 import net.glintwein.ui.render.command.DrawRectBuilder;
@@ -12,8 +13,6 @@ import net.glintwein.ui.render.command.DrawTextBuilder;
 import net.glintwein.ui.render.texture.Textures;
 import net.glintwein.ui.util.Animated;
 import net.glintwein.ui.util.Easing;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.TitleScreen;
 
 import java.util.Arrays;
 import java.util.List;
@@ -55,6 +54,7 @@ public class TestWindow extends Window {
         colorPickerRow.setFlexDirection(FlexDirection.ROW);
         colorPickerRow.addChild(new OpenColorPickerButton());
         colorPickerRow.addChild(new InfoHover("Click the button to open/close the color picker window"));
+        colorPickerRow.addChild(new DropdownTest());
         root.addChild(colorPickerRow);
 
         root.addChild(new Slider(0, 100, 50));
@@ -110,15 +110,32 @@ public class TestWindow extends Window {
                 infoContainer.setDisplay(Display.NONE);
             });
         }
+    }
 
-        @Override
-        public void tick() {
-            if (Minecraft.getInstance().screen instanceof TitleScreen) {
-                setDisplay(Display.FLEX);
-                super.tick();
-            } else {
-                setDisplay(Display.NONE);
-            }
+    private static class DropdownTest extends Element {
+        private Dropdown dropdown;
+
+        public DropdownTest() {
+            this.setPadding(Edge.ALL, 5);
+            this.setBackground(0x5500ff00);
+            this.setBorderRadius(BorderRadius.of(5));
+            this.setAlignSelf(Align.CENTER);
+            this.setMargin(Edge.LEFT, 5);
+            this.setSize(20);
+
+            this.setOnClick(button -> {
+                if (dropdown != null) {
+                    dropdown.close();
+                    dropdown = null;
+                    return true;
+                }
+                this.dropdown = Dropdown.openBelow(this);
+                this.dropdown.setBackground(0x550000ff);
+                this.dropdown.setPadding(Edge.ALL, 5);
+                this.dropdown.addChild(new Text("Dropdown Item 1"));
+                this.dropdown.addChild(new Text("Dropdown Item 2"));
+                return true;
+            });
         }
     }
 
