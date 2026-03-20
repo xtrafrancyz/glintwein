@@ -11,6 +11,7 @@ import java.util.List;
 
 public abstract class YogaNode {
     protected final long yogaNode;
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     private final List<NativeCleaner.Handle> cleanerHandlers = new ArrayList<>();
     private Display display = Display.FLEX;
 
@@ -26,6 +27,8 @@ public abstract class YogaNode {
     }
 
     public void setDisplay(Display display) {
+        if (this.display == display)
+            return;
         this.display = display;
         Yoga.YGNodeStyleSetDisplay(yogaNode, display.getValue());
     }

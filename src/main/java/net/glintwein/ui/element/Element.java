@@ -254,6 +254,8 @@ public class Element extends YogaNode {
     }
 
     public void tick() {
+        if (getDisplayType() == Display.NONE)
+            return;
         GlobalUIState.tickElement(this);
         for (Animated animation : animations)
             animation.update();

@@ -4,11 +4,11 @@ import net.glintwein.Glintwein;
 import net.glintwein.ui.GlobalUIState;
 import net.glintwein.ui.render.command.Context;
 import net.glintwein.ui.util.ARGB;
+import net.glintwein.ui.util.GMath;
 import net.minecraft.SharedConstants;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.util.Mth;
 import org.joml.Vector2i;
 import org.lwjgl.glfw.GLFW;
 
@@ -423,7 +423,7 @@ public class TextInput extends Text {
     private void moveCursorVertical(int delta) {
         List<RenderLine> renderLines = getRenderLines();
         Vector2i current = translatePosToRowCol(cursorPos);
-        int newRow = Mth.clamp(current.y() + delta, 0, renderLines.size() - 1);
+        int newRow = GMath.clamp(current.y() + delta, 0, renderLines.size() - 1);
         if (newRow == current.y())
             return;
         float pixelX;
@@ -455,11 +455,11 @@ public class TextInput extends Text {
     }
 
     private void setCursorPosition(int pos) {
-        this.cursorPos = Mth.clamp(pos, 0, this.value.length());
+        this.cursorPos = GMath.clamp(pos, 0, this.value.length());
     }
 
     private void setHighlightPosition(int pos) {
-        this.highlightPos = Mth.clamp(pos, 0, this.value.length());
+        this.highlightPos = GMath.clamp(pos, 0, this.value.length());
     }
 
     private void moveCursorToEnd() {

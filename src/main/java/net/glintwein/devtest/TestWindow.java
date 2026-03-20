@@ -11,6 +11,8 @@ import net.glintwein.ui.render.command.DrawTextBuilder;
 import net.glintwein.ui.render.texture.Textures;
 import net.glintwein.ui.util.Animated;
 import net.glintwein.ui.util.Easing;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.TitleScreen;
 
 import java.util.Arrays;
 import java.util.List;
@@ -104,6 +106,16 @@ public class TestWindow extends Window {
             setOnMouseExit(() -> {
                 infoContainer.setDisplay(Display.NONE);
             });
+        }
+
+        @Override
+        public void tick() {
+            if (Minecraft.getInstance().screen instanceof TitleScreen) {
+                setDisplay(Display.FLEX);
+                super.tick();
+            } else {
+                setDisplay(Display.NONE);
+            }
         }
     }
 
