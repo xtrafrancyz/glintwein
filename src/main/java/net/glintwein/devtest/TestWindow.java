@@ -5,6 +5,7 @@ import net.glintwein.ui.Window;
 import net.glintwein.ui.WindowManager;
 import net.glintwein.ui.data.*;
 import net.glintwein.ui.element.*;
+import net.glintwein.ui.element.component.Slider;
 import net.glintwein.ui.render.command.Context;
 import net.glintwein.ui.render.command.DrawRectBuilder;
 import net.glintwein.ui.render.command.DrawTextBuilder;
@@ -55,6 +56,8 @@ public class TestWindow extends Window {
         colorPickerRow.addChild(new OpenColorPickerButton());
         colorPickerRow.addChild(new InfoHover("Click the button to open/close the color picker window"));
         root.addChild(colorPickerRow);
+
+        root.addChild(new Slider(0, 100, 50));
     }
 
     private static class OpenColorPickerButton extends Button {

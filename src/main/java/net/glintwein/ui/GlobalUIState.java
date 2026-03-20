@@ -100,6 +100,13 @@ public class GlobalUIState {
         return 1 / scale;
     }
 
+    /**
+     * @return 1 или >=1 в зависимости от масштаба, чтобы гарантировать, что линии толщиной в 1 пиксель всегда будут видимыми.
+     */
+    public static float minimumOnePixel() {
+        return scale >= 1 ? 1 : getPixelSize();
+    }
+
     public static float getScale() {
         return scale;
     }
