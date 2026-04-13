@@ -102,12 +102,12 @@ public class Context {
 
     public void pushDrawPriority(int addedPriority) {
         currentPriority += addedPriority;
-        scissorStack.push(UNBOUNDED);
+        scissorStack.addLast(UNBOUNDED);
     }
 
     public void popDrawPriority(int subtractedPriority) {
         currentPriority -= subtractedPriority;
-        scissorStack.pop();
+        scissorStack.removeLast();
     }
 
     public void drawRect(Box box, int color) {
