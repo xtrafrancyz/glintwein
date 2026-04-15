@@ -7,10 +7,12 @@ public class RootElement extends Element {
     private float lastMouseY = -321;
     private float lastWidth = -321;
     private float lastHeight = -321;
+    private boolean layoutChanged = true;
 
     public void calculateLayout(float width, float height) {
         if (width == lastWidth && height == lastHeight && !Yoga.YGNodeIsDirty(yogaNode))
             return;
+        layoutChanged = true;
         lastWidth = width;
         lastHeight = height;
 
@@ -26,7 +28,7 @@ public class RootElement extends Element {
     public void updateMouse(float mouseX, float mouseY, boolean canHover) {
         if (lastWidth == -321)
             return;
-        if (mouseX == lastMouseX && mouseY == lastMouseY)
+        if (mouseX == lastMouseX && mouseY == lastMouseY && !layoutChanged)
             return;
         this.lastMouseX = mouseX;
         this.lastMouseY = mouseY;
