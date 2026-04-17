@@ -1,0 +1,29 @@
+plugins {
+    id 'java'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly("org.joml:joml:1.10.8")
+    compileOnly("com.google.code.gson:gson:2.8.9")
+    compileOnly("it.unimi.dsi:fastutil:8.2.1")
+    compileOnly("org.lwjgl:lwjgl:3.2.3")
+    compileOnly("org.lwjgl:lwjgl-glfw:3.2.3")
+    compileOnly("org.lwjgl:lwjgl-opengl:3.2.3")
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.encoding = "UTF-8"
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(8)
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}

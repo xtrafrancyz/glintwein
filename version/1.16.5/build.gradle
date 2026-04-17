@@ -1,0 +1,49 @@
+plugins {
+    id 'fabric-loom' version '1.10.5'
+}
+
+def minecraft_version = "1.16.5"
+
+version = project.mod_version
+group = project.maven_group
+
+evaluationDependsOn(':common')
+
+repositories {
+    maven {
+        name = 'ParchmentMC'
+        url = 'https://maven.parchmentmc.org'
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings loom.layered() {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-1.16.5:2022.03.06@zip")
+    }
+
+    modImplementation "net.fabricmc:fabric-loader:0.18.4"
+
+    implementation("org.joml:joml:1.10.8")
+    implementation("org.lwjgl:lwjgl-yoga:3.2.2")
+    implementation("org.lwjgl:lwjgl-yoga:3.2.2:natives-windows")
+
+    implementation project(':common')
+}
+
+jar {
+    from {
+        project(':common').sourceSets.main.output
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.encoding = "UTF-8"
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(8)
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
