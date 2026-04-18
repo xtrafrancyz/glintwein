@@ -1,0 +1,59 @@
+plugins {
+    id "dev.architectury.loom" version "1.10.455"
+    id "maven-publish"
+}
+
+loom {
+    // Suppress the warning about the ambiguity of MojMap license
+    silentMojangMappingsLicense()
+
+    forge {
+        mixinConfigs = ["glintwein.mixins.json"]
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir '../../common/src/main/java'
+            srcDir '../../version/1.16.5/src/main/java'
+        }
+        resources {
+            srcDir '../../common/src/main/resources'
+            srcDir '../../version/1.16.5/src/main/resources'
+        }
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:1.16.5"
+
+    mappings loom.officialMojangMappings()
+
+    forge "net.minecraftforge:forge:1.16.5-36.2.34"
+
+    implementation("org.joml:joml:1.10.8")
+    implementation("org.lwjgl:lwjgl-yoga:3.2.2")
+    implementation("org.lwjgl:lwjgl-yoga:3.2.2:natives-windows")
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(8)
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+}
+
+processResources {
+    // define properties that can be used during resource processing
+    inputs.property "version", project.version
+
+    // this will replace the property "${version}" in your mods.toml
+    // with the version you've defined in your gradle.properties
+    filesMatching("META-INF/mods.toml") {
+        expand "version": project.version
+    }
+}

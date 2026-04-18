@@ -1,13 +1,12 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "net.glintwein.mixin",
+  "package": "net.glintwein.fabric.mixin",
   "compatibilityLevel": "JAVA_8",
-  "refmap": "glintwein.refmap.json",
   "mixins": [
   ],
   "client": [
-    "ui.MixinMinecraft"
+    "MixinKeyboardHandler"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -7,8 +7,6 @@ def minecraft_version = "1.16.5"
 version = project.mod_version
 group = project.maven_group
 
-evaluationDependsOn(':common')
-
 repositories {
     maven {
         name = 'ParchmentMC'
@@ -30,12 +28,6 @@ dependencies {
     implementation("org.lwjgl:lwjgl-yoga:3.2.2:natives-windows")
 
     implementation project(':common')
-}
-
-jar {
-    from {
-        project(':common').sourceSets.main.output
-    }
 }
 
 tasks.withType(JavaCompile).configureEach {

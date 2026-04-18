@@ -28,8 +28,4 @@ public class GlintweinFabricMod implements ClientModInitializer {
             Glintwein.instance.renderHud();
         });
     }
-
-    public static float getGuiScale() {
-        return (float) Minecraft.getInstance().getWindow().getGuiScale();
-    }
 }

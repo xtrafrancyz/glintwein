@@ -13,8 +13,6 @@ base {
     archivesName = project.archives_base_name
 }
 
-evaluationDependsOn(':version:1.16.5')
-
 repositories {
     maven {
         name = 'ParchmentMC'
@@ -24,8 +22,8 @@ repositories {
 
 sourceSets {
     main {
-        java.srcDirs += project(':version:1.16.5').sourceSets.main.java.srcDirs
-        resources.srcDirs += project(':version:1.16.5').sourceSets.main.resources.srcDirs
+        java.srcDirs += project(':version:1.16.5').file('src/main/java')
+        resources.srcDirs += project(':version:1.16.5').file('src/main/resources')
     }
 }
 
@@ -43,7 +41,7 @@ dependencies {
     include implementation("org.lwjgl:lwjgl-yoga:3.2.2:natives-windows")
 
     implementation project(":common")
-    compileOnly project(":version:1.16.5")
+    implementation project(":version:1.16.5")
 }
 
 processResources {

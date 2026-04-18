@@ -15,6 +15,7 @@
     ]
   },
   "mixins": [
+    "glintwein-fabric.mixins.json",
     "glintwein.mixins.json"
   ],
   "depends": {

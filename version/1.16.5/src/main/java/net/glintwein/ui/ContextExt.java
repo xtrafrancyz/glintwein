@@ -1,11 +1,11 @@
 package net.glintwein.ui;
 
-import com.mojang.blaze3d.platform.GlStateManager;
 import net.glintwein.ui.render.command.Context;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.LoadingOverlay;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.world.item.ItemStack;
+import org.lwjgl.opengl.GL11;
 
 public class ContextExt {
     public static void drawItem(Context ctx, ItemStack is, float x, float y, float size, boolean decoration) {
@@ -15,7 +15,7 @@ public class ContextExt {
         ctx.addPipCommand(
             () -> {
                 // default size for items in GUI is 16, so we need to scale it down to 1
-                GlStateManager._scalef(0.0625f, 0.0625f, 0.0625f);
+                GL11.glScalef(0.0625f, 0.0625f, 0.0625f);
                 ItemRenderer itemRenderer = Minecraft.getInstance().getItemRenderer();
                 itemRenderer.renderGuiItem(is, 0, 0);
                 if (decoration) {
