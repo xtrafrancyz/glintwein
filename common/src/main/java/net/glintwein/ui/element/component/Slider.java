@@ -22,6 +22,7 @@ public class Slider extends LeafElement {
     public Slider(float minValue, float maxValue, float initialValue) {
         this.minValue = minValue;
         this.maxValue = maxValue;
+        setMinHeight(thumbSize);
         setValue(initialValue);
         setMeasureFunction((width, widthMode, height, heightMode) -> {
             return new Size(width, thumbSize);
@@ -45,7 +46,10 @@ public class Slider extends LeafElement {
     }
 
     public void setThumbSize(float thumbSize) {
+        if (thumbSize != this.thumbSize)
+            return;
         this.thumbSize = thumbSize;
+        setMinHeight(thumbSize);
         markDirty();
     }
 

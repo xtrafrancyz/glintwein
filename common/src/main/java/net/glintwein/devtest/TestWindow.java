@@ -22,11 +22,11 @@ public class TestWindow extends Window {
         super("test_window");
         root.setPadding(Edge.ALL, 5);
         root.setBackground(0x88ffffff);
-        root.setMaxWidth(200);
 
         root.addChild(new Text("Test Window"));
 
         VerticalScrollView list = new VerticalScrollView();
+        list.setMaxWidth(200);
         list.setHeight(70);
         list.setOnMousePress((button, x, y) -> true); // To prevent clicks from propagating to the window
         list.setPadding(Edge.ALL, 5);
@@ -57,7 +57,9 @@ public class TestWindow extends Window {
         colorPickerRow.addChild(new DropdownTest());
         root.addChild(colorPickerRow);
 
-        root.addChild(new Slider(0, 100, 50));
+        Slider slider = new Slider(200, 400, 200);
+        slider.setOnValueChanged(root::setSize);
+        root.addChild(slider);
     }
 
     private static class OpenColorPickerButton extends Button {
