@@ -8,11 +8,33 @@ import net.glintwein.ui.render.command.PipCommand;
 import net.glintwein.ui.render.texture.AtlasPacker;
 import net.glintwein.ui.util.GMath;
 import net.minecraft.client.Minecraft;
+import net.minecraft.world.phys.Vec3;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
 
 import java.util.PriorityQueue;
 
 public class PlatformRender1_16_5 implements Platform.Render {
+    public static Matrix4f projMatrix = new Matrix4f();
+    public static Matrix4f viewMatrix = new Matrix4f();
+
+    @Override
+    public Vector3f getCameraPos() {
+        Vec3 cameraVec3 = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
+        return new Vector3f((float) cameraVec3.x, (float) cameraVec3.y, (float) cameraVec3.z);
+    }
+
+    @Override
+    public Matrix4f getWorldProjMatrix() {
+        return projMatrix;
+    }
+
+    @Override
+    public Matrix4f getWorldViewMatrix() {
+        return viewMatrix;
+    }
+
     @Override
     public void stateActiveTexture(int texture) {
         GlStateManager._activeTexture(texture);

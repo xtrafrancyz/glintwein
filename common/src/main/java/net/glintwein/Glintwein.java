@@ -19,6 +19,7 @@ public class Glintwein {
     private final List<UILayer> uiLayers = new ArrayList<>();
     public final UILayer layerAlwaysOnTop;
     public final UILayer layerIngame;
+    private boolean uiTickedThisFrame = false;
 
     public Glintwein() {
         if (instance != null)
@@ -57,17 +58,26 @@ public class Glintwein {
     }
 
     public void preRender() {
-        GlobalUIState.startFocusAliveCheck();
-        for (UILayer layer : uiLayers)
-            layer.tick();
-        GlobalUIState.stopFocusAliveCheck();
+        uiTickedThisFrame = false;
+    }
+
+    private void tickUIIfNeeded() {
+        if (!uiTickedThisFrame) {
+            GlobalUIState.startFocusAliveCheck();
+            for (UILayer layer : uiLayers)
+                layer.tick();
+            GlobalUIState.stopFocusAliveCheck();
+            uiTickedThisFrame = true;
+        }
     }
 
     public void renderHud() {
+        tickUIIfNeeded();
         layerIngame.render();
     }
 
     public void postRender() {
+        tickUIIfNeeded();
         layerAlwaysOnTop.render();
     }
 

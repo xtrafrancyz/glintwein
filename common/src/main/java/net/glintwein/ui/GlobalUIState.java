@@ -79,14 +79,6 @@ public class GlobalUIState {
         return yogaConfigHandle;
     }
 
-    public static int getWindowWidth() {
-        return screenWidth;
-    }
-
-    public static int getWindowHeight() {
-        return screenHeight;
-    }
-
     public static float getScaledWidth() {
         return (float) screenWidth / scale;
     }

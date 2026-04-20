@@ -7,6 +7,7 @@
   "mixins": [
   ],
   "client": [
+    "ui.MixinLevelRenderer",
     "ui.MixinMinecraft"
   ],
   "injectors": {

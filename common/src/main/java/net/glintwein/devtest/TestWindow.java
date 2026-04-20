@@ -1,6 +1,7 @@
 package net.glintwein.devtest;
 
 import net.glintwein.Glintwein;
+import net.glintwein.platform.Platform;
 import net.glintwein.ui.Window;
 import net.glintwein.ui.WindowManager;
 import net.glintwein.ui.data.*;
@@ -57,9 +58,35 @@ public class TestWindow extends Window {
         colorPickerRow.addChild(new DropdownTest());
         root.addChild(colorPickerRow);
 
+        root.addChild(new SpawnWaypointButton());
+
         Slider slider = new Slider(200, 400, 200);
         slider.setOnValueChanged(root::setSize);
         root.addChild(slider);
+    }
+
+    private static class SpawnWaypointButton extends Button {
+        public SpawnWaypointButton() {
+            super("Spawn Waypoint Here");
+
+            this.setOnClick((button) -> {
+                WaypointElement waypointElement = new WaypointElement() {
+                    private final long eol = Glintwein.time + 100000;
+
+                    @Override
+                    public void tick() {
+                        super.tick();
+                        if (Glintwein.time >= eol)
+                            this.getParent().removeChild(this);
+                    }
+                };
+                waypointElement.setTargetPos(Platform.get().getRender().getCameraPos().sub(0, 1.8f, 0));
+                waypointElement.setSize(30);
+                waypointElement.setBackground(0xffff0000);
+                Glintwein.instance.layerIngame.getContent().addChild(waypointElement);
+                return true;
+            });
+        }
     }
 
     private static class OpenColorPickerButton extends Button {

@@ -1,6 +1,8 @@
 package net.glintwein.platform;
 
 import net.glintwein.ui.render.command.PipCommand;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -54,6 +56,12 @@ public interface Platform {
     }
 
     interface Render {
+        Vector3f getCameraPos();
+
+        Matrix4f getWorldProjMatrix();
+
+        Matrix4f getWorldViewMatrix();
+
         void stateActiveTexture(int texture);
 
         void stateBindTexture(int texture);
