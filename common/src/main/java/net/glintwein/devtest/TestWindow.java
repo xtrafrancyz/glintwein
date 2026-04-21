@@ -95,7 +95,7 @@ public class TestWindow extends Window {
         public OpenColorPickerButton() {
             super("Color Picker");
 
-            WindowManager manager = Glintwein.instance.layerAlwaysOnTop.getWindowManager();
+            WindowManager manager = Glintwein.instance.layerIngame.getWindowManager();
             this.setOnClick((button) -> {
                 if (colorPicker == null) {
                     manager.addWindow(colorPicker = new ColorPickerWindow());
