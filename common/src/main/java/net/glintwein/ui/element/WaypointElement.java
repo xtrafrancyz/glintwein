@@ -5,6 +5,8 @@ import net.glintwein.ui.GlobalUIState;
 import net.glintwein.ui.data.Display;
 import net.glintwein.ui.data.Edge;
 import net.glintwein.ui.data.PositionType;
+import net.glintwein.ui.render.command.Context;
+import net.glintwein.ui.util.GMath;
 import org.joml.Vector3f;
 
 public class WaypointElement extends Element {
@@ -32,6 +34,17 @@ public class WaypointElement extends Element {
         if (target == null)
             return;
         calculateScreenPosition(target);
+    }
+
+    public boolean isNearScreenCenter(float distance) {
+        if (getDisplayType() == Display.NONE)
+            return false;
+        float centerX = GlobalUIState.getScaledWidth() / 2;
+        float centerY = GlobalUIState.getScaledHeight() / 2;
+        float markerCenterX = lastLeftPos + getComputedWidth() / 2;
+        float markerCenterY = lastTopPos + getComputedHeight() / 2;
+        float distanceSquared = GMath.square(markerCenterX - centerX) + GMath.square(markerCenterY - centerY);
+        return distanceSquared <= distance * distance;
     }
 
     private void calculateScreenPosition(Vector3f target) {
@@ -89,5 +102,12 @@ public class WaypointElement extends Element {
         lastLeftPos = leftPos;
 
         setDisplay(Display.FLEX);
+    }
+
+    @Override
+    public void draw(Context ctx) {
+        ctx.pushDrawPriority(-100);
+        super.draw(ctx);
+        ctx.popDrawPriority(-100);
     }
 }
