@@ -7,6 +7,10 @@ public class GMath {
     public static final float DEG_TO_RAD = (float) (Math.PI / 180.0);
     public static final float RAD_TO_DEG = 180.0F / (float) Math.PI;
 
+    public static float square(float value) {
+        return value * value;
+    }
+
     public static float sin(float value) {
         return (float) Math.sin(value);
     }
