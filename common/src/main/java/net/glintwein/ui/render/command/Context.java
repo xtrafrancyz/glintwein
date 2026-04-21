@@ -29,7 +29,6 @@ public class Context {
         EXECUTORS.put(DrawTextureCommand.class, new DrawTextureCommand.Executor());
     }
 
-    private final List<DrawCommand> commands = new ArrayList<>();
     private final PriorityQueue<PipCommand> pipCommands = new PriorityQueue<>();
     private final Matrix3x2fStack transform = new Matrix3x2fStack(16);
     private final FloatArrayFIFOQueue opacityStack = new FloatArrayFIFOQueue();
@@ -39,7 +38,18 @@ public class Context {
     private int currentPriority = 0;
 
     public Context() {
-        this.opacityStack.enqueue(1.0f);
+        reset();
+    }
+
+    private void reset() {
+        transform.clear();
+        opacityStack.clear();
+        opacityStack.enqueue(1.0f);
+        scissorStack.clear();
+        priorityCommandMap.clear();
+        currentPriority = 0;
+        pipCommands.clear();
+        PipAtlasManager.reset();
     }
 
     public Matrix3x2fStack pose() {
@@ -281,53 +291,48 @@ public class Context {
         if (cmd.scissor != null && !cmd.scissor.intersects(cmd.getBounds()))
             return;
 
-        if (currentPriority != 0) {
-            priorityCommandMap
-                .computeIfAbsent(currentPriority, k -> new ArrayList<>())
-                .add(cmd);
-            return;
-        }
-
-        // Inspiration
-        // https://github.com/nxp-imx/gtec-demo-framework/blob/master/Doc/FslSimpleUI.md#imbatch-flexrendersystem
-        // https://github.com/nxp-imx/gtec-demo-framework/blob/e8840f58de1ebd0233391a663d15c4ca8a45d35c/DemoFramework/FslSimpleUI/Render/IMBatch/source/FslSimpleUI/Render/IMBatch/Preprocess/Linear/LinearPreprocessor.hpp#L142
-        int maxBacktrack = 16;
-        int targetIndex = commands.size() - 1;
-        while (targetIndex >= 0 && maxBacktrack-- > 0) {
-            DrawCommand prev = commands.get(targetIndex);
-            if (!prev.isSimilar(cmd) && !prev.getBounds().intersects(cmd.getBounds())) {
-                targetIndex -= 1;
-                continue;
-            }
-
-            commands.add(targetIndex + 1, cmd);
-            return;
-        }
-
-        // no previous task found, just add it to the end
-        commands.add(cmd);
+        priorityCommandMap
+            .computeIfAbsent(currentPriority, k -> new ArrayList<>())
+            .add(cmd);
     }
 
-    @SuppressWarnings("deprecation")
     public void execute() {
         if (!pipCommands.isEmpty()) {
             Platform.get().getRender().renderPipList(pipCommands);
         }
 
-        currentPriority = 0;
-        if (!priorityCommandMap.isEmpty()) {
-            for (List<DrawCommand> list : priorityCommandMap.values()) {
-                for (DrawCommand cmd : list) {
-                    addCommand(cmd);
-                }
+        List<DrawCommand> commands = new ArrayList<>();
+
+        for (List<DrawCommand> list : priorityCommandMap.values()) {
+            for (DrawCommand cmd : list) {
+                addCommandBatching(commands, cmd);
             }
-            priorityCommandMap.clear();
         }
 
         new ListExecutor(commands).execute();
-        commands.clear();
 
-        PipAtlasManager.reset();
+        reset();
+    }
+
+    private static void addCommandBatching(List<DrawCommand> batch, DrawCommand cmd) {
+        // Inspiration
+        // https://github.com/nxp-imx/gtec-demo-framework/blob/master/Doc/FslSimpleUI.md#imbatch-flexrendersystem
+        // https://github.com/nxp-imx/gtec-demo-framework/blob/e8840f58de1ebd0233391a663d15c4ca8a45d35c/DemoFramework/FslSimpleUI/Render/IMBatch/source/FslSimpleUI/Render/IMBatch/Preprocess/Linear/LinearPreprocessor.hpp#L142
+        int maxBacktrack = 16;
+        int targetIndex = batch.size() - 1;
+        while (targetIndex >= 0 && maxBacktrack-- > 0) {
+            DrawCommand prev = batch.get(targetIndex);
+            if (!prev.isSimilar(cmd) && !prev.getBounds().intersects(cmd.getBounds())) {
+                targetIndex -= 1;
+                continue;
+            }
+
+            batch.add(targetIndex + 1, cmd);
+            return;
+        }
+
+        // no previous task found, just add it to the end
+        batch.add(cmd);
     }
 
     private static class ListExecutor {

@@ -28,6 +28,20 @@ public class Bounds {
             this.minY < other.maxY && this.maxY > other.minY;
     }
 
+    public void set(float minX, float minY, float maxX, float maxY) {
+        this.minX = minX;
+        this.minY = minY;
+        this.maxX = maxX;
+        this.maxY = maxY;
+    }
+
+    public void set(Bounds other) {
+        this.minX = other.minX;
+        this.minY = other.minY;
+        this.maxX = other.maxX;
+        this.maxY = other.maxY;
+    }
+
     public Bounds intersection(Bounds other) {
         float newMinX = Math.max(this.minX, other.minX);
         float newMinY = Math.max(this.minY, other.minY);
