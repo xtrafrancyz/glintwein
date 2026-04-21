@@ -5,7 +5,9 @@ import net.glintwein.platform.Platform;
 import net.glintwein.ui.GlobalUIState;
 import net.glintwein.ui.IngameUILayer;
 import net.glintwein.ui.UILayer;
+import net.glintwein.ui.imui.Imgui;
 import net.glintwein.ui.render.PipAtlasManager;
+import net.glintwein.ui.render.command.Context;
 import net.glintwein.ui.util.NativeCleaner;
 import net.glintwein.util.KVStore;
 
@@ -80,6 +82,20 @@ public class Glintwein {
     public void postRender() {
         tickUIIfNeeded();
         layerAlwaysOnTop.render();
+
+        Context ctx = new Context();
+        Imgui.frameStart(ctx);
+
+        if (Imgui.begin("Debug")) {
+            Imgui.text("Time: " + time);
+            Imgui.text("Line 2");
+            Imgui.sameLine();
+            Imgui.text("Same line");
+            Imgui.end();
+        }
+
+        Imgui.frameEnd();
+        ctx.execute();
     }
 
     public void updateTime() {

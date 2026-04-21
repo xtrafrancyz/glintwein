@@ -1,0 +1,34 @@
+package net.glintwein.ui.imui;
+
+public enum IMColor {
+    TEXT(0),
+    TEXT_DISABLED(1),
+    WINDOW_BACKGROUND(2),
+    CHILD_BACKGROUND(3),
+    POPUP_BACKGROUND(4),
+    BORDER(5),
+    BORDER_SHADOW(6),
+    FRAME_BACKGROUND(7),
+    FRAME_BACKGROUND_HOVERED(8),
+    FRAME_BACKGROUND_ACTIVE(9),
+    TITLE_BACKGROUND(10),
+    TITLE_BACKGROUND_ACTIVE(11),
+    TITLE_BACKGROUND_COLLAPSED(12),
+    MENU_BAR_BACKGROUND(13),
+    SCROLLBAR_BACKGROUND(14),
+    SCROLLBAR_GRAB(15),
+    SCROLLBAR_GRAB_HOVERED(16),
+    SCROLLBAR_GRAB_ACTIVE(17),
+    CHECK_MARK(18),
+    SLIDER_GRAB(19),
+    SLIDER_GRAB_ACTIVE(20),
+    BUTTON(21),
+    BUTTON_HOVERED(22),
+    BUTTON_ACTIVE(23);
+
+    public final int index;
+
+    IMColor(int index) {
+        this.index = index;
+    }
+}
