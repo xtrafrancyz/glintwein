@@ -41,9 +41,7 @@ public class WaypointElement extends Element {
             return false;
         float centerX = GlobalUIState.getScaledWidth() / 2;
         float centerY = GlobalUIState.getScaledHeight() / 2;
-        float markerCenterX = lastLeftPos + getComputedWidth() / 2;
-        float markerCenterY = lastTopPos + getComputedHeight() / 2;
-        float distanceSquared = GMath.square(markerCenterX - centerX) + GMath.square(markerCenterY - centerY);
+        float distanceSquared = GMath.square(lastLeftPos - centerX) + GMath.square(lastTopPos - centerY);
         return distanceSquared <= distance * distance;
     }
 
@@ -92,14 +90,14 @@ public class WaypointElement extends Element {
         screenX = Math.max(MIN_X, Math.min(MAX_X, screenX));
         screenY = Math.max(MIN_Y, Math.min(MAX_Y, screenY));
 
-        float topPos = screenY - HALF_MARKER_H;
-        float leftPos = screenX - HALF_MARKER_W;
-        if (topPos != lastTopPos)
-            setPosition(Edge.TOP, topPos);
-        if (leftPos != lastLeftPos)
-            setPosition(Edge.LEFT, leftPos);
-        lastTopPos = topPos;
-        lastLeftPos = leftPos;
+        if (lastTopPos != screenY) {
+            lastTopPos = screenY;
+            setPosition(Edge.TOP, screenY - HALF_MARKER_H);
+        }
+        if (lastLeftPos != screenX) {
+            lastLeftPos = screenX;
+            setPosition(Edge.LEFT, screenX - HALF_MARKER_W);
+        }
 
         setDisplay(Display.FLEX);
     }
