@@ -14,6 +14,7 @@ public class WaypointElement extends Element {
 
     private float lastTopPos = Float.NaN;
     private float lastLeftPos = Float.NaN;
+    private float lastSizeSum = Float.NaN;
 
     public WaypointElement() {
         setPositionType(PositionType.ABSOLUTE);
@@ -90,6 +91,12 @@ public class WaypointElement extends Element {
         screenX = Math.max(MIN_X, Math.min(MAX_X, screenX));
         screenY = Math.max(MIN_Y, Math.min(MAX_Y, screenY));
 
+        float sizeSum = HALF_MARKER_W * 71 + HALF_MARKER_H;
+        if (sizeSum != lastSizeSum) {
+            lastSizeSum = sizeSum;
+            lastTopPos = Float.NaN;
+            lastLeftPos = Float.NaN;
+        }
         if (lastTopPos != screenY) {
             lastTopPos = screenY;
             setPosition(Edge.TOP, screenY - HALF_MARKER_H);
