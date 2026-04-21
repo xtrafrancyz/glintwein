@@ -1,8 +1,8 @@
 package net.glintwein.ui.render.command;
 
 import it.unimi.dsi.fastutil.floats.FloatArrayFIFOQueue;
-import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectSortedMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.glintwein.platform.Platform;
 import net.glintwein.ui.data.BorderRadius;
 import net.glintwein.ui.data.Bounds;
@@ -34,7 +34,7 @@ public class Context {
     private final FloatArrayFIFOQueue opacityStack = new FloatArrayFIFOQueue();
     private final Deque<Bounds> scissorStack = new ArrayDeque<>();
 
-    private final Int2ObjectSortedMap<List<DrawCommand>> priorityCommandMap = new Int2ObjectLinkedOpenHashMap<>(4);
+    private final Int2ObjectMap<List<DrawCommand>> priorityCommandMap = new Int2ObjectOpenHashMap<>(4);
     private int currentPriority = 0;
 
     public Context() {
@@ -303,7 +303,10 @@ public class Context {
 
         List<DrawCommand> commands = new ArrayList<>();
 
-        for (List<DrawCommand> list : priorityCommandMap.values()) {
+        int[] keys = priorityCommandMap.keySet().toArray(new int[0]);
+        Arrays.sort(keys);
+        for (int key : keys) {
+            List<DrawCommand> list = priorityCommandMap.get(key);
             for (DrawCommand cmd : list) {
                 addCommandBatching(commands, cmd);
             }
