@@ -3,6 +3,7 @@ package net.glintwein.platform;
 import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
 
 import java.io.IOException;
@@ -102,6 +103,12 @@ public class Platform1_16_5 implements Platform {
         @Override
         public String getClipboard() {
             return Minecraft.getInstance().keyboardHandler.getClipboard();
+        }
+
+        @Override
+        public boolean canHandleIngameLayerInput() {
+            Screen screen = Minecraft.getInstance().screen;
+            return screen instanceof ChatScreen;
         }
     }
 }

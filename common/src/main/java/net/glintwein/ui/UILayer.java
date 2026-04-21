@@ -29,9 +29,9 @@ public class UILayer {
     public void tick() {
         float mouseX = GlobalUIState.getMouseX();
         float mouseY = GlobalUIState.getMouseY();
-        boolean mouseGrabbed = GlobalUIState.isMouseGrabbed();
-        windowManager.tick(mouseX, mouseY, !mouseGrabbed);
-        root.updateMouse(mouseX, mouseY, !mouseGrabbed);
+        boolean canHandleMouse = canHandleMouseInput();
+        windowManager.tick(mouseX, mouseY, canHandleMouse);
+        root.updateMouse(mouseX, mouseY, canHandleMouse);
         root.tick();
         root.calculateLayout(GlobalUIState.getScaledWidth(), GlobalUIState.getScaledHeight());
     }
@@ -42,6 +42,10 @@ public class UILayer {
         windowManager.draw(ctx);
         root.draw(ctx);
         ctx.execute();
+    }
+
+    protected boolean canHandleMouseInput() {
+        return !GlobalUIState.isMouseGrabbed();
     }
 
     public boolean onMousePress(float mouseX, float mouseY, int button) {

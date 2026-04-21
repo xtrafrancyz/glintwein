@@ -53,6 +53,8 @@ public interface Platform {
         void setClipboard(String text);
 
         String getClipboard();
+
+        boolean canHandleIngameLayerInput();
     }
 
     interface Render {

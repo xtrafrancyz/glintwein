@@ -3,6 +3,7 @@ package net.glintwein;
 import net.glintwein.devtest.DevTest;
 import net.glintwein.platform.Platform;
 import net.glintwein.ui.GlobalUIState;
+import net.glintwein.ui.IngameUILayer;
 import net.glintwein.ui.UILayer;
 import net.glintwein.ui.render.PipAtlasManager;
 import net.glintwein.ui.util.NativeCleaner;
@@ -29,7 +30,7 @@ public class Glintwein {
         GlobalUIState.init();
 
         layerAlwaysOnTop = new UILayer();
-        layerIngame = new UILayer();
+        layerIngame = new IngameUILayer();
         uiLayers.add(layerAlwaysOnTop);
         uiLayers.add(layerIngame);
 
