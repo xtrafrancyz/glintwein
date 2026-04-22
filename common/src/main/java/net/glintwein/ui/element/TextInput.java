@@ -186,7 +186,7 @@ public class TextInput extends Text {
     }
 
     @Override
-    public boolean handleCharTyped(char character, int keyCode) {
+    public boolean handleCharTyped(char character, int modifiers) {
         if (editable && isAllowedChatCharacter(character)) {
             this.insertText(Character.toString(character));
             return true;

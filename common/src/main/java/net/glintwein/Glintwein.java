@@ -138,9 +138,9 @@ public class Glintwein {
         return false;
     }
 
-    public boolean onCharTyped(char character, int keyCode) {
+    public boolean onCharTyped(char character, int modifiers) {
         if (GlobalUIState.getFocusedElement() != null) {
-            return GlobalUIState.getFocusedElement().handleCharTyped(character, keyCode);
+            return GlobalUIState.getFocusedElement().handleCharTyped(character, modifiers);
         }
         return false;
     }

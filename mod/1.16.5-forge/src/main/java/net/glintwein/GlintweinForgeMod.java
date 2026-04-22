@@ -14,8 +14,6 @@ public class GlintweinForgeMod {
 
     public GlintweinForgeMod() {
         MinecraftForge.EVENT_BUS.register(this);
-
-        // TODO mouse events
     }
 
     @SubscribeEvent
@@ -25,8 +23,31 @@ public class GlintweinForgeMod {
     }
 
     @SubscribeEvent
-    public void onHudRender(RenderGameOverlayEvent.Post event) {
-        // TODO fix transparency
+    public void onPreKeyPressed(GuiScreenEvent.KeyboardKeyPressedEvent.Pre event) {
+        if (Glintwein.instance.onKeyPress(event.getKeyCode(), event.getScanCode(), event.getModifiers()))
+            event.setCanceled(true);
+    }
+
+    @SubscribeEvent
+    public void onPreMouseClicked(GuiScreenEvent.MouseClickedEvent.Pre event) {
+        if (Glintwein.instance.onMousePress((float) event.getMouseX(), (float) event.getMouseY(), event.getButton()))
+            event.setCanceled(true);
+    }
+
+    @SubscribeEvent
+    public void onPreMouseReleased(GuiScreenEvent.MouseReleasedEvent.Pre event) {
+        if (Glintwein.instance.onMouseRelease((float) event.getMouseX(), (float) event.getMouseY(), event.getButton()))
+            event.setCanceled(true);
+    }
+
+    @SubscribeEvent
+    public void onPreMouseScrolled(GuiScreenEvent.MouseScrollEvent.Pre event) {
+        if (Glintwein.instance.onMouseScroll((float) event.getMouseX(), (float) event.getMouseY(), 0, (float) event.getScrollDelta()))
+            event.setCanceled(true);
+    }
+
+    @SubscribeEvent
+    public void onHudRender(RenderGameOverlayEvent.Chat event) {
         Glintwein.instance.renderHud();
     }
 }

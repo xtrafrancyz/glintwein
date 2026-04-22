@@ -263,7 +263,7 @@ public class Element extends YogaNode {
         return false;
     }
 
-    public boolean handleCharTyped(char character, int keyCode) {
+    public boolean handleCharTyped(char character, int modifiers) {
         return false;
     }
 
