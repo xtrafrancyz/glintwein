@@ -11,7 +11,7 @@
   "environment": "client",
   "entrypoints": {
     "client": [
-      "net.glintwein.GlintweinFabricMod"
+      "net.glintwein.fabric.GlintweinFabricMod"
     ]
   },
   "mixins": [

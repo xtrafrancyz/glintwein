@@ -1,11 +1,11 @@
-package net.glintwein;
+package net.glintwein.fabric;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenMouseEvents;
-import net.minecraft.client.Minecraft;
+import net.glintwein.Glintwein;
 
 public class GlintweinFabricMod implements ClientModInitializer {
     @Override

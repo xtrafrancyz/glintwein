@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "glintwein",
+  "version": "${version}",
+  "name": "Glintwein",
+  "description": "This is an example description! Tell everyone what your mod is about!",
+  "authors": [
+    "Me!"
+  ],
+  "contact": {
+    "homepage": "https://fabricmc.net/",
+    "sources": "https://github.com/FabricMC/fabric-example-mod"
+  },
+  "license": "CC0-1.0",
+  "icon": "assets/glintwein/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "net.glintwein.fabric.GlintweinFabricMod"
+    ]
+  },
+  "mixins": [
+    "glintwein-fabric.mixins.json",
+    "glintwein.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.19.2",
+    "minecraft": "~1.21.4",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

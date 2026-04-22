@@ -79,5 +79,13 @@ public interface Platform {
         void afterDraw();
 
         GlintRenderTarget createRenderTarget(int width, int height, boolean useDepth);
+
+        default boolean shouldUseVAO() {
+            return false;
+        }
+
+        default AutoQuadIndexBuffer getQuadAutoIndexBuffer() {
+            throw new UnsupportedOperationException("AutoQuadIndexBuffer is not supported on this platform");
+        }
     }
 }

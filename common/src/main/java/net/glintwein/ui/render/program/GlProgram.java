@@ -1,8 +1,11 @@
 package net.glintwein.ui.render.program;
 
+import net.glintwein.platform.AutoQuadIndexBuffer;
 import net.glintwein.platform.Platform;
 import net.glintwein.util.ResourceLoader;
+import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL30;
 import org.lwjgl.system.MemoryUtil;
 
 import java.io.InputStream;
@@ -19,6 +22,12 @@ public class GlProgram {
     private final int programId;
     private final Map<String, Uniform> uniforms = new HashMap<>();
     private final List<Uniform> samplerUnits = new ArrayList<>();
+
+    private final boolean vao;
+    private int vaoId = -1;
+    private int vboId = -1;
+    private boolean vaoInitialized = false;
+    private int lastAutoIndexMaxSize = 0;
 
     public GlProgram(String name, GlintVertexFormat format) {
         this(name, name, format);
@@ -62,6 +71,24 @@ public class GlProgram {
             GL20.glDeleteProgram(this.programId);
             throw new RuntimeException("Failed to link GL program: " + infoLog);
         }
+
+        vao = Platform.get().getRender().shouldUseVAO();
+        if (vao) {
+            vaoId = GL30.glGenVertexArrays();
+            vboId = GL30.glGenBuffers();
+        }
+    }
+
+    private void setupVertexAttribs(long pointer) {
+        int stride = format.getVertexSize();
+        int offset = 0;
+        for (int i = 0; i < format.elements.length; i++) {
+            GlintVertexFormatElement element = format.elements[i];
+            int count = element.getByteSize() / element.type.size;
+            GL20.glEnableVertexAttribArray(i);
+            GL20.glVertexAttribPointer(i, count, element.type.glType, element.normalized, stride, pointer + offset);
+            offset += element.getByteSize();
+        }
     }
 
     public void bind() {
@@ -83,23 +110,39 @@ public class GlProgram {
         b.end();
         BufferBuilder.NextBuffer nextBuffer = b.popNextBuffer();
         nextBuffer.getBuffer().clear();
-        long pointer = MemoryUtil.memAddress(nextBuffer.getBuffer());
         BufferBuilder.DrawState state = nextBuffer.getState();
         if (state.vertexCount() > 0) {
-            int stride = format.getVertexSize();
-            int offset = 0;
-            for (int i = 0; i < format.elements.length; i++) {
-                GlintVertexFormatElement element = format.elements[i];
-                int count = element.getByteSize() / element.type.size;
-                GL20.glEnableVertexAttribArray(i);
-                GL20.glVertexAttribPointer(i, count, element.type.glType, element.normalized, stride, pointer + offset);
-                offset += element.getByteSize();
-            }
+            if (vao) {
+                GL30.glBindVertexArray(vaoId);
+                GL30.glBindBuffer(GL30.GL_ARRAY_BUFFER, vboId);
+                GL30.glBufferData(GL30.GL_ARRAY_BUFFER, nextBuffer.getBuffer(), GL30.GL_DYNAMIC_DRAW);
+                if (!vaoInitialized) {
+                    vaoInitialized = true;
+                    setupVertexAttribs(0);
+                }
 
-            GL20.glDrawArrays(state.mode(), 0, state.vertexCount());
+                if (state.mode() == GL20.GL_QUADS) {
+                    int indexCount = state.vertexCount() / 4 * 6;
+                    AutoQuadIndexBuffer indexBuffer = Platform.get().getRender().getQuadAutoIndexBuffer();
+                    if (lastAutoIndexMaxSize <= 0 || !indexBuffer.hasCapacity(indexCount))
+                        indexBuffer.bind(indexCount);
+                    lastAutoIndexMaxSize = Math.max(lastAutoIndexMaxSize, indexCount);
 
-            for (int i = 0; i < format.elements.length; i++) {
-                GL20.glDisableVertexAttribArray(i);
+                    GL30.glDrawElements(GL11.GL_TRIANGLES, indexCount, indexBuffer.getGlType(), 0);
+                } else {
+                    GL20.glDrawArrays(state.mode(), 0, state.vertexCount());
+                }
+
+                GL30.glBindVertexArray(0);
+            } else {
+                long pointer = MemoryUtil.memAddress(nextBuffer.getBuffer());
+                setupVertexAttribs(pointer);
+
+                GL20.glDrawArrays(state.mode(), 0, state.vertexCount());
+
+                for (int i = 0; i < format.elements.length; i++) {
+                    GL20.glDisableVertexAttribArray(i);
+                }
             }
         }
 
@@ -133,16 +176,6 @@ public class GlProgram {
             throw new RuntimeException("Failed to compile shader: " + infoLog);
         }
         return shaderId;
-    }
-
-    private static class AttribProperties {
-        public final String name;
-        public final boolean normalized;
-
-        public AttribProperties(String name, boolean normalized) {
-            this.name = name;
-            this.normalized = normalized;
-        }
     }
 
     public static class Uniform {
