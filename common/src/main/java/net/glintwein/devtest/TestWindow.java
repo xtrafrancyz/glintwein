@@ -132,10 +132,12 @@ public class TestWindow extends Window {
             this.addChild(infoContainer);
 
             setOnMouseEnter(() -> {
+                System.out.println("hover");
                 infoContainer.setDisplay(Display.FLEX);
             });
 
             setOnMouseExit(() -> {
+                System.out.println("exit");
                 infoContainer.setDisplay(Display.NONE);
             });
         }
@@ -161,7 +163,17 @@ public class TestWindow extends Window {
                 this.dropdown = Dropdown.openBelow(this);
                 this.dropdown.setBackground(0x550000ff);
                 this.dropdown.setPadding(Edge.ALL, 5);
-                this.dropdown.addChild(new Text("Dropdown Item 1"));
+                this.dropdown.addChild(new Text("Dropdown Item 1") {
+                    @Override
+                    public void tick() {
+                        super.tick();
+                        if (isHovered()) {
+                            setBackground(0x33ffffff);
+                        } else {
+                            setBackground(0x00ffffff);
+                        }
+                    }
+                });
                 this.dropdown.addChild(new Text("Dropdown Item 2"));
                 return true;
             });

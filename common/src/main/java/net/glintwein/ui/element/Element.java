@@ -187,8 +187,7 @@ public class Element extends YogaNode {
 
     protected void handleMouseMoved(float mouseX, float mouseY, boolean canHover) {
         boolean wasHovered = hovered;
-        hovered = canHover && borderBox.contains(mouseX, mouseY);
-
+        hovered = canHover && getDisplayType() != Display.NONE && borderBox.contains(mouseX, mouseY);
         if (wasHovered != hovered) {
             if (hovered && onMouseEnter != null)
                 onMouseEnter.run();
@@ -198,8 +197,11 @@ public class Element extends YogaNode {
 
         float localX = mouseX - borderBox.x;
         float localY = mouseY - borderBox.y;
-        for (Element child : children) {
+        for (int i = children.size() - 1; i >= 0; i--) {
+            Element child = children.get(i);
             child.handleMouseMoved(localX, localY, canHover);
+            if (child.hovered)
+                canHover = false;
         }
     }
 
@@ -208,7 +210,8 @@ public class Element extends YogaNode {
         float localX = mouseX - borderBox.x;
         float localY = mouseY - borderBox.y;
         boolean handled = false;
-        for (Element child : children) {
+        for (int i = children.size() - 1; i >= 0; i--) {
+            Element child = children.get(i);
             if (child.canHandleClick() && child.handleMousePress(localX, localY, button)) {
                 handled = true;
                 break;
@@ -226,7 +229,8 @@ public class Element extends YogaNode {
     protected boolean handleMouseRelease(float mouseX, float mouseY, int button, boolean blocked) {
         float localX = mouseX - borderBox.x;
         float localY = mouseY - borderBox.y;
-        for (Element child : children) {
+        for (int i = children.size() - 1; i >= 0; i--) {
+            Element child = children.get(i);
             if (child.handleMouseRelease(localX, localY, button, blocked))
                 blocked = true;
         }
@@ -244,7 +248,8 @@ public class Element extends YogaNode {
         float localX = mouseX - borderBox.x;
         float localY = mouseY - borderBox.y;
         boolean handled = false;
-        for (Element child : children) {
+        for (int i = children.size() - 1; i >= 0; i--) {
+            Element child = children.get(i);
             if (child.canHandleClick() && child.handleMouseScroll(localX, localY, horizontal, vertical)) {
                 handled = true;
                 break;

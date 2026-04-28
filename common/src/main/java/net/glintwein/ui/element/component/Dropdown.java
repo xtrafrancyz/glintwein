@@ -25,13 +25,6 @@ public class Dropdown extends Element {
         super.tick();
     }
 
-    @Override
-    public void draw(Context ctx) {
-        ctx.pushDrawPriority(1);
-        super.draw(ctx);
-        ctx.popDrawPriority(1);
-    }
-
     public static Dropdown openBelow(Element triggerElement) {
         Bounds absoluteBorderBox = triggerElement.getAbsoluteBorderBox();
         Dropdown dropdown = new Dropdown(absoluteBorderBox.minX, absoluteBorderBox.maxY);
