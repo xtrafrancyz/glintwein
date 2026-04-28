@@ -31,6 +31,9 @@ public class PipAtlasManager {
     }
 
     public static Sprite insert(int width, int height) {
+        if (width > lastWidth || height > lastHeight)
+            return null;
+
         for (Atlas atlas : atlases) {
             AtlasPacker.Sprite sprite = atlas.packer.insert(width, height);
             if (sprite != null)
@@ -40,8 +43,7 @@ public class PipAtlasManager {
         atlases.add(atlas);
         AtlasPacker.Sprite sprite = atlas.packer.insert(width, height);
         if (sprite == null)
-            throw new RuntimeException(String.format("Failed to insert sprite of size %dx%d into atlas of size %dx%d",
-                width, height, atlas.target.getWidth(), atlas.target.getHeight()));
+            return null;
         return new Sprite(atlas.target, sprite);
     }
 

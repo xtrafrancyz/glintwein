@@ -1,5 +1,6 @@
 package net.glintwein.platform;
 
+import com.mojang.blaze3d.ProjectionType;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -20,6 +21,8 @@ import org.joml.Vector3f;
 import java.util.PriorityQueue;
 
 public class PlatformRender1_21_4 implements Platform.Render {
+    public static boolean isFrameBufferLocked = false;
+
     public static Matrix4f projMatrix = new Matrix4f();
     public static Matrix4f viewMatrix = new Matrix4f();
 
@@ -68,36 +71,44 @@ public class PlatformRender1_21_4 implements Platform.Render {
     public void renderPipList(PriorityQueue<PipCommand> commands) {
         //noinspection DataFlowIssue
         GlintRenderTarget firstTarget = commands.peek().sprite.target;
+        isFrameBufferLocked = true;
 
-        RenderSystem.backupProjectionMatrix();
+        // builtin backup and restore can be used in some pips, so need to do it manually
+        Matrix4f projMatBackup = new Matrix4f(RenderSystem.getProjectionMatrix());
         RenderSystem.getProjectionMatrix()
             .identity()
             .ortho(0.0f, firstTarget.getWidth(), firstTarget.getHeight(), 0.0f, -3000, 3000.0f);
         RenderSystem.getModelViewStack().pushMatrix();
         RenderSystem.getModelViewStack().identity();
 
-        RenderTargetWrapper target = null;
-        ContextExt.pose = new PoseStack();
-        for (PipCommand cmd : commands) {
-            if (cmd.sprite.target != target) {
-                target = (RenderTargetWrapper) cmd.sprite.target;
-                target.handle.clear();
-                target.handle.bindWrite(true);
+        try {
+            RenderTargetWrapper target = null;
+            ContextExt.pose = new PoseStack();
+            for (PipCommand cmd : commands) {
+                if (cmd.sprite.target != target) {
+                    target = (RenderTargetWrapper) cmd.sprite.target;
+                    isFrameBufferLocked = false;
+                    target.handle.clear();
+                    target.handle.bindWrite(true);
+                    isFrameBufferLocked = true;
+                }
+
+                AtlasPacker.Sprite sprite = cmd.sprite.sprite;
+                enableScissor(Bounds.fromMinMax(sprite.left, sprite.top, sprite.right, sprite.bottom), target.getHeight());
+                ContextExt.pose.pushPose();
+                ContextExt.pose.translate(sprite.left, sprite.top, -3000);
+                float sx = sprite.right - sprite.left;
+                float sy = sprite.bottom - sprite.top;
+                ContextExt.pose.scale(sx, sy, (sx + sy) / 2f);
+                cmd.render.run();
+                ContextExt.pose.popPose();
             }
-
-            AtlasPacker.Sprite sprite = cmd.sprite.sprite;
-            enableScissor(Bounds.fromMinMax(sprite.left, sprite.top, sprite.right, sprite.bottom), target.getHeight());
-            ContextExt.pose.pushPose();
-            ContextExt.pose.translate(sprite.left, sprite.top, -3000);
-            float sx = sprite.right - sprite.left;
-            float sy = sprite.bottom - sprite.top;
-            ContextExt.pose.scale(sx, sy, (sx + sy) / 2f);
-            cmd.render.run();
-            ContextExt.pose.popPose();
+        } catch (Exception e) {
+            Platform1_21_4.log.error("Exception while rendering pip list", e);
         }
+        isFrameBufferLocked = false;
 
-
-        RenderSystem.restoreProjectionMatrix();
+        RenderSystem.setProjectionMatrix(projMatBackup, ProjectionType.ORTHOGRAPHIC);
         RenderSystem.getModelViewStack().popMatrix();
 
         RenderSystem.disableScissor();
@@ -121,6 +132,7 @@ public class PlatformRender1_21_4 implements Platform.Render {
     public void afterDraw() {
         RenderSystem.disableScissor();
         RenderSystem.enableDepthTest();
+        RenderSystem.disableBlend();
     }
 
     @Override

@@ -272,6 +272,9 @@ public class Context {
             GMath.ceil(screenSize.x),
             GMath.ceil(screenSize.y)
         );
+        // Skip rendering if we can't get a sprite
+        if (sprite == null)
+            return;
 
         pipCommands.add(new PipCommand(render, sprite));
 

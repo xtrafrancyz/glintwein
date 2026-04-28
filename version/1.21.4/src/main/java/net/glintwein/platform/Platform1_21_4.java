@@ -5,11 +5,15 @@ import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 
 public class Platform1_21_4 implements Platform {
+    public static Logger log = LoggerFactory.getLogger("glintwein");
+
     private final YogaShim yogaShim = new Yoga3_3_3();
     private final Input input = new Input1_16_5();
     private final Render render = new PlatformRender1_21_4();

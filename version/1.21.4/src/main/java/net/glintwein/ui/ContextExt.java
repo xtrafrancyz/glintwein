@@ -11,8 +11,6 @@ import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
-import org.joml.Matrix4f;
-import org.lwjgl.opengl.GL11;
 
 public class ContextExt {
     private static final ItemStackRenderState tempItemStackRenderState = new ItemStackRenderState();
@@ -26,11 +24,8 @@ public class ContextExt {
             return;
         ctx.addPipCommand(
             () -> {
-                // TODO тупа не пашет
-
-                pose.translate(8, 8, 0);
-                pose.mulPose(new Matrix4f().scaling(1.0F, 1.0F, 1.0F));
-                pose.scale(16, 16, 160);
+                pose.translate(0.5f, 0.5f, 1);
+                pose.scale(1, -1, 1);
 
                 Minecraft mc = Minecraft.getInstance();
                 MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();

@@ -7,11 +7,7 @@ import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenMouseEvents;
 import net.glintwein.Glintwein;
-import net.glintwein.ui.ContextExt;
-import net.glintwein.ui.render.command.Context;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,11 +42,6 @@ public class GlintweinFabricMod implements ModInitializer {
                 (context, tickCounter) -> {
                     context.flush();
                     Glintwein.instance.renderHud();
-
-                    Context ctx = new Context();
-                    ctx.drawRect(0, 0, 300, 300, 0xffffffff);
-                    ContextExt.drawItem(ctx, new ItemStack(Items.APPLE), 0, 0, 300, false);
-                    ctx.execute();
                 }
             )
         );
