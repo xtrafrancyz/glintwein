@@ -29,7 +29,7 @@ public interface Platform {
 
     int getWindowHeight();
 
-    boolean isAnyScreenOpen();
+    ScreenType getScreenType();
 
     GlintImage loadImage(InputStream is) throws IOException;
 
@@ -55,8 +55,6 @@ public interface Platform {
         void setClipboard(String text);
 
         String getClipboard();
-
-        boolean canHandleIngameLayerInput();
     }
 
     interface Render {

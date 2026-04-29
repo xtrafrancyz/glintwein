@@ -2,6 +2,7 @@ package net.glintwein;
 
 import net.glintwein.devtest.DevTest;
 import net.glintwein.platform.Platform;
+import net.glintwein.platform.ScreenType;
 import net.glintwein.ui.GlobalUIState;
 import net.glintwein.ui.IngameUILayer;
 import net.glintwein.ui.UILayer;
@@ -68,7 +69,7 @@ public class Glintwein {
             for (UILayer layer : uiLayers)
                 layer.tick();
             GlobalUIState.stopFocusAliveCheck();
-            if (!Platform.get().isAnyScreenOpen())
+            if (Platform.get().getScreenType() == ScreenType.NONE)
                 GlobalUIState.clearCurrentFocus();
             uiTickedThisFrame = true;
         }

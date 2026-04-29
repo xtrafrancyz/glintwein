@@ -49,8 +49,15 @@ public class Platform1_21_4 implements Platform {
     }
 
     @Override
-    public boolean isAnyScreenOpen() {
-        return Minecraft.getInstance().screen != null;
+    public ScreenType getScreenType() {
+        Screen screen = Minecraft.getInstance().screen;
+        if (screen == null) {
+            return ScreenType.NONE;
+        } else if (screen instanceof ChatScreen) {
+            return ScreenType.CHAT;
+        } else {
+            return ScreenType.OTHER;
+        }
     }
 
     public GlintImage loadImage(InputStream is) throws IOException {
@@ -112,12 +119,6 @@ public class Platform1_21_4 implements Platform {
         @Override
         public String getClipboard() {
             return Minecraft.getInstance().keyboardHandler.getClipboard();
-        }
-
-        @Override
-        public boolean canHandleIngameLayerInput() {
-            Screen screen = Minecraft.getInstance().screen;
-            return screen instanceof ChatScreen;
         }
     }
 }
