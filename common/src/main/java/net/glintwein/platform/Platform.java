@@ -29,6 +29,8 @@ public interface Platform {
 
     int getWindowHeight();
 
+    boolean isAnyScreenOpen();
+
     GlintImage loadImage(InputStream is) throws IOException;
 
     Render getRender();

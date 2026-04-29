@@ -48,6 +48,11 @@ public class Platform1_21_4 implements Platform {
         return Minecraft.getInstance().getWindow().getHeight();
     }
 
+    @Override
+    public boolean isAnyScreenOpen() {
+        return Minecraft.getInstance().screen != null;
+    }
+
     public GlintImage loadImage(InputStream is) throws IOException {
         NativeImage image = NativeImage.read(NativeImage.Format.RGBA, is);
         return new PlatformImage1_21_4(image);

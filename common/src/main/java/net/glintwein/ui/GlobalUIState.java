@@ -53,7 +53,13 @@ public class GlobalUIState {
         focusAliveCheck = false;
         // no event
         if (!focusAlive)
-            focusedElement = null;
+            clearCurrentFocus();
+    }
+
+    public static void clearCurrentFocus() {
+        if (focusedElement != null)
+            focusedElement.handleFocusLoss();
+        focusedElement = null;
     }
 
     public static Element getFocusedElement() {

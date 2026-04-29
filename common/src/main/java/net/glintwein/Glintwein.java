@@ -68,6 +68,8 @@ public class Glintwein {
             for (UILayer layer : uiLayers)
                 layer.tick();
             GlobalUIState.stopFocusAliveCheck();
+            if (!Platform.get().isAnyScreenOpen())
+                GlobalUIState.clearCurrentFocus();
             uiTickedThisFrame = true;
         }
     }
