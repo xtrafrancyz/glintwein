@@ -21,6 +21,16 @@ public class Box {
         this.height = other.height;
     }
 
+    public void setXY(Box other) {
+        this.x = other.x;
+        this.y = other.y;
+    }
+
+    public void setSize(Box other) {
+        this.width = other.width;
+        this.height = other.height;
+    }
+
     public void set(float x, float y, float width, float height) {
         this.x = x;
         this.y = y;

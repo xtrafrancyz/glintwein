@@ -1,12 +1,16 @@
 package net.glintwein.ui.element;
 
+import net.glintwein.Glintwein;
 import net.glintwein.platform.Platform;
 import net.glintwein.ui.GlobalUIState;
+import net.glintwein.ui.data.Box;
 import net.glintwein.ui.data.Display;
 import net.glintwein.ui.data.Edge;
 import net.glintwein.ui.data.PositionType;
 import net.glintwein.ui.render.command.Context;
+import net.glintwein.ui.util.Easing;
 import net.glintwein.ui.util.GMath;
+import net.glintwein.ui.util.LayoutBoxLerp;
 import org.joml.Vector3f;
 
 public class WaypointElement extends Element {
@@ -26,6 +30,11 @@ public class WaypointElement extends Element {
 
     public Vector3f getTargetPos() {
         return targetPos;
+    }
+
+    @Override
+    public void enableLayoutLerp(float durationMs, Easing easing, boolean lerpPosition, boolean lerpSize) {
+        layoutLerp = new LayoutLerp(durationMs, easing);
     }
 
     @Override
@@ -88,8 +97,8 @@ public class WaypointElement extends Element {
         }
 
         // Target is fully on-screen. We use the projected position directly.
-        screenX = Math.max(MIN_X, Math.min(MAX_X, screenX));
-        screenY = Math.max(MIN_Y, Math.min(MAX_Y, screenY));
+        screenX = GMath.clamp(screenX, MIN_X, MAX_X);
+        screenY = GMath.clamp(screenY, MIN_Y, MAX_Y);
 
         float sizeSum = HALF_MARKER_W * 71 + HALF_MARKER_H;
         if (sizeSum != lastSizeSum) {
@@ -114,5 +123,42 @@ public class WaypointElement extends Element {
         ctx.pushDrawPriority(-100);
         super.draw(ctx);
         ctx.popDrawPriority(-100);
+    }
+
+    private static class LayoutLerp extends LayoutBoxLerp {
+        public LayoutLerp(float durationMs, Easing easing) {
+            super(durationMs, easing, false, true);
+        }
+
+        @Override
+        public void startAnimation(Box border, Box padding, Box content) {
+            border0.setXY(border);
+            padding0.setXY(padding);
+            content0.setXY(content);
+            border1.setXY(border);
+            padding1.setXY(padding);
+            content1.setXY(content);
+
+            float epsilon = GlobalUIState.getPixelSize() * 1.5f;
+
+            if (!(Math.abs(border1.height - border.height) < epsilon &&
+                Math.abs(border1.width - border.width) < epsilon &&
+                Math.abs(padding1.height - padding.height) < epsilon &&
+                Math.abs(padding1.width - padding.width) < epsilon &&
+                Math.abs(content1.height - content.height) < epsilon &&
+                Math.abs(content1.width - content.width) < epsilon)) {
+                // start animation
+                apply(border0, padding0, content0);
+                this.endTime = Glintwein.time + (long) durationMs;
+            } else {
+                // Sizes are close enough, skip animation but update values to target immediately
+            }
+
+            content1.setSize(content);
+            padding1.setSize(padding);
+            border1.setSize(border);
+
+            apply(border, padding, content);
+        }
     }
 }

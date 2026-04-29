@@ -78,8 +78,14 @@ public class TestWindow extends Window {
                         super.tick();
                         if (Glintwein.time >= eol)
                             this.getParent().removeChild(this);
+                        if (isNearScreenCenter(150)) {
+                            setWidth(100);
+                        } else {
+                            setWidth(30);
+                        }
                     }
                 };
+                waypointElement.enableLayoutLerp(400, Easing.OUT_BACK);
                 waypointElement.setTargetPos(Platform.get().getRender().getCameraPos().sub(0, 1.8f, 0));
                 waypointElement.setSize(30);
                 waypointElement.setBackground(0xffff0000);
@@ -132,12 +138,10 @@ public class TestWindow extends Window {
             this.addChild(infoContainer);
 
             setOnMouseEnter(() -> {
-                System.out.println("hover");
                 infoContainer.setDisplay(Display.FLEX);
             });
 
             setOnMouseExit(() -> {
-                System.out.println("exit");
                 infoContainer.setDisplay(Display.NONE);
             });
         }

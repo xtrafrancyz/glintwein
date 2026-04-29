@@ -20,7 +20,7 @@ public class Element extends YogaNode {
     protected final Box borderBox = new Box();
     protected final Box paddingBox = new Box();
     protected final Box contentBox = new Box();
-    private LayoutBoxLerp layoutLerp;
+    protected LayoutBoxLerp layoutLerp;
     private final List<Animated> animations = new ArrayList<>();
 
     private boolean hovered;
@@ -78,7 +78,11 @@ public class Element extends YogaNode {
     }
 
     public void enableLayoutLerp(float durationMs, Easing easing) {
-        layoutLerp = new LayoutBoxLerp(durationMs, easing);
+        enableLayoutLerp(durationMs, easing, true, true);
+    }
+
+    public void enableLayoutLerp(float durationMs, Easing easing, boolean lerpPosition, boolean lerpSize) {
+        layoutLerp = new LayoutBoxLerp(durationMs, easing, lerpPosition, lerpSize);
     }
 
     public void disableLayoutLerp() {
