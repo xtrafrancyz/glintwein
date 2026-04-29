@@ -7,9 +7,14 @@ import java.util.function.IntConsumer;
 
 public abstract class Animated {
     protected long endTime;
-    protected float durationMs;
-    protected Easing easing;
+    protected float durationMs = 250;
+    protected Easing easing = Easing.EASE;
     protected CompletableFuture<End> future;
+
+    public CompletableFuture<End> createFuture() {
+        future = new CompletableFuture<>();
+        return future;
+    }
 
     public abstract void update();
 
@@ -18,6 +23,10 @@ public abstract class Animated {
 
         public End(long time) {
             this.time = time;
+        }
+
+        public long getTime() {
+            return time;
         }
     }
 
@@ -30,6 +39,12 @@ public abstract class Animated {
             this(null, value);
         }
 
+        public Float(float value, int durationMs, Easing easing) {
+            this(null, value);
+            this.durationMs = durationMs;
+            this.easing = easing;
+        }
+
         public Float(FloatConsumer set, float value) {
             this.setter = set;
             this.value = value;
@@ -37,22 +52,36 @@ public abstract class Animated {
             update();
         }
 
-        public CompletableFuture<End> animateIfDifferent(float value, int durationMs, Easing easing) {
+        public Float(FloatConsumer set, float value, int durationMs, Easing easing) {
+            this(set, value);
+            this.durationMs = durationMs;
+            this.easing = easing;
+        }
+
+        public boolean animateIfDifferent(float value) {
+            return animateIfDifferent(value, (int) durationMs, easing);
+        }
+
+        public boolean animateIfDifferent(float value, int durationMs, Easing easing) {
             if (this.targetValue != value) {
-                return animate(value, durationMs, easing);
+                animate(value, durationMs, easing);
+                return true;
             } else {
-                return CompletableFuture.completedFuture(new End(Glintwein.time));
+                return false;
             }
         }
 
-        public CompletableFuture<End> animate(float value, int durationMs, Easing easing) {
+        public void animate(float value) {
+            animate(value, (int) durationMs, easing);
+        }
+
+        public void animate(float value, int durationMs, Easing easing) {
             this.value = get();
             this.targetValue = value;
             this.durationMs = durationMs;
             this.easing = easing;
             this.endTime = Glintwein.time + durationMs;
-            this.future = new CompletableFuture<>();
-            return this.future;
+            this.future = null;
         }
 
         public void set(float value) {
@@ -101,6 +130,12 @@ public abstract class Animated {
             this(null, value);
         }
 
+        public Color(int value, int durationMs, Easing easing) {
+            this(null, value);
+            this.durationMs = durationMs;
+            this.easing = easing;
+        }
+
         public Color(IntConsumer set, int value) {
             this.setter = set;
             this.value = value;
@@ -108,22 +143,36 @@ public abstract class Animated {
             update();
         }
 
-        public CompletableFuture<End> animateIfDifferent(int value, int durationMs, Easing easing) {
+        public Color(IntConsumer set, int value, int durationMs, Easing easing) {
+            this(set, value);
+            this.durationMs = durationMs;
+            this.easing = easing;
+        }
+
+        public boolean animateIfDifferent(int value) {
+            return animateIfDifferent(value, (int) durationMs, easing);
+        }
+
+        public boolean animateIfDifferent(int value, int durationMs, Easing easing) {
             if (this.targetValue != value) {
-                return animate(value, durationMs, easing);
+                animate(value, durationMs, easing);
+                return true;
             } else {
-                return CompletableFuture.completedFuture(new End(Glintwein.time));
+                return false;
             }
         }
 
-        public CompletableFuture<End> animate(int value, int durationMs, Easing easing) {
+        public void animate(int value) {
+            animate(value, (int) durationMs, easing);
+        }
+
+        public void animate(int value, int durationMs, Easing easing) {
             this.value = get();
             this.targetValue = value;
             this.durationMs = durationMs;
             this.easing = easing;
             this.endTime = Glintwein.time + durationMs;
-            this.future = new CompletableFuture<>();
-            return this.future;
+            this.future = null;
         }
 
         public void set(int value) {
@@ -150,6 +199,10 @@ public abstract class Animated {
             }
 
             return value;
+        }
+
+        public int getFinal() {
+            return targetValue;
         }
 
         @Override
