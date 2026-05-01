@@ -242,8 +242,6 @@ public class TextInput extends Text {
     protected void drawContent(Context ctx) {
         super.drawContent(ctx);
 
-        placeholder = "Enter text...";
-
         if (isInFocus()) {
             Vector2i cursor = translatePosToRowCol(cursorPos);
 
