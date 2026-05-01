@@ -28,6 +28,10 @@ public class TextInput extends Text {
     private int highlightPos;
     private float verticalCursorXCache = -1;
 
+    private float lastMouseX, lastMouseY;
+    private long lastClickTime;
+    private int clickCount;
+
     public TextInput() {
     }
 
@@ -90,7 +94,25 @@ public class TextInput extends Text {
         blinkTimer = Glintwein.time;
         verticalCursorXCache = -1;
         shiftPressed = false;
-        this.moveCursorTo(translatePixelToPos(mouseX, mouseY));
+        if (mouseX == lastMouseX && mouseY == lastMouseY && Glintwein.time - lastClickTime < 400) {
+            clickCount++;
+            if (clickCount == 1) {
+                int pos = translatePixelToPos(mouseX, mouseY);
+                int wordStart = getWordPosition(-1, pos, false);
+                int wordEnd = getWordPosition(1, pos, false);
+                setCursorPosition(wordEnd);
+                setHighlightPosition(wordStart);
+            } else if (clickCount == 2) {
+                moveCursorToEnd();
+                setHighlightPosition(0);
+            }
+        } else {
+            moveCursorTo(translatePixelToPos(mouseX, mouseY));
+            clickCount = 0;
+        }
+        lastMouseX = mouseX;
+        lastMouseY = mouseY;
+        lastClickTime = Glintwein.time;
         return true;
     }
 
