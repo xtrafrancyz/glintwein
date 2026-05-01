@@ -20,6 +20,7 @@ public class TextInput extends Text {
     private String placeholder;
     private Integer placeholderColor;
     private Runnable enterCallback;
+    private int highlightColor = 0x6633B5E5;
 
     private String value = "";
     private long blinkTimer;
@@ -61,6 +62,10 @@ public class TextInput extends Text {
 
     public void setMaxLength(int maxLength) {
         this.maxLength = maxLength;
+    }
+
+    public void setHighlightColor(int color) {
+        this.highlightColor = color;
     }
 
     public String getValue() {
@@ -258,7 +263,7 @@ public class TextInput extends Text {
                     float x1 = i == min.y() ? font.getWidth(line.text.substring(0, min.x())) : 0;
                     float x2 = i == max.y() ? font.getWidth(line.text.substring(0, max.x())) : line.width;
                     // TODO: fucking blend mode
-                    ctx.drawRect(line.x + x1, line.y, x2 - x1, font.getHeight(), 0x6633B5E5);
+                    ctx.drawRect(line.x + x1, line.y, x2 - x1, font.getHeight(), highlightColor);
                 }
             }
 

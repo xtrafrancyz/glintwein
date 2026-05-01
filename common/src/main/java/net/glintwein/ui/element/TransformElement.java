@@ -13,6 +13,11 @@ public class TransformElement extends Element {
         this.scaleY = scale;
     }
 
+    public void setScale(float scaleX, float scaleY) {
+        this.scaleX = scaleX;
+        this.scaleY = scaleY;
+    }
+
     public void setRotation(float rotation) {
         this.rotation = rotation;
     }
