@@ -20,6 +20,7 @@ public class Window {
     private float dragCurrentPosX;
     private float dragCurrentPosY;
     private Anchor anchor = Anchor.TOP_LEFT;
+    private boolean moved;
 
     private float posXPct = 0f;
     private float posYPct = 0f;
@@ -45,7 +46,7 @@ public class Window {
         float screenW = GlobalUIState.getScaledWidth();
         float screenH = GlobalUIState.getScaledHeight();
 
-        if (dragged) {
+        if (dragged && moved) {
             drawGuides(ctx, screenW, screenH);
         }
 
@@ -75,6 +76,8 @@ public class Window {
 
     private void updateMouse(float mouseX, float mouseY, boolean canHover) {
         if (dragged) {
+            moved = moved || dragStartX != mouseX || dragStartY != mouseY;
+
             float deltaX = mouseX - dragStartX;
             float deltaY = mouseY - dragStartY;
             dragStartX = mouseX;
@@ -268,6 +271,7 @@ public class Window {
 
         if (!handled && root.isHovered()) {
             dragged = true;
+            moved = false;
             dragStartX = mouseX;
             dragStartY = mouseY;
             dragCurrentPosX = xy.x;
