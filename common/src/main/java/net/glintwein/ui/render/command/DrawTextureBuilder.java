@@ -19,7 +19,7 @@ public class DrawTextureBuilder {
         this.x1 = x1;
         this.y1 = y1;
         this.radius = BorderRadius.ZERO;
-        this.color = 0x00000000;
+        this.color = 0xffffffff;
         this.outlineColor = 0x00000000;
         this.outlineWidth = 0;
     }
