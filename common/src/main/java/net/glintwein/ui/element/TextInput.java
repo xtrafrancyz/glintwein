@@ -244,6 +244,8 @@ public class TextInput extends Text {
     protected void drawContent(Context ctx) {
         super.drawContent(ctx);
 
+        setMaxWidth(100);
+
         if (isInFocus()) {
             Vector2i cursor = translatePosToRowCol(cursorPos);
 
@@ -262,7 +264,6 @@ public class TextInput extends Text {
                     RenderLine line = getRenderLines().get(i);
                     float x1 = i == min.y() ? font.getWidth(line.text.substring(0, min.x())) : 0;
                     float x2 = i == max.y() ? font.getWidth(line.text.substring(0, max.x())) : line.width;
-                    // TODO: fucking blend mode
                     ctx.drawRect(line.x + x1, line.y, x2 - x1, font.getHeight(), highlightColor);
                 }
             }
@@ -284,6 +285,8 @@ public class TextInput extends Text {
     }
 
     private int translatePixelToPos(float mx, float my) {
+        if (isPlaceholderVisible())
+            return 0;
         List<RenderLine> renderLines = getRenderLines();
         if (renderLines.get(0).y > my)
             return 0;
@@ -302,6 +305,8 @@ public class TextInput extends Text {
     }
 
     private int translateRowColToPos(int row, int col) {
+        if (isPlaceholderVisible())
+            return 0;
         List<RenderLine> renderLines = getRenderLines();
         int pos = 0;
         for (int i = 0; i < renderLines.size(); i++) {
@@ -318,6 +323,11 @@ public class TextInput extends Text {
 
     private Vector2i translatePosToRowCol(int pos) {
         List<RenderLine> renderLines = getRenderLines();
+
+        // special case for position at the end of text which is exactly on a newline
+        if (pos > 0 && pos == value.length())
+            return new Vector2i(renderLines.get(renderLines.size() - 1).text.length(), renderLines.size() - 1);
+
         int posTracker = 0;
         for (int i = 0; i < renderLines.size(); i++) {
             RenderLine line = renderLines.get(i);

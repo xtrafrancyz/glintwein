@@ -14,14 +14,26 @@ import org.lwjgl.opengl.GL12;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class GigaFont {
+    private static final int CACHE_MAX_ENTRIES = 500;
+
     private final MsdfModel.Atlas atlas;
     private final MsdfModel.FontMetrics metrics;
     private final Char2ObjectMap<Glyph> glyphs;
     private final Int2FloatOpenHashMap kerning;
+    private final float spaceWidth;
     private int textureId;
+
+    private Map<String, Float> widthCache = new LinkedHashMap<String, Float>(CACHE_MAX_ENTRIES + 1, .75F, true) {
+        public boolean removeEldestEntry(Map.Entry<String, Float> eldest) {
+            // Automatically evict the oldest entry when size exceeds capacity
+            return size() > CACHE_MAX_ENTRIES;
+        }
+    };
 
     private GigaFont(MsdfModel model, GlintImage image) {
         this.atlas = model.atlas;
@@ -37,6 +49,8 @@ public class GigaFont {
             kerning.put(key, k.advance);
         }
 
+        spaceWidth = getWidth(" ", 1.0f);
+
         textureId = GL11.glGenTextures();
         Platform.get().getRender().stateBindTexture(textureId);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
@@ -48,19 +62,22 @@ public class GigaFont {
     }
 
     public float getWidth(String text, float size) {
-        float width = 0;
-        int len = text.length();
-        char prevChar = 0;
-        for (int i = 0; i < len; i++) {
-            char c = text.charAt(i);
-            Glyph glyph = glyphs.get(c);
-            if (glyph != null) {
-                float kerning = this.kerning.getOrDefault(((prevChar << 16) | c), 0.0f);
-                width += (glyph.advance + kerning) * size;
-                prevChar = c;
+        float result = widthCache.computeIfAbsent(text, t -> {
+            float width = 0;
+            int len = t.length();
+            char prevChar = 0;
+            for (int i = 0; i < len; i++) {
+                char c = t.charAt(i);
+                Glyph glyph = glyphs.get(c);
+                if (glyph != null) {
+                    float kerning = this.kerning.getOrDefault(((prevChar << 16) | c), 0.0f);
+                    width += glyph.advance + kerning;
+                    prevChar = c;
+                }
             }
-        }
-        return width;
+            return width;
+        });
+        return result * size;
     }
 
     public String trimToWidth(String text, float size, float maxWidth) {
@@ -90,17 +107,19 @@ public class GigaFont {
     public void wrapText(String text, float size, float maxWidth, List<String> output) {
         String[] lines = text.split("\n", -1);
         for (String line : lines) {
-            if (line.isEmpty())
+            if (line.isEmpty()) {
                 output.add("");
+                continue;
+            }
 
             StringBuilder currentLine = new StringBuilder();
             float currentWidth = 0;
 
-            String[] words = line.split(" ");
+            String[] words = line.split(" ", -1);
             for (int i = 0; i < words.length; i++) {
                 String word = words[i];
                 float wordWidth = getWidth(word, size);
-                float spaceWidth = (i == 0) ? 0 : getWidth(" ", size);
+                float spaceWidth = (i == 0) ? 0 : this.spaceWidth * size;
 
                 if (currentWidth + spaceWidth + wordWidth <= maxWidth) {
                     if (i != 0) {
