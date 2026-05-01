@@ -237,6 +237,8 @@ public class TextInput extends Text {
     protected void drawContent(Context ctx) {
         super.drawContent(ctx);
 
+        placeholder = "Enter text...";
+
         if (isInFocus()) {
             Vector2i cursor = translatePosToRowCol(cursorPos);
 
@@ -345,7 +347,7 @@ public class TextInput extends Text {
             filteredLen = maxAllowed;
         }
 
-        String result = new StringBuilder(getText()).replace(selectionStart, selectionEnd, filtered).toString();
+        String result = new StringBuilder(value).replace(selectionStart, selectionEnd, filtered).toString();
         if (this.allowRegexp == null || this.allowRegexp.matcher(result).matches()) {
             this.setText(result);
             this.setCursorPosition(selectionStart + filteredLen);
@@ -381,7 +383,7 @@ public class TextInput extends Text {
                 int j = Math.min(i, this.cursorPos);
                 int k = Math.max(i, this.cursorPos);
                 if (j != k) {
-                    String s = new StringBuilder(this.getText()).delete(j, k).toString();
+                    String s = new StringBuilder(value).delete(j, k).toString();
                     if (this.allowRegexp == null || this.allowRegexp.matcher(s).matches()) {
                         this.setText(s);
                         this.moveCursorTo(j);
