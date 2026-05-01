@@ -129,6 +129,18 @@ public class Element extends YogaNode {
         return borderBox.height;
     }
 
+    public Bounds getRelativeBorderBox(Element someParent) {
+        float relX = borderBox.x;
+        float relY = borderBox.y;
+        Element current = parent;
+        while (current != null && current != someParent) {
+            relX += current.borderBox.x;
+            relY += current.borderBox.y;
+            current = current.parent;
+        }
+        return Bounds.fromXYWH(relX, relY, borderBox.width, borderBox.height);
+    }
+
     public Bounds getAbsoluteBorderBox() {
         float absX = borderBox.x;
         float absY = borderBox.y;
