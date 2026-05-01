@@ -32,6 +32,14 @@ public class DrawTextureBuilder {
         return this;
     }
 
+    public DrawTextureBuilder uv(int x, int y, int width, int height, int textureWidth, int textureHeight) {
+        this.u0 = (float) x / textureWidth;
+        this.v0 = (float) y / textureHeight;
+        this.u1 = (float) (x + width) / textureWidth;
+        this.v1 = (float) (y + height) / textureHeight;
+        return this;
+    }
+
     public DrawTextureBuilder texture(int texture) {
         this.texture = texture;
         return this;
