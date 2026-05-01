@@ -44,9 +44,11 @@ public class TestWindow extends Window {
         root.addChild(list);
 
         TextInput input = new TextInput();
-        input.setMaxWidthPercent(100);
+        //input.setMaxWidthPercent(100);
         input.setBackground(0x5500ff00);
         input.setPadding(Edge.ALL, 5);
+        input.setPlaceholder("Type something...");
+        input.setPlaceholderColor(0xaaffffff);
         root.addChild(input);
 
         Element colorPickerRow = new Element();

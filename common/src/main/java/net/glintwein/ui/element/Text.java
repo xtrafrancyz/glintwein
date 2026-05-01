@@ -173,7 +173,7 @@ public class Text extends LeafElement {
     }
 
     protected void drawLine(Context ctx, RenderLine line) {
-        ctx.drawText(font.font(), line.text, line.x, line.y, font.size(), color);
+        ctx.drawText(font.font(), line.text, line.x, line.y, font.size(), getTextColor());
     }
 
     private static class WrappedLine {

@@ -38,6 +38,8 @@ public class TextInput extends Text {
 
     public void setPlaceholder(String placeholder) {
         this.placeholder = placeholder;
+        // update current text, maybe we are showing placeholder right now
+        setText(value);
     }
 
     public void setPlaceholderColor(Integer placeholderColor) {
