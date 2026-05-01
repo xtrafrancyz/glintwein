@@ -65,6 +65,14 @@ public class TestWindow extends Window {
         root.addChild(slider);
     }
 
+    private static class HoverText extends Text {
+        public HoverText(String text) {
+            super(text);
+            setOnMouseEnter(() -> setBackground(0x33ffffff));
+            setOnMouseExit(() -> setBackground(0x00ffffff));
+        }
+    }
+
     private static class SpawnWaypointButton extends Button {
         public SpawnWaypointButton() {
             super("Spawn Waypoint Here");
@@ -148,8 +156,6 @@ public class TestWindow extends Window {
     }
 
     private static class DropdownTest extends Element {
-        private Dropdown dropdown;
-
         public DropdownTest() {
             this.setPadding(Edge.ALL, 5);
             this.setBackground(0x5500ff00);
@@ -159,26 +165,11 @@ public class TestWindow extends Window {
             this.setSize(20);
 
             this.setOnClick(button -> {
-                if (dropdown != null) {
-                    dropdown.close();
-                    dropdown = null;
-                    return true;
-                }
-                this.dropdown = Dropdown.openBelow(this);
-                this.dropdown.setBackground(0x550000ff);
-                this.dropdown.setPadding(Edge.ALL, 5);
-                this.dropdown.addChild(new Text("Dropdown Item 1") {
-                    @Override
-                    public void tick() {
-                        super.tick();
-                        if (isHovered()) {
-                            setBackground(0x33ffffff);
-                        } else {
-                            setBackground(0x00ffffff);
-                        }
-                    }
-                });
-                this.dropdown.addChild(new Text("Dropdown Item 2"));
+                Dropdown dropdown = Dropdown.openCenteredBelowRelative(this, getRoot());
+                dropdown.setBackground(0x550000ff);
+                dropdown.setPadding(Edge.ALL, 5);
+                dropdown.addChild(new HoverText("Dropdown Item 1"));
+                dropdown.addChild(new HoverText("Dropdown Item 2"));
                 return true;
             });
         }
