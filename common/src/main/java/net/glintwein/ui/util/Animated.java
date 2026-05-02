@@ -99,8 +99,9 @@ public abstract class Animated {
                     value = targetValue;
                     endTime = 0;
                     if (future != null) {
-                        future.complete(new End(Glintwein.time));
+                        CompletableFuture<End> _future = future;
                         future = null;
+                        _future.complete(new End(endTime));
                     }
                 } else {
                     return GMath.lerp(easing.ease(t), value, targetValue);
@@ -190,8 +191,9 @@ public abstract class Animated {
                     value = targetValue;
                     endTime = 0;
                     if (future != null) {
-                        future.complete(new End(Glintwein.time));
+                        CompletableFuture<End> _future = future;
                         future = null;
+                        _future.complete(new End(endTime));
                     }
                 } else {
                     return ARGB.lerp(easing.ease(t), value, targetValue);
