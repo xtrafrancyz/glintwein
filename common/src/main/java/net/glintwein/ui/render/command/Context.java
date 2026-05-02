@@ -30,7 +30,7 @@ public class Context {
     }
 
     private final PriorityQueue<PipCommand> pipCommands = new PriorityQueue<>();
-    private final Matrix3x2fStack transform = new Matrix3x2fStack(16);
+    private final Matrix3x2fStack transform = new Matrix3x2fStack(32);
     private final FloatArrayFIFOQueue opacityStack = new FloatArrayFIFOQueue();
     private final Deque<Bounds> scissorStack = new ArrayDeque<>();
 
