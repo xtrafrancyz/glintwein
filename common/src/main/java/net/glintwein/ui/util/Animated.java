@@ -71,17 +71,18 @@ public abstract class Animated {
             }
         }
 
-        public void animate(float value) {
-            animate(value, (int) durationMs, easing);
+        public Float animate(float value) {
+            return animate(value, (int) durationMs, easing);
         }
 
-        public void animate(float value, int durationMs, Easing easing) {
+        public Float animate(float value, int durationMs, Easing easing) {
             this.value = get();
             this.targetValue = value;
             this.durationMs = durationMs;
             this.easing = easing;
             this.endTime = Glintwein.time + durationMs;
             this.future = null;
+            return this;
         }
 
         public void set(float value) {
@@ -163,17 +164,18 @@ public abstract class Animated {
             }
         }
 
-        public void animate(int value) {
-            animate(value, (int) durationMs, easing);
+        public Color animate(int value) {
+            return animate(value, (int) durationMs, easing);
         }
 
-        public void animate(int value, int durationMs, Easing easing) {
+        public Color animate(int value, int durationMs, Easing easing) {
             this.value = get();
             this.targetValue = value;
             this.durationMs = durationMs;
             this.easing = easing;
             this.endTime = Glintwein.time + durationMs;
             this.future = null;
+            return this;
         }
 
         public void set(int value) {
