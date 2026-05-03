@@ -244,8 +244,6 @@ public class TextInput extends Text {
     protected void drawContent(Context ctx) {
         super.drawContent(ctx);
 
-        setMaxWidth(100);
-
         if (isInFocus()) {
             Vector2i cursor = translatePosToRowCol(cursorPos);
 

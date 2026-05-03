@@ -28,59 +28,60 @@ public class Text extends LeafElement {
 
     public Text(String text) {
         this.font = new SizedFont(SFPro.REGULAR, 16);
-
-        setMeasureFunction((width, widthMode, height, heightMode) -> {
-            // wrap content
-            wrappedLines.clear();
-            renderLines.clear();
-            float contentWidth = 0;
-            if (widthMode != YogaMeasureFunction.SizeMode.UNDEFINED && wrapMode == WrapMode.WORD) {
-                List<String> wrapped = new ArrayList<>();
-                font.wrapText(this.text, width, wrapped);
-                for (String line : wrapped) {
-                    float lineWidth = font.getWidth(line);
-                    wrappedLines.add(new WrappedLine(line, lineWidth));
-                    contentWidth = Math.max(contentWidth, lineWidth);
-                }
-            } else {
-                if (splitLinesText == null) {
-                    String[] lines = this.text.split("\n", -1);
-                    splitLinesMaxWidth = 0;
-                    splitLinesText = new ArrayList<>(lines.length);
-                    for (String line : lines) {
-                        float lineWidth = font.getWidth(line);
-                        splitLinesText.add(new WrappedLine(line, lineWidth));
-                        splitLinesMaxWidth = Math.max(splitLinesMaxWidth, lineWidth);
-                    }
-                }
-                wrappedLines.addAll(splitLinesText);
-                contentWidth = splitLinesMaxWidth;
-            }
-            if (wrappedLines.isEmpty())
-                wrappedLines.add(new WrappedLine("", 0));
-            float contentHeight = font.getHeight() * wrappedLines.size();
-
-            float measuredWidth;
-            if (widthMode == YogaMeasureFunction.SizeMode.EXACTLY) {
-                measuredWidth = width;
-            } else if (widthMode == YogaMeasureFunction.SizeMode.AT_MOST) {
-                measuredWidth = Math.min(contentWidth, width);
-            } else {
-                measuredWidth = contentWidth;
-            }
-
-            float measuredHeight;
-            if (heightMode == YogaMeasureFunction.SizeMode.EXACTLY)
-                measuredHeight = height;
-            else if (heightMode == YogaMeasureFunction.SizeMode.AT_MOST)
-                measuredHeight = Math.min(contentHeight, height);
-            else
-                measuredHeight = contentHeight;
-
-            return new Size(measuredWidth, measuredHeight);
-        });
-
+        setMeasureFunction(this::wrapAndMeasure);
         setText(text);
+    }
+
+    private Size wrapAndMeasure(float width, YogaMeasureFunction.SizeMode widthMode,
+                                float height, YogaMeasureFunction.SizeMode heightMode) {
+        // wrap content
+        wrappedLines.clear();
+        renderLines.clear();
+        float contentWidth = 0;
+        if (widthMode != YogaMeasureFunction.SizeMode.UNDEFINED && wrapMode == WrapMode.WORD) {
+            List<String> wrapped = new ArrayList<>();
+            font.wrapText(this.text, width, wrapped);
+            for (String line : wrapped) {
+                float lineWidth = font.getWidth(line);
+                wrappedLines.add(new WrappedLine(line, lineWidth));
+                contentWidth = Math.max(contentWidth, lineWidth);
+            }
+        } else {
+            if (splitLinesText == null) {
+                String[] lines = this.text.split("\n", -1);
+                splitLinesMaxWidth = 0;
+                splitLinesText = new ArrayList<>(lines.length);
+                for (String line : lines) {
+                    float lineWidth = font.getWidth(line);
+                    splitLinesText.add(new WrappedLine(line, lineWidth));
+                    splitLinesMaxWidth = Math.max(splitLinesMaxWidth, lineWidth);
+                }
+            }
+            wrappedLines.addAll(splitLinesText);
+            contentWidth = splitLinesMaxWidth;
+        }
+        if (wrappedLines.isEmpty())
+            wrappedLines.add(new WrappedLine("", 0));
+        float contentHeight = font.getHeight() * wrappedLines.size();
+
+        float measuredWidth;
+        if (widthMode == YogaMeasureFunction.SizeMode.EXACTLY) {
+            measuredWidth = width;
+        } else if (widthMode == YogaMeasureFunction.SizeMode.AT_MOST) {
+            measuredWidth = Math.min(contentWidth, width);
+        } else {
+            measuredWidth = contentWidth;
+        }
+
+        float measuredHeight;
+        if (heightMode == YogaMeasureFunction.SizeMode.EXACTLY)
+            measuredHeight = height;
+        else if (heightMode == YogaMeasureFunction.SizeMode.AT_MOST)
+            measuredHeight = Math.min(contentHeight, height);
+        else
+            measuredHeight = contentHeight;
+
+        return new Size(measuredWidth, measuredHeight);
     }
 
     public void setAlign(Align align) {
@@ -101,7 +102,6 @@ public class Text extends LeafElement {
         if (this.text.equals(text))
             return;
         this.text = text;
-        this.splitLinesText = null;
         markDirty();
     }
 
@@ -113,7 +113,6 @@ public class Text extends LeafElement {
         if (this.wrapMode == mode)
             return;
         this.wrapMode = mode;
-        this.splitLinesText = null;
         markDirty();
     }
 
@@ -127,6 +126,13 @@ public class Text extends LeafElement {
 
     protected List<RenderLine> getRenderLines() {
         if (renderLines.isEmpty()) {
+            if (wrappedLines.isEmpty()) {
+                wrapAndMeasure(
+                    contentBox.width, YogaMeasureFunction.SizeMode.EXACTLY,
+                    contentBox.height, YogaMeasureFunction.SizeMode.EXACTLY
+                );
+            }
+
             float y = contentBox.y;
             for (WrappedLine line : wrappedLines) {
                 float x;
@@ -164,6 +170,8 @@ public class Text extends LeafElement {
     protected void markDirty() {
         super.markDirty();
         renderLines.clear();
+        wrappedLines.clear();
+        splitLinesText = null;
     }
 
     @Override

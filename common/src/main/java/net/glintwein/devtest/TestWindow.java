@@ -171,7 +171,10 @@ public class TestWindow extends Window {
                 dropdown.setBackground(0x550000ff);
                 dropdown.setPadding(Edge.ALL, 5);
                 dropdown.addChild(new HoverText("Dropdown Item 1"));
-                dropdown.addChild(new HoverText("Dropdown Item 2"));
+                dropdown.addChild(new HoverText("Dropdown Item 2") {{
+                    setWidth(100);
+                    setHeight(10);
+                }});
                 return true;
             });
         }
