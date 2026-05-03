@@ -34,6 +34,7 @@ public class TextInput extends Text {
     private int clickCount;
 
     public TextInput() {
+        setWrapMode(WrapMode.NONE);
     }
 
     public void setPlaceholder(String placeholder) {
@@ -56,6 +57,7 @@ public class TextInput extends Text {
 
     public void setMultiline(boolean multiline) {
         this.multiline = multiline;
+        setWrapMode(multiline ? WrapMode.WORD : WrapMode.NONE);
     }
 
     public void setAllowRegexp(Pattern allowRegexp) {
