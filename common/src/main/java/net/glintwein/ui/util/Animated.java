@@ -16,6 +16,10 @@ public abstract class Animated {
         return future;
     }
 
+    public boolean isActive() {
+        return endTime != 0;
+    }
+
     public abstract void update();
 
     public static class End {
@@ -47,9 +51,7 @@ public abstract class Animated {
 
         public Float(FloatConsumer set, float value) {
             this.setter = set;
-            this.value = value;
-            this.targetValue = value;
-            update();
+            set(value);
         }
 
         public Float(FloatConsumer set, float value, int durationMs, Easing easing) {
@@ -90,7 +92,8 @@ public abstract class Animated {
             this.value = value;
             this.targetValue = value;
             this.future = null;
-            update();
+            if (setter != null)
+                setter.accept(value);
         }
 
         public float get() {
@@ -118,7 +121,7 @@ public abstract class Animated {
 
         @Override
         public void update() {
-            if (setter != null)
+            if (isActive() && setter != null)
                 setter.accept(get());
         }
     }
@@ -140,9 +143,7 @@ public abstract class Animated {
 
         public Color(IntConsumer set, int value) {
             this.setter = set;
-            this.value = value;
-            this.targetValue = value;
-            update();
+            set(value);
         }
 
         public Color(IntConsumer set, int value, int durationMs, Easing easing) {
@@ -211,7 +212,7 @@ public abstract class Animated {
 
         @Override
         public void update() {
-            if (setter != null)
+            if (isActive() && setter != null)
                 setter.accept(get());
         }
     }

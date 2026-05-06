@@ -127,7 +127,8 @@ public class VerticalScrollView extends Element {
         float clamped = clampScrollOffsetY(scrollOffsetY);
         if (oldOffsetY != clamped)
             barThumbOffsetYAnim.animateIfDifferent(clamped, 150, Easing.IN_SINE);
-        modifyContentBoxes();
+        // just to trigger the position update
+        updateScrollOffsetFromAnim(scrollOffsetY);
     }
 
     @Override
@@ -182,8 +183,6 @@ public class VerticalScrollView extends Element {
     }
 
     private void updateScrollOffsetFromAnim(float value) {
-        if (scrollOffsetY == value)
-            return;
         scrollOffsetY = value;
 
         float availableBarHeight = trackHeight - barThumbBox.height;

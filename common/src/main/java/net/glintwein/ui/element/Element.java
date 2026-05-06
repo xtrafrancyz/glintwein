@@ -154,10 +154,11 @@ public class Element extends YogaNode {
     }
 
     protected void propagateLayoutRead() {
-        if (Platform.yoga().NodeGetHasNewLayout(yogaNode)) {
-            Platform.yoga().NodeSetHasNewLayout(yogaNode, false);
-            readYogaLayout();
-        }
+        if (!Platform.yoga().NodeGetHasNewLayout(yogaNode))
+            return;
+        Platform.yoga().NodeSetHasNewLayout(yogaNode, false);
+
+        readYogaLayout();
 
         for (Element child : children)
             child.propagateLayoutRead();
