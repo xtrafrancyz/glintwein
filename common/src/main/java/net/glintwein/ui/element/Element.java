@@ -11,6 +11,7 @@ import net.glintwein.ui.render.command.Context;
 import net.glintwein.ui.util.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -21,7 +22,7 @@ public class Element extends YogaNode {
     protected final Box paddingBox = new Box();
     protected final Box contentBox = new Box();
     protected LayoutBoxLerp layoutLerp;
-    private final List<Animated> animations = new ArrayList<>();
+    private List<Animated> animations = Collections.emptyList();
 
     private boolean hovered;
     private boolean pressed;
@@ -74,6 +75,8 @@ public class Element extends YogaNode {
     }
 
     public void trackAnimation(Animated animation) {
+        if (animations.isEmpty())
+            animations = new ArrayList<>();
         animations.add(animation);
     }
 

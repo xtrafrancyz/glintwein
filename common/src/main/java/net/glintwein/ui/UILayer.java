@@ -1,5 +1,6 @@
 package net.glintwein.ui;
 
+import net.glintwein.Glintwein;
 import net.glintwein.ui.element.Element;
 import net.glintwein.ui.element.RootElement;
 import net.glintwein.ui.render.command.Context;
@@ -37,7 +38,7 @@ public class UILayer {
     }
 
     public void render() {
-        Context ctx = new Context();
+        Context ctx = Glintwein.sharedDrawContext;
         ctx.pose().scale(GlobalUIState.getScale());
         windowManager.draw(ctx);
         root.draw(ctx);

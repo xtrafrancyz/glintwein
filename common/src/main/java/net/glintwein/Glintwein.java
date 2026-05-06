@@ -7,6 +7,7 @@ import net.glintwein.ui.GlobalUIState;
 import net.glintwein.ui.IngameUILayer;
 import net.glintwein.ui.UILayer;
 import net.glintwein.ui.render.PipAtlasManager;
+import net.glintwein.ui.render.command.Context;
 import net.glintwein.ui.util.NativeCleaner;
 import net.glintwein.util.KVStore;
 
@@ -17,6 +18,8 @@ public class Glintwein {
     public static Glintwein instance;
     private static long timeStart;
     public static long time;
+
+    public static final Context sharedDrawContext = new Context();
 
     private final List<UILayer> uiLayers = new ArrayList<>();
     public final UILayer layerAlwaysOnTop;
