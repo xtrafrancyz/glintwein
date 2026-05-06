@@ -297,6 +297,7 @@ public class TextInput extends Text {
     @Override
     protected void readYogaLayout() {
         super.readYogaLayout();
+        scrollDirty = true;
         updateScroll();
     }
 
