@@ -3,6 +3,7 @@ package net.glintwein.ui.element;
 import net.glintwein.Glintwein;
 import net.glintwein.platform.Platform;
 import net.glintwein.ui.GlobalUIState;
+import net.glintwein.ui.data.Bounds;
 import net.glintwein.ui.render.command.Context;
 import net.glintwein.ui.util.ARGB;
 import net.glintwein.ui.util.GMath;
@@ -28,6 +29,9 @@ public class TextInput extends Text {
     private int cursorPos;
     private int highlightPos;
     private float verticalCursorXCache = -1;
+    private float scrollX;
+    private boolean hasOverflow;
+    private boolean scrollDirty;
 
     private float lastMouseX, lastMouseY;
     private long lastClickTime;
@@ -244,6 +248,15 @@ public class TextInput extends Text {
 
     @Override
     protected void drawContent(Context ctx) {
+        updateScroll();
+
+        if (hasOverflow) {
+            if (!ctx.pushScissor(Bounds.fromBox(contentBox)))
+                return;
+            ctx.pose().pushMatrix();
+            ctx.pose().translate(-scrollX, 0);
+        }
+
         super.drawContent(ctx);
 
         if (isInFocus()) {
@@ -271,13 +284,46 @@ public class TextInput extends Text {
             if ((Glintwein.time - blinkTimer) % 1060L < 530L) {
                 RenderLine line = getRenderLines().get(cursor.y());
                 float cursorOffset = font.getWidth(line.text.substring(0, cursor.x()));
-                ctx.drawRect(line.x + cursorOffset, line.y, 1, font.getHeight(), 0xFFFFFFFF);
+                ctx.drawRect(line.x + cursorOffset, line.y, GlobalUIState.getPixelSize() * 2, font.getHeight(), 0xFFFFFFFF);
             }
+        }
+
+        if (hasOverflow) {
+            ctx.pose().popMatrix();
+            ctx.popScissor();
         }
     }
 
-    protected void onValueChange() {
+    @Override
+    protected void readYogaLayout() {
+        super.readYogaLayout();
+        updateScroll();
+    }
 
+    protected void onValueChange() {
+        scrollDirty = true;
+    }
+
+    private void updateScroll() {
+        if (!scrollDirty)
+            return;
+        scrollDirty = false;
+
+        if (multiline) {
+            scrollX = 0;
+            return;
+        }
+
+        RenderLine line = getRenderLines().get(0);
+        hasOverflow = line.width > contentBox.width;
+        if (!hasOverflow) {
+            scrollX = 0;
+            return;
+        }
+        float cursorOffset = font.getWidth(line.text.substring(0, translatePosToRowCol(cursorPos).x()));
+        float minScroll = GMath.clamp(cursorOffset - contentBox.width + GlobalUIState.getPixelSize() * 3, 0, cursorOffset);
+        float maxScroll = GMath.clamp(line.width - contentBox.width, 0, cursorOffset);
+        scrollX = GlobalUIState.snapToPixel(GMath.clamp(scrollX, minScroll, maxScroll));
     }
 
     private boolean isPlaceholderVisible() {
@@ -294,7 +340,7 @@ public class TextInput extends Text {
         for (int i = 0; i < renderLines.size(); i++) {
             RenderLine line = renderLines.get(i);
             if (line.y <= my && my <= line.y + lineHeight) {
-                float xRelativeToLine = mx - line.x;
+                float xRelativeToLine = mx - line.x + scrollX;
                 if (xRelativeToLine <= 0)
                     return translateRowColToPos(i, 0);
                 String strBefore = this.font.trimToWidth(line.text, xRelativeToLine);
@@ -479,6 +525,7 @@ public class TextInput extends Text {
         if (!this.shiftPressed) {
             this.setHighlightPosition(this.cursorPos);
         }
+        scrollDirty = true;
     }
 
     private void setCursorPosition(int pos) {
