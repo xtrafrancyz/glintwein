@@ -3,8 +3,8 @@ package net.glintwein.ui.element;
 import net.glintwein.platform.Platform;
 import net.glintwein.ui.GlobalUIState;
 import net.glintwein.ui.data.BorderRadius;
-import net.glintwein.ui.data.Bounds;
 import net.glintwein.ui.data.Box;
+import net.glintwein.ui.data.Display;
 import net.glintwein.ui.data.Overflow;
 import net.glintwein.ui.render.command.Context;
 import net.glintwein.ui.util.Animated;
@@ -217,16 +217,10 @@ public class VerticalScrollView extends Element {
 
     @Override
     public void draw(Context ctx) {
-        if (hasOverflow)
-            if (!ctx.pushScissor(Bounds.fromBox(borderBox)))
-                return;
-
         super.draw(ctx);
 
-        drawScrollbars(ctx);
-
-        if (hasOverflow)
-            ctx.popScissor();
+        if (getDisplayType() != Display.NONE)
+            drawScrollbars(ctx);
     }
 
     protected void drawScrollbars(Context ctx) {

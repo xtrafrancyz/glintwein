@@ -28,7 +28,7 @@ public class GigaFont {
     private final float spaceWidth;
     private int textureId;
 
-    private Map<String, Float> widthCache = new LinkedHashMap<String, Float>(CACHE_MAX_ENTRIES + 1, .75F, true) {
+    private final Map<String, Float> widthCache = new LinkedHashMap<String, Float>(CACHE_MAX_ENTRIES + 1, .75F, true) {
         public boolean removeEldestEntry(Map.Entry<String, Float> eldest) {
             // Automatically evict the oldest entry when size exceeds capacity
             return size() > CACHE_MAX_ENTRIES;

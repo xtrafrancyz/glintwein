@@ -10,7 +10,6 @@ import org.joml.Matrix3x2fc;
 import java.util.List;
 
 public class DrawTextureCommand extends DrawCommand {
-    private final Bounds bounds;
     private final Matrix3x2fc pose;
     private final float x0, y0, x1, y1;
     private final float u0, v0, u1, v1;
@@ -42,11 +41,6 @@ public class DrawTextureCommand extends DrawCommand {
         this.color = color;
         this.outlineColor = outlineColor;
         this.outlineWidth = outlineWidth;
-    }
-
-    @Override
-    public Bounds getBounds() {
-        return bounds;
     }
 
     @Override

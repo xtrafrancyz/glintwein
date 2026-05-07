@@ -75,7 +75,7 @@ public class Context {
         bounds.transformAxisAligned(transform);
         Bounds last = scissorStack.peekLast();
         if (last != null) {
-            bounds = last.intersection(bounds);
+            bounds = last.intersectionOrNull(bounds);
             if (bounds == null)
                 return false;
         }
@@ -329,9 +329,17 @@ public class Context {
     }
 
     private void addCommand(DrawCommand cmd) {
-        cmd.scissor = nullIfUnbounded(scissorStack.peekLast());
-        if (cmd.scissor != null && !cmd.scissor.intersects(cmd.getBounds()))
-            return;
+        Bounds scissor = scissorStack.peekLast();
+        if (scissor != null && scissor != UNBOUNDED) {
+            cmd.scissor = scissor;
+            if (!scissor.intersects(cmd.bounds))
+                return;
+            boolean contains = scissor.contains(cmd.bounds);
+            if (contains)
+                cmd.scissor = null;
+            else
+                cmd.bounds.intersectionInPlace(scissor);
+        }
 
         priorityCommandMap
             .computeIfAbsent(currentPriority, k -> new ArrayList<>())
@@ -365,7 +373,7 @@ public class Context {
         DrawCommand currentCommand = commands.get(0);
         for (int i = 1; i < commands.size(); i++) {
             DrawCommand cmd = commands.get(i);
-            if (!currentCommand.isSimilar(cmd)) {
+            if (cmd.firstInBatch) {
                 executeBatch(currentCommand.getClass(), commands.subList(startIndex, i));
                 startIndex = i;
                 currentCommand = cmd;
@@ -379,8 +387,7 @@ public class Context {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T extends DrawCommand> void executeBatch(Class<? extends
-        DrawCommand> cmdClass, List<DrawCommand> batch) {
+    private static <T extends DrawCommand> void executeBatch(Class<? extends DrawCommand> cmdClass, List<DrawCommand> batch) {
         DrawCommand.Executor<T> executor = (DrawCommand.Executor<T>) EXECUTORS.get(cmdClass);
         if (executor != null) {
             DrawCommand cmd = batch.get(0);
@@ -401,16 +408,22 @@ public class Context {
         int targetIndex = batch.size() - 1;
         while (targetIndex >= 0 && maxBacktrack-- > 0) {
             DrawCommand prev = batch.get(targetIndex);
-            if (!prev.isSimilar(cmd) && !prev.getBounds().intersects(cmd.getBounds())) {
+            if (!cmd.isSimilar(prev)) {
+                if (prev.bounds.intersects(cmd.bounds))
+                    break;
                 targetIndex -= 1;
                 continue;
             }
+
+            // Merge scissors
+            cmd.scissor = prev.scissor;
 
             batch.add(targetIndex + 1, cmd);
             return;
         }
 
         // no previous task found, just add it to the end
+        cmd.firstInBatch = true;
         batch.add(cmd);
     }
 
@@ -420,9 +433,5 @@ public class Context {
         int x = GMath.floor(bounds.minX);
         int y = GMath.floor(frameHeight - bounds.maxY);
         Platform.get().getRender().stateEnableScissor(x, y, width, height);
-    }
-
-    private static Bounds nullIfUnbounded(Bounds bounds) {
-        return bounds == UNBOUNDED ? null : bounds;
     }
 }

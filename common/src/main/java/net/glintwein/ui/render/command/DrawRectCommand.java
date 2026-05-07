@@ -10,7 +10,6 @@ import org.joml.Matrix3x2fc;
 import java.util.List;
 
 public class DrawRectCommand extends DrawCommand {
-    private final Bounds bounds;
     private final Matrix3x2fc pose;
     private final float x0, y0, x1, y1;
     private final BorderRadius radius;
@@ -36,18 +35,6 @@ public class DrawRectCommand extends DrawCommand {
         this.colorBL = colorBL;
         this.outlineColor = outlineColor;
         this.outlineWidth = outlineWidth;
-    }
-
-    @Override
-    public Bounds getBounds() {
-        return bounds;
-    }
-
-    @Override
-    public boolean isSimilar(DrawCommand other) {
-        if (!super.isSimilar(other)) return false;
-        DrawRectCommand o = (DrawRectCommand) other;
-        return true; // All rects are similar for batching
     }
 
     public static class Executor implements DrawCommand.Executor<DrawRectCommand> {

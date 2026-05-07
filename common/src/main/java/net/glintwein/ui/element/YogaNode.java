@@ -15,6 +15,7 @@ public abstract class YogaNode {
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     private final List<NativeCleaner.Handle> cleanerHandlers = new ArrayList<>();
     private Display display = Display.FLEX;
+    private Overflow overflow = Overflow.VISIBLE;
 
     public YogaNode() {
         this.yogaNode = Platform.yoga().NodeNewWithConfig(GlobalUIState.getYogaConfigHandle());
@@ -201,7 +202,14 @@ public abstract class YogaNode {
         Platform.yoga().NodeStyleSetPaddingPercent(yogaNode, edge, percent);
     }
 
+    public Overflow getOverflow() {
+        return overflow;
+    }
+
     public void setOverflow(Overflow overflow) {
+        if (this.overflow == overflow)
+            return;
+        this.overflow = overflow;
         Platform.yoga().NodeStyleSetOverflow(yogaNode, overflow);
     }
 

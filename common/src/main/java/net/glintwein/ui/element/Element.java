@@ -3,10 +3,7 @@ package net.glintwein.ui.element;
 import net.glintwein.platform.Platform;
 import net.glintwein.platform.YogaLayoutResult;
 import net.glintwein.ui.GlobalUIState;
-import net.glintwein.ui.data.BorderRadius;
-import net.glintwein.ui.data.Bounds;
-import net.glintwein.ui.data.Box;
-import net.glintwein.ui.data.Display;
+import net.glintwein.ui.data.*;
 import net.glintwein.ui.render.command.Context;
 import net.glintwein.ui.util.*;
 
@@ -333,16 +330,21 @@ public class Element extends YogaNode {
         }
 
         if (ARGB.alpha(backgroundColor) > 0)
-            ctx.drawRect(borderBox, borderRadius, backgroundColor);
+            ctx.drawRect(paddingBox, borderRadius, backgroundColor);
 
-        drawContent(ctx);
+        if (getOverflow() == Overflow.VISIBLE || ctx.pushScissor(Bounds.fromBox(paddingBox))) {
+            drawContent(ctx);
 
-        if (!children.isEmpty()) {
-            ctx.pose().pushMatrix();
-            ctx.pose().translate(borderBox.x, borderBox.y);
-            for (Element child : children)
-                child.draw(ctx);
-            ctx.pose().popMatrix();
+            if (!children.isEmpty()) {
+                ctx.pose().pushMatrix();
+                ctx.pose().translate(borderBox.x, borderBox.y);
+                for (Element child : children)
+                    child.draw(ctx);
+                ctx.pose().popMatrix();
+            }
+
+            if (getOverflow() != Overflow.VISIBLE)
+                ctx.popScissor();
         }
 
         if (opacity != 1)

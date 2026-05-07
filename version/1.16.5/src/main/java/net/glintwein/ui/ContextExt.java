@@ -1,9 +1,13 @@
 package net.glintwein.ui;
 
+import net.glintwein.ui.data.BorderRadius;
 import net.glintwein.ui.render.command.Context;
+import net.glintwein.ui.render.command.DrawTextureBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.LoadingOverlay;
+import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import org.lwjgl.opengl.GL11;
 
@@ -23,6 +27,24 @@ public class ContextExt {
                 }
             },
             x, y, size, size
+        );
+    }
+
+    public static void drawPlayerHead(Context ctx, AbstractClientPlayer player, float x, float y, float size, BorderRadius radius) {
+        ResourceLocation skinTextureLocation = player.getSkinTextureLocation();
+        int textureId = Minecraft.getInstance().getTextureManager().getTexture(skinTextureLocation).getId();
+
+        // head
+        ctx.drawTexture(DrawTextureBuilder.fromXYWH(x, y, size, size)
+            .uv(8, 8, 8, 8, 64, 64)
+            .texture(textureId)
+            .radius(radius)
+        );
+        // helmet overlay
+        ctx.drawTexture(DrawTextureBuilder.fromXYWH(x, y, size, size)
+            .uv(40, 8, 8, 8, 64, 64)
+            .texture(textureId)
+            .radius(radius)
         );
     }
 }

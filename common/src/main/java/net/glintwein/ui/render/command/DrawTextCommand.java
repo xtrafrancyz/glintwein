@@ -21,8 +21,6 @@ public class DrawTextCommand extends DrawCommand {
     private final float outlineWidth;
     private final int outlineColor;
 
-    private final Bounds bounds;
-
     public DrawTextCommand(Matrix3x2f pose, GigaFont font, String text, float x, float y, float size, int color) {
         this(pose, font, text, x, y, size, color, color, color, color, 0, 0f);
     }
@@ -47,11 +45,6 @@ public class DrawTextCommand extends DrawCommand {
         this.solidColor = (colorTL == colorTR) && (colorTL == colorBR) && (colorTL == colorBL);
         this.outlineWidth = Math.max(0, outlineWidth);
         this.outlineColor = this.outlineWidth <= 0 ? 0 : outlineColor;
-    }
-
-    @Override
-    public Bounds getBounds() {
-        return bounds;
     }
 
     @Override
