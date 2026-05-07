@@ -181,6 +181,44 @@ public class Context {
         ));
     }
 
+    public void drawLine(float x0, float y0, float x1, float y1, float width, BorderRadius radius, int color) {
+        if (ARGB.alpha(color = mulOpacity(color)) == 0)
+            return;
+        float length = GMath.sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));
+        Matrix3x2f pose = new Matrix3x2f(transform);
+        pose.translate(x0, y0);
+        pose.rotate((float) Math.atan2(y1 - y0, x1 - x0));
+        pose.translate(0, -width / 2);
+
+        addCommand(new DrawRectCommand(
+            pose,
+            0, 0, length, width,
+            radius,
+            color,
+            0, 0
+        ));
+    }
+
+    public void drawLine(float x0, float y0, float x1, float y1, float width, BorderRadius radius, Gradient color) {
+        Gradient gradient = mulOpacity(color);
+        if (gradient.isFullyTransparent())
+            return;
+
+        float length = GMath.sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));
+        Matrix3x2f pose = new Matrix3x2f(transform);
+        pose.translate(x0, y0);
+        pose.rotate((float) Math.atan2(y1 - y0, x1 - x0));
+        pose.translate(0, -width / 2);
+
+        addCommand(new DrawRectCommand(
+            pose,
+            0, 0, length, width,
+            radius,
+            gradient.topLeft(), gradient.topRight(), gradient.bottomRight(), gradient.bottomLeft(),
+            0, 0
+        ));
+    }
+
     public void drawTexture(Sprite sprite, Box box, int color) {
         drawTexture(sprite, box.x, box.y, box.width, box.height, BorderRadius.ZERO, color);
     }
@@ -193,7 +231,8 @@ public class Context {
         drawTexture(sprite, box.x, box.y, box.width, box.height, radius, color);
     }
 
-    public void drawTexture(Sprite sprite, float x, float y, float width, float height, BorderRadius radius, int color) {
+    public void drawTexture(Sprite sprite, float x, float y, float width, float height, BorderRadius radius,
+                            int color) {
         if (ARGB.alpha(color = mulOpacity(color)) == 0)
             return;
 
@@ -300,12 +339,17 @@ public class Context {
     }
 
     public void execute() {
+        if (priorityCommandMap.isEmpty()) {
+            reset();
+            return;
+        }
+
         if (!pipCommands.isEmpty()) {
             Platform.get().getRender().renderPipList(pipCommands);
         }
 
+        // Collect commands in priority order and batch similar commands together
         List<DrawCommand> commands = new ArrayList<>();
-
         int[] keys = priorityCommandMap.keySet().toArray(new int[0]);
         Arrays.sort(keys);
         for (int key : keys) {
@@ -315,9 +359,38 @@ public class Context {
             }
         }
 
-        new ListExecutor(commands).execute();
+        Platform.get().getRender().beforeDraw();
+
+        int startIndex = 0;
+        DrawCommand currentCommand = commands.get(0);
+        for (int i = 1; i < commands.size(); i++) {
+            DrawCommand cmd = commands.get(i);
+            if (!currentCommand.isSimilar(cmd)) {
+                executeBatch(currentCommand.getClass(), commands.subList(startIndex, i));
+                startIndex = i;
+                currentCommand = cmd;
+            }
+        }
+        executeBatch(currentCommand.getClass(), commands.subList(startIndex, commands.size()));
+
+        Platform.get().getRender().afterDraw();
 
         reset();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T extends DrawCommand> void executeBatch(Class<? extends
+        DrawCommand> cmdClass, List<DrawCommand> batch) {
+        DrawCommand.Executor<T> executor = (DrawCommand.Executor<T>) EXECUTORS.get(cmdClass);
+        if (executor != null) {
+            DrawCommand cmd = batch.get(0);
+            if (cmd.scissor != null) {
+                enableScissor(cmd.scissor, Platform.get().getWindowHeight());
+            } else {
+                Platform.get().getRender().stateDisableScissor();
+            }
+            executor.execute((List<T>) batch);
+        }
     }
 
     private static void addCommandBatching(List<DrawCommand> batch, DrawCommand cmd) {
@@ -339,49 +412,6 @@ public class Context {
 
         // no previous task found, just add it to the end
         batch.add(cmd);
-    }
-
-    private static class ListExecutor {
-        private final List<DrawCommand> commands;
-
-        public ListExecutor(List<DrawCommand> commands) {
-            this.commands = commands;
-        }
-
-        public void execute() {
-            if (commands.isEmpty())
-                return;
-
-            Platform.get().getRender().beforeDraw();
-
-            int startIndex = 0;
-            DrawCommand currentCommand = commands.get(0);
-            for (int i = 1; i < commands.size(); i++) {
-                DrawCommand cmd = commands.get(i);
-                if (!currentCommand.isSimilar(cmd)) {
-                    executeBatch(currentCommand.getClass(), commands.subList(startIndex, i));
-                    startIndex = i;
-                    currentCommand = cmd;
-                }
-            }
-            executeBatch(currentCommand.getClass(), commands.subList(startIndex, commands.size()));
-
-            Platform.get().getRender().afterDraw();
-        }
-
-        @SuppressWarnings("unchecked")
-        private <T extends DrawCommand> void executeBatch(Class<? extends DrawCommand> cmdClass, List<DrawCommand> batch) {
-            DrawCommand.Executor<T> executor = (DrawCommand.Executor<T>) EXECUTORS.get(cmdClass);
-            if (executor != null) {
-                DrawCommand cmd = batch.get(0);
-                if (cmd.scissor != null) {
-                    enableScissor(cmd.scissor, Platform.get().getWindowHeight());
-                } else {
-                    Platform.get().getRender().stateDisableScissor();
-                }
-                executor.execute((List<T>) batch);
-            }
-        }
     }
 
     private static void enableScissor(Bounds bounds, float frameHeight) {
