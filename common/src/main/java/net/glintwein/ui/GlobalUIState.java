@@ -1,9 +1,18 @@
 package net.glintwein.ui;
 
+import net.glintwein.Glintwein;
 import net.glintwein.platform.Platform;
 import net.glintwein.ui.element.Element;
+import net.glintwein.ui.render.font.GigaFont;
+import net.glintwein.ui.render.font.SizedFont;
+import net.glintwein.util.ResourceLoaderUtil;
+import org.joml.Matrix4f;
+
+import java.io.InputStream;
 
 public class GlobalUIState {
+    private static GigaFont defaultFont;
+    private static SizedFont defaultTextFont;
     private static int uiResolutionWidth = 1920;
     private static int uiResolutionHeight = 1080;
     private static Element focusedElement;
@@ -19,6 +28,28 @@ public class GlobalUIState {
     public static void init() {
         yogaConfigHandle = Platform.yoga().ConfigNew();
         Platform.yoga().ConfigSetPointScaleFactor(yogaConfigHandle, 1);
+
+        String defaultFontPath = "assets/fonts/sf-pro-regular";
+        try (InputStream jsonStream = ResourceLoaderUtil.getStream(defaultFontPath + ".json");
+             InputStream imageStream = ResourceLoaderUtil.getStream(defaultFontPath + ".png")) {
+            defaultFont = Glintwein.loadFont(jsonStream, imageStream);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to load GigaFont: " + defaultFontPath, e);
+        }
+
+        defaultTextFont = new SizedFont(defaultFont, 16);
+    }
+
+    public static GigaFont getDefaultFont() {
+        return defaultFont;
+    }
+
+    public static SizedFont getDefaultTextFont() {
+        return defaultTextFont;
+    }
+
+    public static void setDefaultTextFont(SizedFont font) {
+        defaultTextFont = font;
     }
 
     public static void setUiResolution(int width, int height) {
@@ -137,5 +168,20 @@ public class GlobalUIState {
 
     public static float snapToPixel(float value) {
         return Math.round(value * scale) / scale;
+    }
+
+    private static final Matrix4f guiProxMatrix = new Matrix4f();
+    private static int projMatrixWidth = -1;
+    private static int projMatrixHeight = -1;
+
+    public static Matrix4f getGuiProjectionMatrix() {
+        int width = Platform.get().getWindowWidth();
+        int height = Platform.get().getWindowHeight();
+        if (width != projMatrixWidth || height != projMatrixHeight) {
+            projMatrixWidth = width;
+            projMatrixHeight = height;
+            guiProxMatrix.setOrtho2D(0, width, height, 0);
+        }
+        return guiProxMatrix;
     }
 }

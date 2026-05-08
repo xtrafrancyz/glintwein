@@ -1,10 +1,10 @@
 package net.glintwein.ui.element;
 
 import net.glintwein.platform.YogaMeasureFunction;
+import net.glintwein.ui.GlobalUIState;
 import net.glintwein.ui.data.Size;
 import net.glintwein.ui.render.command.Context;
 import net.glintwein.ui.render.font.GigaFont;
-import net.glintwein.ui.render.font.SFPro;
 import net.glintwein.ui.render.font.SizedFont;
 
 import java.util.ArrayList;
@@ -27,7 +27,7 @@ public class Text extends LeafElement {
     }
 
     public Text(String text) {
-        this.font = new SizedFont(SFPro.REGULAR, 16);
+        this.font = GlobalUIState.getDefaultTextFont();
         setMeasureFunction(this::wrapAndMeasure);
         setText(text);
     }
@@ -96,6 +96,17 @@ public class Text extends LeafElement {
             return;
         this.font = new SizedFont(font, size);
         markDirty();
+    }
+
+    public void setFont(SizedFont font) {
+        if (this.font.font() == font.font() && this.font.size() == font.size())
+            return;
+        this.font = font;
+        markDirty();
+    }
+
+    public SizedFont getFont() {
+        return font;
     }
 
     public void setText(String text) {

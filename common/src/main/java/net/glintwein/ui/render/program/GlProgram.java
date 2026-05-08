@@ -2,19 +2,25 @@ package net.glintwein.ui.render.program;
 
 import net.glintwein.platform.AutoQuadIndexBuffer;
 import net.glintwein.platform.Platform;
-import net.glintwein.util.ResourceLoader;
+import net.glintwein.util.ResourceLoaderUtil;
+import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
+import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
 import java.io.InputStream;
-import java.util.*;
+import java.nio.FloatBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class GlProgram {
-    public static final GlProgram MSDF = new GlProgram("msdf", GlintVertexFormat.MSDF);
-    public static final GlProgram RECT = new GlProgram("rect", GlintVertexFormat.RECT);
-    public static final GlProgram RECT_TEXTURED = new GlProgram("rect_textured", GlintVertexFormat.TEXTURED_RECT);
+    public static final GlProgram MSDF = loadFromJar("msdf", GlintVertexFormat.MSDF);
+    public static final GlProgram RECT = loadFromJar("rect", GlintVertexFormat.RECT);
+    public static final GlProgram RECT_TEXTURED = loadFromJar("rect_textured", GlintVertexFormat.TEXTURED_RECT);
 
     private static final BufferBuilder BUFFER_BUILDER = new BufferBuilder(98304);
 
@@ -29,28 +35,11 @@ public class GlProgram {
     private boolean vaoInitialized = false;
     private int lastAutoIndexMaxSize = 0;
 
-    public GlProgram(String name, GlintVertexFormat format) {
-        this(name, name, format);
-    }
-
-    public GlProgram(String vsh, String fsh, GlintVertexFormat format) {
+    public GlProgram(String vertexShader, String fragmentShader, GlintVertexFormat format) {
         this.format = format;
 
-        int vertexShaderId;
-        try (InputStream is = ResourceLoader.getStream("/assets/shaders/" + vsh + ".vsh")) {
-            String vertexSource = ResourceLoader.toString(is);
-            vertexShaderId = compileShader(vertexSource, GL20.GL_VERTEX_SHADER);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to load vertex shader source for " + vsh, e);
-        }
-
-        int fragmentShaderId;
-        try (InputStream is = ResourceLoader.getStream("/assets/shaders/" + fsh + ".fsh")) {
-            String fragmentSource = ResourceLoader.toString(is);
-            fragmentShaderId = compileShader(fragmentSource, GL20.GL_FRAGMENT_SHADER);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to load fragment shader source for " + fsh, e);
-        }
+        int vertexShaderId = compileShader(vertexShader, GL20.GL_VERTEX_SHADER);
+        int fragmentShaderId = compileShader(fragmentShader, GL20.GL_FRAGMENT_SHADER);
 
         this.programId = GL20.glCreateProgram();
         if (this.programId <= 0)
@@ -178,6 +167,17 @@ public class GlProgram {
         return shaderId;
     }
 
+    private static GlProgram loadFromJar(String name, GlintVertexFormat format) {
+        try (InputStream vshStream = ResourceLoaderUtil.getStream("/assets/shaders/" + name + ".vsh");
+             InputStream fshStream = ResourceLoaderUtil.getStream("/assets/shaders/" + name + ".fsh")) {
+            String vertexSource = ResourceLoaderUtil.toString(vshStream);
+            String fragmentSource = ResourceLoaderUtil.toString(fshStream);
+            return new GlProgram(vertexSource, fragmentSource, format);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to load shader: " + name, e);
+        }
+    }
+
     public static class Uniform {
         private final GlProgram program;
         private final int location;
@@ -187,7 +187,7 @@ public class GlProgram {
         private float f2 = Float.NaN;
         private float f3 = Float.NaN;
         private int i0 = Integer.MIN_VALUE;
-        private float[] mat4 = null;
+        private Matrix4f mat4 = null;
 
         public Uniform(GlProgram program, int location) {
             this.program = program;
@@ -230,10 +230,16 @@ public class GlProgram {
             }
         }
 
-        public void setMat4(float[] matrix) {
-            if (this.mat4 == null || !Arrays.equals(this.mat4, matrix)) {
-                this.mat4 = matrix.clone();
-                GL20.glUniformMatrix4fv(location, false, this.mat4);
+        public void setMat4(Matrix4f matrix) {
+            if (this.mat4 == null || !mat4.equals(matrix)) {
+                if (this.mat4 == null)
+                    this.mat4 = new Matrix4f();
+                this.mat4.set(matrix);
+
+                try (MemoryStack stack = MemoryStack.stackPush()) {
+                    FloatBuffer fb = this.mat4.get(stack.mallocFloat(16));
+                    GL20.glUniformMatrix4fv(location, false, fb);
+                }
             }
         }
 

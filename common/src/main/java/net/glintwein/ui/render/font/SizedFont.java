@@ -34,4 +34,8 @@ public class SizedFont {
     public float size() {
         return size;
     }
+
+    public SizedFont withSize(float newSize) {
+        return new SizedFont(font, newSize);
+    }
 }

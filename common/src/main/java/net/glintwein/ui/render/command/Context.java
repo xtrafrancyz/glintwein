@@ -24,9 +24,13 @@ public class Context {
     private static final Map<Class<? extends DrawCommand>, DrawCommand.Executor<?>> EXECUTORS = new HashMap<>();
 
     static {
-        EXECUTORS.put(DrawRectCommand.class, new DrawRectCommand.Executor());
-        EXECUTORS.put(DrawTextCommand.class, new DrawTextCommand.Executor());
-        EXECUTORS.put(DrawTextureCommand.class, new DrawTextureCommand.Executor());
+        registerExecutor(DrawRectCommand.class, new DrawRectCommand.Executor());
+        registerExecutor(DrawTextCommand.class, new DrawTextCommand.Executor());
+        registerExecutor(DrawTextureCommand.class, new DrawTextureCommand.Executor());
+    }
+
+    public static <T extends DrawCommand> void registerExecutor(Class<T> cmdClass, DrawCommand.Executor<T> executor) {
+        EXECUTORS.put(cmdClass, executor);
     }
 
     private final PriorityQueue<PipCommand> pipCommands = new PriorityQueue<>();
@@ -328,7 +332,7 @@ public class Context {
         ));
     }
 
-    private void addCommand(DrawCommand cmd) {
+    public void addCommand(DrawCommand cmd) {
         Bounds scissor = scissorStack.peekLast();
         if (scissor != null && scissor != UNBOUNDED) {
             cmd.scissor = scissor;

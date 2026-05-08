@@ -24,15 +24,16 @@ public class GlintVertexFormat {
         GlintVertexFormatElement.OUTLINE_COLOR // 4
     );
 
-    GlintVertexFormatElement[] elements;
-    private int vertexSize;
+    public final GlintVertexFormatElement[] elements;
+    public final int vertexSize;
 
     public GlintVertexFormat(GlintVertexFormatElement... elements) {
         this.elements = elements;
-        this.vertexSize = 0;
+        int vertexSize = 0;
         for (GlintVertexFormatElement element : elements) {
-            this.vertexSize += element.type.size * element.count;
+            vertexSize += element.type.size * element.count;
         }
+        this.vertexSize = vertexSize;
     }
 
     public int getVertexSize() {

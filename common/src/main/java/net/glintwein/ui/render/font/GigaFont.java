@@ -7,7 +7,7 @@ import net.glintwein.platform.GlintImage;
 import net.glintwein.platform.Platform;
 import net.glintwein.ui.render.program.GlintVertexConsumer;
 import net.glintwein.ui.util.ARGB;
-import net.glintwein.util.ResourceLoader;
+import net.glintwein.util.ResourceLoaderUtil;
 import org.joml.Matrix3x2f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -221,14 +221,14 @@ public class GigaFont {
         textureId = -1;
     }
 
-    public static GigaFont load(String path) {
-        MsdfModel model = ResourceLoader.getJson(path + ".json", MsdfModel.class);
+    public static GigaFont load(InputStream jsonStream, InputStream imageStream) {
+        MsdfModel model = ResourceLoaderUtil.getJson(jsonStream, MsdfModel.class);
 
         GlintImage image;
-        try (InputStream is = ResourceLoader.getStream(path + ".png")) {
-            image = Platform.get().loadImage(is);
+        try {
+            image = Platform.get().loadImage(imageStream);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to load GigaFont texture from path: " + path, e);
+            throw new RuntimeException("Failed to load GigaFont texture", e);
         }
         try {
             return new GigaFont(model, image);

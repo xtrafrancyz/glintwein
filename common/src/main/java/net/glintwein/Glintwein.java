@@ -8,13 +8,19 @@ import net.glintwein.ui.IngameUILayer;
 import net.glintwein.ui.UILayer;
 import net.glintwein.ui.render.PipAtlasManager;
 import net.glintwein.ui.render.command.Context;
+import net.glintwein.ui.render.font.GigaFont;
+import net.glintwein.ui.render.texture.Texture;
+import net.glintwein.ui.render.texture.TextureSimple;
 import net.glintwein.ui.util.NativeCleaner;
 import net.glintwein.util.KVStore;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Glintwein {
+    public static GigaFont DEFAULT_FONT;
+
     public static Glintwein instance;
     private static long timeStart;
     public static long time;
@@ -170,5 +176,17 @@ public class Glintwein {
             }
         }
         return false;
+    }
+
+    public static GigaFont loadFont(InputStream json, InputStream texture) {
+        return GigaFont.load(json, texture);
+    }
+
+    public static Texture loadTexture(InputStream is) {
+        try {
+            return new TextureSimple(Platform.get().loadImage(is));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to load texture", e);
+        }
     }
 }

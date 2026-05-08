@@ -1,8 +1,8 @@
 package net.glintwein.ui.render.command;
 
+import net.glintwein.ui.GlobalUIState;
 import net.glintwein.ui.data.BorderRadius;
 import net.glintwein.ui.data.Bounds;
-import net.glintwein.ui.render.GlobalRender;
 import net.glintwein.ui.render.program.GlProgram;
 import net.glintwein.ui.render.program.GlintVertexConsumer;
 import org.joml.Matrix3x2fc;
@@ -57,7 +57,7 @@ public class DrawTextureCommand extends DrawCommand {
             GlProgram program = GlProgram.RECT_TEXTURED;
             program.bind();
             program.getUniform("Texture").setTexture(first.textureId);
-            program.getUniform("ProjMat").setMat4(GlobalRender.getGuiProxMatrix());
+            program.getUniform("ProjMat").setMat4(GlobalUIState.getGuiProjectionMatrix());
             GlintVertexConsumer consumer = program.begin();
             for (DrawTextureCommand cmd : commands) {
                 float sx = (float) Math.sqrt(cmd.pose.m00() * cmd.pose.m00() + cmd.pose.m01() * cmd.pose.m01());

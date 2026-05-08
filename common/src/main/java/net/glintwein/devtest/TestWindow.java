@@ -11,7 +11,6 @@ import net.glintwein.ui.element.component.Slider;
 import net.glintwein.ui.render.command.Context;
 import net.glintwein.ui.render.command.DrawRectBuilder;
 import net.glintwein.ui.render.command.DrawTextBuilder;
-import net.glintwein.ui.render.texture.Textures;
 import net.glintwein.ui.util.Animated;
 import net.glintwein.ui.util.Easing;
 
@@ -37,9 +36,7 @@ public class TestWindow extends Window {
         list.setBackground(0x55ff0000);
         list.addChild(new SwitchOnClickText());
         list.addChild(new Text("Item 1"));
-        Image pout = new Image(Textures.POUT);
-        pout.setWidth(100);
-        list.addChild(pout);
+        list.addChild(new Text("Item 2"));
         list.addChild(new SwitchOnClickText());
         root.addChild(list);
 
@@ -223,12 +220,11 @@ public class TestWindow extends Window {
     }
 
     private static class SwitchOnClickText extends Text {
-        List<String> loremList = Arrays.asList(
+        private static final List<String> loremList = Arrays.asList(
             "1. Lorem ipsum dolor sit amet, consectetur adipiscing elit",
             "2. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
             "3. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris",
             "4. Nisi ut aliquip ex ea commodo consequat",
-            "11. Хуй пизда и баба ебется",
             "12. Еще строка для теста ширины текста",
             "13. Последняя строка в этом списке",
             "14. The quick brown fox jumps over the lazy dog",

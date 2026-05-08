@@ -1,7 +1,7 @@
 package net.glintwein.ui.render.command;
 
+import net.glintwein.ui.GlobalUIState;
 import net.glintwein.ui.data.Bounds;
-import net.glintwein.ui.render.GlobalRender;
 import net.glintwein.ui.render.font.GigaFont;
 import net.glintwein.ui.render.program.GlProgram;
 import net.glintwein.ui.render.program.GlintVertexConsumer;
@@ -66,7 +66,7 @@ public class DrawTextCommand extends DrawCommand {
             msdf.getUniform("Smoothness").setFloat(0.5f);
             msdf.getUniform("OutlineThickness").setFloat(first.outlineWidth);
             msdf.getUniform("OutlineColor").setColor4f(first.outlineColor);
-            msdf.getUniform("ProjMat").setMat4(GlobalRender.getGuiProxMatrix());
+            msdf.getUniform("ProjMat").setMat4(GlobalUIState.getGuiProjectionMatrix());
             GlintVertexConsumer consumer = msdf.begin();
             for (DrawTextCommand cmd : commands) {
                 if (cmd.solidColor)
