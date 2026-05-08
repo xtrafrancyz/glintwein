@@ -18,36 +18,36 @@ public class GlintweinForgeMod {
 
     @SubscribeEvent
     public void onPreCharTyped(GuiScreenEvent.KeyboardCharTypedEvent.Pre event) {
-        if (Glintwein.instance.onCharTyped(event.getCodePoint(), event.getModifiers()))
+        if (GlintweinHook.onCharTyped(event.getCodePoint(), event.getModifiers()))
             event.setCanceled(true);
     }
 
     @SubscribeEvent
     public void onPreKeyPressed(GuiScreenEvent.KeyboardKeyPressedEvent.Pre event) {
-        if (Glintwein.instance.onKeyPress(event.getKeyCode(), event.getScanCode(), event.getModifiers()))
+        if (GlintweinHook.onKeyPress(event.getKeyCode(), event.getScanCode(), event.getModifiers()))
             event.setCanceled(true);
     }
 
     @SubscribeEvent
     public void onPreMouseClicked(GuiScreenEvent.MouseClickedEvent.Pre event) {
-        if (Glintwein.instance.onMousePress((float) event.getMouseX(), (float) event.getMouseY(), event.getButton()))
+        if (GlintweinHook.onMousePress(event.getButton()))
             event.setCanceled(true);
     }
 
     @SubscribeEvent
     public void onPreMouseReleased(GuiScreenEvent.MouseReleasedEvent.Pre event) {
-        if (Glintwein.instance.onMouseRelease((float) event.getMouseX(), (float) event.getMouseY(), event.getButton()))
+        if (GlintweinHook.onMouseRelease(event.getButton()))
             event.setCanceled(true);
     }
 
     @SubscribeEvent
     public void onPreMouseScrolled(GuiScreenEvent.MouseScrollEvent.Pre event) {
-        if (Glintwein.instance.onMouseScroll((float) event.getMouseX(), (float) event.getMouseY(), 0, (float) event.getScrollDelta()))
+        if (GlintweinHook.onMouseScroll(0, (float) event.getScrollDelta()))
             event.setCanceled(true);
     }
 
     @SubscribeEvent
     public void onHudRender(RenderGameOverlayEvent.Chat event) {
-        Glintwein.instance.renderHud();
+        GlintweinHook.renderLayerIngame();
     }
 }

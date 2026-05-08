@@ -1,6 +1,6 @@
 package net.glintwein.mixin.ui;
 
-import net.glintwein.Glintwein;
+import net.glintwein.GlintweinHook;
 import net.glintwein.platform.Platform1_21_4;
 import net.glintwein.platform.PlatformProvider;
 import net.minecraft.client.Minecraft;
@@ -14,22 +14,22 @@ public class MixinMinecraft {
     @Inject(at = @At("RETURN"), method = "<init>")
     private void init(CallbackInfo info) {
         PlatformProvider.set(new Platform1_21_4());
-        new Glintwein();
+        GlintweinHook.init();
     }
 
     @Inject(at = @At("TAIL"), method = "tick()V")
     private void tick(CallbackInfo info) {
-        Glintwein.instance.tick();
+        GlintweinHook.tickEnd();
     }
 
     @Inject(at = @At("HEAD"), method = "runTick(Z)V")
     private void runTickHead(boolean renderLevel, CallbackInfo info) {
-        Glintwein.instance.tickStart();
+        GlintweinHook.tickStart();
     }
 
     @Inject(at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/pipeline/RenderTarget;bindWrite(Z)V"), method = "runTick(Z)V")
     private void runTickBeforeRender(boolean renderLevel, CallbackInfo info) {
-        Glintwein.instance.preRender();
+        GlintweinHook.preRender();
     }
 
     @Inject(
@@ -40,6 +40,6 @@ public class MixinMinecraft {
         method = "runTick(Z)V"
     )
     private void runTickAfterRender(boolean renderLevel, CallbackInfo info) {
-        Glintwein.instance.postRender();
+        GlintweinHook.postRender();
     }
 }

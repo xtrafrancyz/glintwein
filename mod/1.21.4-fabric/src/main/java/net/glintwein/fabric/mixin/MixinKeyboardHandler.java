@@ -1,6 +1,6 @@
 package net.glintwein.fabric.mixin;
 
-import net.glintwein.Glintwein;
+import net.glintwein.GlintweinHook;
 import net.minecraft.client.KeyboardHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -13,10 +13,10 @@ public class MixinKeyboardHandler {
     private void onCharTyped(long windowHandle, int codePoint, int modifiers, CallbackInfo ci) {
         boolean handled = false;
         if (Character.isBmpCodePoint(codePoint)) {
-            handled = Glintwein.instance.onCharTyped((char) codePoint, modifiers);
+            handled = GlintweinHook.onCharTyped((char) codePoint, modifiers);
         } else if (Character.isValidCodePoint(codePoint)) {
-            handled = Glintwein.instance.onCharTyped(Character.highSurrogate(codePoint), modifiers);
-            handled |= Glintwein.instance.onCharTyped(Character.lowSurrogate(codePoint), modifiers);
+            handled = GlintweinHook.onCharTyped(Character.highSurrogate(codePoint), modifiers);
+            handled |= GlintweinHook.onCharTyped(Character.lowSurrogate(codePoint), modifiers);
         }
         if (handled)
             ci.cancel();

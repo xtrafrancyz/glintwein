@@ -26,7 +26,7 @@ public class Glintwein {
     public final UILayer layerIngame;
     private boolean uiTickedThisFrame = false;
 
-    public Glintwein() {
+    Glintwein() {
         if (instance != null)
             throw new IllegalStateException("Glintwein instance already exists!");
         instance = this;
@@ -42,12 +42,12 @@ public class Glintwein {
             DevTest.init();
     }
 
-    public void tick() {
+    void tickEnd() {
         NativeCleaner.cleanUp();
         KVStore.save();
     }
 
-    public void tickStart() {
+    void tickStart() {
         updateTime();
         if (timeStart == 0) {
             timeStart = time;
@@ -62,7 +62,7 @@ public class Glintwein {
         PipAtlasManager.tickStart();
     }
 
-    public void preRender() {
+    void preRender() {
         uiTickedThisFrame = false;
     }
 
@@ -78,12 +78,12 @@ public class Glintwein {
         }
     }
 
-    public void renderHud() {
+    void renderLayerIngame() {
         tickUIIfNeeded();
         layerIngame.render();
     }
 
-    public void postRender() {
+    void postRender() {
         tickUIIfNeeded();
         layerAlwaysOnTop.render();
     }
@@ -92,11 +92,11 @@ public class Glintwein {
         time = Platform.get().getTimeMillis() - timeStart;
     }
 
-    public boolean onMousePress(float mouseX, float mouseY, int button) {
+    boolean onMousePress(int button) {
         GlobalUIState.startFocusCapturing();
         // use captured mouse coords to prevent issues with scaling
-        mouseX = GlobalUIState.getMouseX();
-        mouseY = GlobalUIState.getMouseY();
+        float mouseX = GlobalUIState.getMouseX();
+        float mouseY = GlobalUIState.getMouseY();
         boolean cancel = false;
         for (UILayer layer : uiLayers) {
             if (layer.onMousePress(mouseX, mouseY, button)) {
@@ -108,10 +108,10 @@ public class Glintwein {
         return cancel;
     }
 
-    public boolean onMouseRelease(float mouseX, float mouseY, int button) {
+    boolean onMouseRelease(int button) {
         // use captured mouse coords to prevent issues with scaling
-        mouseX = GlobalUIState.getMouseX();
-        mouseY = GlobalUIState.getMouseY();
+        float mouseX = GlobalUIState.getMouseX();
+        float mouseY = GlobalUIState.getMouseY();
         boolean cancel = false;
         for (UILayer layer : uiLayers) {
             if (layer.onMouseRelease(mouseX, mouseY, button)) {
@@ -122,10 +122,10 @@ public class Glintwein {
         return cancel;
     }
 
-    public boolean onMouseScroll(float mouseX, float mouseY, float horizontal, float vertical) {
+    boolean onMouseScroll(float horizontal, float vertical) {
         // use captured mouse coords to prevent issues with scaling
-        mouseX = GlobalUIState.getMouseX();
-        mouseY = GlobalUIState.getMouseY();
+        float mouseX = GlobalUIState.getMouseX();
+        float mouseY = GlobalUIState.getMouseY();
         boolean cancel = false;
         for (UILayer layer : uiLayers) {
             if (layer.onMouseScroll(mouseX, mouseY, horizontal, vertical)) {
@@ -136,14 +136,14 @@ public class Glintwein {
         return cancel;
     }
 
-    public boolean onKeyPress(int keyCode, int scanCode, int modifiers) {
+    boolean onKeyPress(int keyCode, int scanCode, int modifiers) {
         if (GlobalUIState.getFocusedElement() != null) {
             return GlobalUIState.getFocusedElement().handleKeyPress(keyCode, scanCode, modifiers);
         }
         return false;
     }
 
-    public boolean onCharTyped(char character, int modifiers) {
+    boolean onCharTyped(char character, int modifiers) {
         if (GlobalUIState.getFocusedElement() != null) {
             return GlobalUIState.getFocusedElement().handleCharTyped(character, modifiers);
         }

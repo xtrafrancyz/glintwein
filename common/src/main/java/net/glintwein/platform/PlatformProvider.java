@@ -10,8 +10,6 @@ public class PlatformProvider {
     }
 
     public static Platform get() {
-        if (platform == null)
-            throw new IllegalStateException("Platform is not set");
         return platform;
     }
 }
