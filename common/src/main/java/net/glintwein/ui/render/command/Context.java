@@ -353,7 +353,7 @@ public class Context {
         }
 
         if (!pipCommands.isEmpty()) {
-            Platform.get().getRender().renderPipList(pipCommands);
+            Platform.render().renderPipList(pipCommands);
         }
 
         // Collect commands in priority order and batch similar commands together
@@ -367,7 +367,7 @@ public class Context {
             }
         }
 
-        Platform.get().getRender().beforeDraw();
+        Platform.render().beforeDraw();
 
         int startIndex = 0;
         DrawCommand currentCommand = commands.get(0);
@@ -381,7 +381,7 @@ public class Context {
         }
         executeBatch(currentCommand.getClass(), commands.subList(startIndex, commands.size()));
 
-        Platform.get().getRender().afterDraw();
+        Platform.render().afterDraw();
 
         reset();
     }
@@ -394,7 +394,7 @@ public class Context {
             if (cmd.scissor != null) {
                 enableScissor(cmd.scissor, Platform.get().getWindowHeight());
             } else {
-                Platform.get().getRender().stateDisableScissor();
+                Platform.render().stateDisableScissor();
             }
             executor.execute((List<T>) batch);
         }
@@ -432,6 +432,6 @@ public class Context {
         int height = GMath.ceil((bounds.maxY - bounds.minY));
         int x = GMath.floor(bounds.minX);
         int y = GMath.floor(frameHeight - bounds.maxY);
-        Platform.get().getRender().stateEnableScissor(x, y, width, height);
+        Platform.render().stateEnableScissor(x, y, width, height);
     }
 }

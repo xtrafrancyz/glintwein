@@ -52,7 +52,7 @@ public class GigaFont {
         spaceWidth = getWidth(" ", 1.0f);
 
         textureId = GL11.glGenTextures();
-        Platform.get().getRender().stateBindTexture(textureId);
+        Platform.render().stateBindTexture(textureId);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);

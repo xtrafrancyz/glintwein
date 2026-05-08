@@ -139,23 +139,23 @@ public class TextInput extends Text {
         float prevVerticalCursorXCache = verticalCursorXCache;
         verticalCursorXCache = -1;
 
-        boolean ctrl = Platform.get().getInput().hasControlDown();
-        boolean shift = Platform.get().getInput().hasShiftDown();
-        boolean alt = Platform.get().getInput().hasAltDown();
+        boolean ctrl = Platform.input().hasControlDown();
+        boolean shift = Platform.input().hasShiftDown();
+        boolean alt = Platform.input().hasAltDown();
 
         if (keyCode == GLFW.GLFW_KEY_A && ctrl && !shift && !alt) {
             this.moveCursorToEnd();
             this.setHighlightPosition(0);
             return true;
         } else if (keyCode == GLFW.GLFW_KEY_C && ctrl && !shift && !alt) {
-            Platform.get().getInput().setClipboard(this.getHighlighted());
+            Platform.input().setClipboard(this.getHighlighted());
             return true;
         } else if (keyCode == GLFW.GLFW_KEY_V && ctrl && !shift && !alt) {
             if (editable)
-                this.insertText(Platform.get().getInput().getClipboard());
+                this.insertText(Platform.input().getClipboard());
             return true;
         } else if (keyCode == GLFW.GLFW_KEY_X && ctrl && !shift && !alt) {
-            Platform.get().getInput().setClipboard(this.getHighlighted());
+            Platform.input().setClipboard(this.getHighlighted());
             if (editable)
                 this.insertText("");
             return true;
@@ -419,7 +419,7 @@ public class TextInput extends Text {
     }
 
     private void deleteText(int p_94218_) {
-        if (Platform.get().getInput().hasControlDown()) {
+        if (Platform.input().hasControlDown()) {
             this.deleteWords(p_94218_);
         } else {
             this.deleteChars(p_94218_);

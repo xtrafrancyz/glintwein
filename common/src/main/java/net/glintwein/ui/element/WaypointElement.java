@@ -56,9 +56,9 @@ public class WaypointElement extends Element {
     }
 
     private void calculateScreenPosition(Vector3f target) {
-        target = target.sub(Platform.get().getRender().getCameraPos(), new Vector3f())
-            .mulPosition(Platform.get().getRender().getWorldViewMatrix())
-            .mulPosition(Platform.get().getRender().getWorldProjMatrix());
+        target = target.sub(Platform.render().getCameraPos(), new Vector3f())
+            .mulPosition(Platform.render().getWorldViewMatrix())
+            .mulPosition(Platform.render().getWorldProjMatrix());
 
         // VIBE CODING STARTS HERE
 

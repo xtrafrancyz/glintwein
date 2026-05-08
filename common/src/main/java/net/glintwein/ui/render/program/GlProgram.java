@@ -72,7 +72,7 @@ public class GlProgram {
             throw new RuntimeException("Failed to link GL program: " + infoLog);
         }
 
-        vao = Platform.get().getRender().shouldUseVAO();
+        vao = Platform.render().shouldUseVAO();
         if (vao) {
             vaoId = GL30.glGenVertexArrays();
             vboId = GL30.glGenBuffers();
@@ -123,7 +123,7 @@ public class GlProgram {
 
                 if (state.mode() == GL20.GL_QUADS) {
                     int indexCount = state.vertexCount() / 4 * 6;
-                    AutoQuadIndexBuffer indexBuffer = Platform.get().getRender().getQuadAutoIndexBuffer();
+                    AutoQuadIndexBuffer indexBuffer = Platform.render().getQuadAutoIndexBuffer();
                     if (lastAutoIndexMaxSize <= 0 || !indexBuffer.hasCapacity(indexCount))
                         indexBuffer.bind(indexCount);
                     lastAutoIndexMaxSize = Math.max(lastAutoIndexMaxSize, indexCount);
@@ -146,7 +146,7 @@ public class GlProgram {
             }
         }
 
-        Platform.get().getRender().stateActiveTexture(GL20.GL_TEXTURE0);
+        Platform.render().stateActiveTexture(GL20.GL_TEXTURE0);
         unbind();
     }
 
@@ -247,8 +247,8 @@ public class GlProgram {
                 }
                 setInt(textureUnit);
             }
-            Platform.get().getRender().stateActiveTexture(GL20.GL_TEXTURE0 + textureUnit);
-            Platform.get().getRender().stateBindTexture(textureId);
+            Platform.render().stateActiveTexture(GL20.GL_TEXTURE0 + textureUnit);
+            Platform.render().stateBindTexture(textureId);
         }
     }
 }

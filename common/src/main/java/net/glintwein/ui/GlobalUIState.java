@@ -109,15 +109,15 @@ public class GlobalUIState {
     }
 
     public static float getMouseX() {
-        return Platform.get().getInput().getMouseX() / scale;
+        return Platform.input().getMouseX() / scale;
     }
 
     public static float getMouseY() {
-        return Platform.get().getInput().getMouseY() / scale;
+        return Platform.input().getMouseY() / scale;
     }
 
     public static boolean isMouseGrabbed() {
-        return Platform.get().getInput().isMouseGrabbed();
+        return Platform.input().isMouseGrabbed();
     }
 
     public static boolean updateUIScale() {

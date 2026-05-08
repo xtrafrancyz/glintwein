@@ -96,7 +96,7 @@ public class TestWindow extends Window {
                     }
                 };
                 waypointElement.enableLayoutLerp(400, Easing.OUT_BACK);
-                waypointElement.setTargetPos(Platform.get().getRender().getCameraPos().sub(0, 1.8f, 0));
+                waypointElement.setTargetPos(Platform.render().getCameraPos().sub(0, 1.8f, 0));
                 waypointElement.setSize(30);
                 waypointElement.setBackground(0xffff0000);
                 Glintwein.instance.layerIngame.getContent().addChild(waypointElement);

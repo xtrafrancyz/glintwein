@@ -17,6 +17,14 @@ public interface Platform {
         return get().getYogaShim();
     }
 
+    static Render render() {
+        return get().getRender();
+    }
+
+    static Input input() {
+        return get().getInput();
+    }
+
     long getTimeMillis();
 
     float getGuiScale();

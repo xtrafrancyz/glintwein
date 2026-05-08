@@ -14,7 +14,7 @@ public class PipAtlasManager {
     private static int lastHeight = 512;
 
     private static Atlas createAtlas() {
-        GlintRenderTarget target = Platform.get().getRender().createRenderTarget(lastWidth, lastHeight, true);
+        GlintRenderTarget target = Platform.render().createRenderTarget(lastWidth, lastHeight, true);
         return new Atlas(target);
     }
 
