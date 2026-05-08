@@ -1,6 +1,5 @@
 package net.glintwein.ui;
 
-import net.glintwein.Glintwein;
 import net.glintwein.ui.data.PositionType;
 import net.glintwein.ui.element.RootElement;
 import net.glintwein.ui.render.command.Context;
@@ -8,11 +7,13 @@ import net.glintwein.util.KVStore;
 import org.joml.Vector2f;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Window {
     private final String id;
     public final RootElement root;
+    public WindowManager windowManager;
 
     protected boolean dragged;
     private float dragStartX;
@@ -118,10 +119,9 @@ public class Window {
 
         // =========================================================
         // 2. ДИНАМИЧЕСКИЕ НАПРАВЛЯЮЩИЕ ОТ ДРУГИХ ОКОН
-        // TODO: Здесь тебе нужно достать список всех открытых окон.
         // =========================================================
 
-        List<Window> otherWindows = Glintwein.instance.layerAlwaysOnTop.getWindowManager().windows; // Замени на свой метод
+        List<Window> otherWindows = windowManager == null ? Collections.emptyList() : windowManager.windows;
         for (Window other : otherWindows) {
             if (other == this)
                 continue; // Себя не учитываем

@@ -14,10 +14,14 @@ public class WindowManager {
     }
 
     public void addWindow(Window window) {
+        window.windowManager = this;
         windows.add(window);
     }
 
     public void removeWindow(Window window) {
+        if (window.windowManager != this)
+            return;
+        window.windowManager = null;
         windows.remove(window);
     }
 
