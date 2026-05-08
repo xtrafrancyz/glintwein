@@ -13,6 +13,7 @@ public class Platform1_16_5 implements Platform {
     private final YogaShim yogaShim = new Yoga3_2_2();
     private final Input input = new Input1_16_5();
     private final Render render = new PlatformRender1_16_5();
+    private final Logger logger = new ApacheLogger();
 
     @Override
     public long getTimeMillis() {
@@ -74,6 +75,11 @@ public class Platform1_16_5 implements Platform {
     @Override
     public Render getRender() {
         return render;
+    }
+
+    @Override
+    public Logger getLogger() {
+        return logger;
     }
 
     private static class Input1_16_5 implements Input {

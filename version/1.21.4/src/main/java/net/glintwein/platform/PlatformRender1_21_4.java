@@ -104,7 +104,7 @@ public class PlatformRender1_21_4 implements Platform.Render {
                 ContextExt.pose.popPose();
             }
         } catch (Exception e) {
-            Platform1_21_4.log.error("Exception while rendering pip list", e);
+            Platform.log().error("Exception while rendering pip list", e);
         }
         isFrameBufferLocked = false;
 

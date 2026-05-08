@@ -25,6 +25,10 @@ public interface Platform {
         return get().getInput();
     }
 
+    static Logger log() {
+        return get().getLogger();
+    }
+
     long getTimeMillis();
 
     float getGuiScale();
@@ -46,6 +50,8 @@ public interface Platform {
     YogaShim getYogaShim();
 
     Input getInput();
+
+    Logger getLogger();
 
     interface Input {
         float getMouseX();

@@ -19,7 +19,7 @@ public class Glintwein {
     private static long timeStart;
     public static long time;
 
-    public static final Context sharedDrawContext = new Context();
+    private final Context sharedDrawContext = new Context();
 
     private final List<UILayer> uiLayers = new ArrayList<>();
     public final UILayer layerAlwaysOnTop;
@@ -80,29 +80,33 @@ public class Glintwein {
 
     void renderLayerIngame() {
         tickUIIfNeeded();
-        layerIngame.render();
+        layerIngame.render(sharedDrawContext);
     }
 
     void postRender() {
         tickUIIfNeeded();
-        layerAlwaysOnTop.render();
+        layerAlwaysOnTop.render(sharedDrawContext);
     }
 
-    public void updateTime() {
+    private void updateTime() {
         time = Platform.get().getTimeMillis() - timeStart;
     }
 
     boolean onMousePress(int button) {
         GlobalUIState.startFocusCapturing();
-        // use captured mouse coords to prevent issues with scaling
-        float mouseX = GlobalUIState.getMouseX();
-        float mouseY = GlobalUIState.getMouseY();
         boolean cancel = false;
-        for (UILayer layer : uiLayers) {
-            if (layer.onMousePress(mouseX, mouseY, button)) {
-                cancel = true;
-                break;
+        try {
+            // use captured mouse coords to prevent issues with scaling
+            float mouseX = GlobalUIState.getMouseX();
+            float mouseY = GlobalUIState.getMouseY();
+            for (UILayer layer : uiLayers) {
+                if (layer.onMousePress(mouseX, mouseY, button)) {
+                    cancel = true;
+                    break;
+                }
             }
+        } catch (Exception e) {
+            Platform.log().error("Exception while handling mouse press", e);
         }
         GlobalUIState.stopFocusCapturing();
         return cancel;
@@ -113,11 +117,15 @@ public class Glintwein {
         float mouseX = GlobalUIState.getMouseX();
         float mouseY = GlobalUIState.getMouseY();
         boolean cancel = false;
-        for (UILayer layer : uiLayers) {
-            if (layer.onMouseRelease(mouseX, mouseY, button)) {
-                cancel = true;
-                break;
+        try {
+            for (UILayer layer : uiLayers) {
+                if (layer.onMouseRelease(mouseX, mouseY, button)) {
+                    cancel = true;
+                    break;
+                }
             }
+        } catch (Exception e) {
+            Platform.log().error("Exception while handling mouse release", e);
         }
         return cancel;
     }
@@ -127,25 +135,39 @@ public class Glintwein {
         float mouseX = GlobalUIState.getMouseX();
         float mouseY = GlobalUIState.getMouseY();
         boolean cancel = false;
-        for (UILayer layer : uiLayers) {
-            if (layer.onMouseScroll(mouseX, mouseY, horizontal, vertical)) {
-                cancel = true;
-                break;
+        try {
+            for (UILayer layer : uiLayers) {
+                if (layer.onMouseScroll(mouseX, mouseY, horizontal, vertical)) {
+                    cancel = true;
+                    break;
+                }
             }
+        } catch (Exception e) {
+            Platform.log().error("Exception while handling mouse scroll", e);
         }
         return cancel;
     }
 
     boolean onKeyPress(int keyCode, int scanCode, int modifiers) {
         if (GlobalUIState.getFocusedElement() != null) {
-            return GlobalUIState.getFocusedElement().handleKeyPress(keyCode, scanCode, modifiers);
+            try {
+                return GlobalUIState.getFocusedElement().handleKeyPress(keyCode, scanCode, modifiers);
+            } catch (Exception e) {
+                Platform.log().error("Exception while handling key press", e);
+                return false;
+            }
         }
         return false;
     }
 
     boolean onCharTyped(char character, int modifiers) {
         if (GlobalUIState.getFocusedElement() != null) {
-            return GlobalUIState.getFocusedElement().handleCharTyped(character, modifiers);
+            try {
+                return GlobalUIState.getFocusedElement().handleCharTyped(character, modifiers);
+            } catch (Exception e) {
+                Platform.log().error("Exception while handling char typed", e);
+                return false;
+            }
         }
         return false;
     }

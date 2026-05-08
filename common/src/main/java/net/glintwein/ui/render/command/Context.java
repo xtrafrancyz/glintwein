@@ -41,7 +41,7 @@ public class Context {
         reset();
     }
 
-    private void reset() {
+    public void reset() {
         transform.clear();
         opacityStack.clear();
         opacityStack.enqueue(1.0f);

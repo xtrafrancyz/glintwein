@@ -1,6 +1,6 @@
 package net.glintwein.ui;
 
-import net.glintwein.Glintwein;
+import net.glintwein.platform.Platform;
 import net.glintwein.ui.element.Element;
 import net.glintwein.ui.element.RootElement;
 import net.glintwein.ui.render.command.Context;
@@ -31,22 +31,30 @@ public class UILayer {
         float mouseX = GlobalUIState.getMouseX();
         float mouseY = GlobalUIState.getMouseY();
         boolean canHandleMouse = canHandleMouseInput();
-        windowManager.tick(mouseX, mouseY, canHandleMouse);
-        root.updateMouse(mouseX, mouseY, canHandleMouse);
-        root.tick();
-        root.calculateLayout(GlobalUIState.getScaledWidth(), GlobalUIState.getScaledHeight());
+        try {
+            windowManager.tick(mouseX, mouseY, canHandleMouse);
+            root.updateMouse(mouseX, mouseY, canHandleMouse);
+            root.tick();
+            root.calculateLayout(GlobalUIState.getScaledWidth(), GlobalUIState.getScaledHeight());
+        } catch (Exception e) {
+            Platform.log().error("Error while ticking UI layer", e);
+        }
     }
 
-    public void render() {
-        Context ctx = Glintwein.sharedDrawContext;
-        ctx.pose().scale(GlobalUIState.getScale());
-        windowManager.draw(ctx);
-        root.draw(ctx);
-        ctx.execute();
+    public void render(Context ctx) {
+        try {
+            ctx.pose().scale(GlobalUIState.getScale());
+            windowManager.draw(ctx);
+            root.draw(ctx);
+            ctx.execute();
+        } catch (Exception e) {
+            ctx.reset();
+            Platform.log().error("Error while rendering UI layer", e);
+        }
     }
 
     protected boolean canHandleMouseInput() {
-        return !GlobalUIState.isMouseGrabbed();
+        return !Platform.input().isMouseGrabbed();
     }
 
     public boolean onMousePress(float mouseX, float mouseY, int button) {

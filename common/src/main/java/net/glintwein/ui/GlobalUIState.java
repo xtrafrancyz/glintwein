@@ -4,6 +4,8 @@ import net.glintwein.platform.Platform;
 import net.glintwein.ui.element.Element;
 
 public class GlobalUIState {
+    private static int uiResolutionWidth = 1920;
+    private static int uiResolutionHeight = 1080;
     private static Element focusedElement;
     private static Element currentFocus;
     private static boolean captureFocus = false;
@@ -17,6 +19,11 @@ public class GlobalUIState {
     public static void init() {
         yogaConfigHandle = Platform.yoga().ConfigNew();
         Platform.yoga().ConfigSetPointScaleFactor(yogaConfigHandle, 1);
+    }
+
+    public static void setUiResolution(int width, int height) {
+        uiResolutionWidth = width;
+        uiResolutionHeight = height;
     }
 
     public static void startFocusCapturing() {
@@ -116,16 +123,12 @@ public class GlobalUIState {
         return Platform.input().getMouseY() / scale;
     }
 
-    public static boolean isMouseGrabbed() {
-        return Platform.input().isMouseGrabbed();
-    }
-
     public static boolean updateUIScale() {
         screenWidth = Platform.get().getScreenWidth();
         screenHeight = Platform.get().getScreenHeight();
 
         float oldScale = scale;
-        scale = Math.min(screenWidth / 1920f, screenHeight / 1080f);
+        scale = Math.min((float) screenWidth / uiResolutionWidth, (float) screenHeight / uiResolutionHeight);
         if (scale != oldScale) {
             Platform.yoga().ConfigSetPointScaleFactor(yogaConfigHandle, scale);
         }
