@@ -15,9 +15,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class Element extends YogaNode {
     private Element parent;
     private final List<Element> children = new CopyOnWriteArrayList<>();
-    protected final Box borderBox = new Box();
-    protected final Box paddingBox = new Box();
-    protected final Box contentBox = new Box();
+    public final Box borderBox = new Box();
+    public final Box paddingBox = new Box();
+    public final Box contentBox = new Box();
     protected LayoutBoxLerp layoutLerp;
     private List<Animated> animations = Collections.emptyList();
 
@@ -169,6 +169,9 @@ public class Element extends YogaNode {
         borderBox.set(result.border);
         paddingBox.set(result.padding);
         contentBox.set(result.content);
+        borderBox.snapToPixels();
+        paddingBox.snapToPixels();
+        contentBox.snapToPixels();
         if (layoutLerp != null)
             layoutLerp.animate(borderBox, paddingBox, contentBox);
     }

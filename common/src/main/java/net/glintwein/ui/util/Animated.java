@@ -184,7 +184,8 @@ public abstract class Animated {
             this.value = value;
             this.targetValue = value;
             this.future = null;
-            update();
+            if (setter != null)
+                setter.accept(value);
         }
 
         public int get() {

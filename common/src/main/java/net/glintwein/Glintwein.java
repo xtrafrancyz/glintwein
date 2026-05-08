@@ -1,6 +1,6 @@
 package net.glintwein;
 
-import net.glintwein.devtest.DevTest;
+import net.glintwein.demo.DemoWindow;
 import net.glintwein.platform.Platform;
 import net.glintwein.platform.ScreenType;
 import net.glintwein.ui.GlobalUIState;
@@ -19,8 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Glintwein {
-    public static GigaFont DEFAULT_FONT;
-
     public static Glintwein instance;
     private static long timeStart;
     public static long time;
@@ -45,7 +43,7 @@ public class Glintwein {
         uiLayers.add(layerIngame);
 
         if (Boolean.getBoolean("glintwein.devtest"))
-            DevTest.init();
+            layerIngame.getWindowManager().addWindow(new DemoWindow());
     }
 
     void tickEnd() {

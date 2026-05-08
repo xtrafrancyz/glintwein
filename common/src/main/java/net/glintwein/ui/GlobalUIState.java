@@ -22,12 +22,14 @@ public class GlobalUIState {
     private static boolean focusAlive = false;
     private static long yogaConfigHandle;
     private static float scale = 1;
-    private static int screenWidth;
-    private static int screenHeight;
+    private static final Matrix4f guiProxMatrix = new Matrix4f();
+    private static int lastWindowWidth = -1;
+    private static int lastWindowHeight = -1;
 
     public static void init() {
         yogaConfigHandle = Platform.yoga().ConfigNew();
-        Platform.yoga().ConfigSetPointScaleFactor(yogaConfigHandle, 1);
+        // disable automatic scaling, we will handle it ourselves
+        Platform.yoga().ConfigSetPointScaleFactor(yogaConfigHandle, 0);
 
         String defaultFontPath = "assets/fonts/sf-pro-regular";
         try (InputStream jsonStream = ResourceLoaderUtil.getStream(defaultFontPath + ".json");
@@ -124,11 +126,11 @@ public class GlobalUIState {
     }
 
     public static float getScaledWidth() {
-        return (float) screenWidth / scale;
+        return uiResolutionWidth;
     }
 
     public static float getScaledHeight() {
-        return (float) screenHeight / scale;
+        return uiResolutionHeight;
     }
 
     public static float getPixelSize() {
@@ -155,33 +157,25 @@ public class GlobalUIState {
     }
 
     public static boolean updateUIScale() {
-        screenWidth = Platform.get().getScreenWidth();
-        screenHeight = Platform.get().getScreenHeight();
+        int width = Platform.get().getWindowWidth();
+        int height = Platform.get().getWindowHeight();
+        if (lastWindowHeight == height && lastWindowWidth == width)
+            return false;
+        lastWindowWidth = width;
+        lastWindowHeight = height;
 
-        float oldScale = scale;
-        scale = Math.min((float) screenWidth / uiResolutionWidth, (float) screenHeight / uiResolutionHeight);
-        if (scale != oldScale) {
-            Platform.yoga().ConfigSetPointScaleFactor(yogaConfigHandle, scale);
-        }
-        return scale != oldScale;
+        guiProxMatrix.setOrtho2D(0, width, height, 0);
+
+        scale = Math.min((float) width / uiResolutionWidth, (float) height / uiResolutionHeight);
+        //Platform.yoga().ConfigSetPointScaleFactor(yogaConfigHandle, scale);
+        return true;
     }
 
     public static float snapToPixel(float value) {
-        return Math.round(value * scale) / scale;
+        return (float) (Math.floor(value * scale + 0.5) / scale);
     }
 
-    private static final Matrix4f guiProxMatrix = new Matrix4f();
-    private static int projMatrixWidth = -1;
-    private static int projMatrixHeight = -1;
-
     public static Matrix4f getGuiProjectionMatrix() {
-        int width = Platform.get().getWindowWidth();
-        int height = Platform.get().getWindowHeight();
-        if (width != projMatrixWidth || height != projMatrixHeight) {
-            projMatrixWidth = width;
-            projMatrixHeight = height;
-            guiProxMatrix.setOrtho2D(0, width, height, 0);
-        }
         return guiProxMatrix;
     }
 }

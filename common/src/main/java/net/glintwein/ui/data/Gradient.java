@@ -41,6 +41,10 @@ public class Gradient {
         return new Gradient(bottom, bottom, top, top);
     }
 
+    public static Gradient fromCorners(int tl, int tr, int br, int bl) {
+        return new Gradient(tl, tr, br, bl);
+    }
+
     public int topLeft() {
         return tl;
     }

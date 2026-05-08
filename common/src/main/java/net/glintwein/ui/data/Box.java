@@ -1,5 +1,7 @@
 package net.glintwein.ui.data;
 
+import net.glintwein.ui.GlobalUIState;
+
 public class Box {
     public float x;
     public float y;
@@ -36,6 +38,17 @@ public class Box {
         this.y = y;
         this.width = width;
         this.height = height;
+    }
+
+    public void snapToPixels() {
+        float x = this.x;
+        float y = this.y;
+        float right = GlobalUIState.snapToPixel(x + width);
+        float bottom = GlobalUIState.snapToPixel(y + height);
+        this.x = GlobalUIState.snapToPixel(x);
+        this.y = GlobalUIState.snapToPixel(y);
+        this.width = right - this.x;
+        this.height = bottom - this.y;
     }
 
     public boolean contains(float px, float py) {
