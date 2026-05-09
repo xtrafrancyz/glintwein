@@ -54,9 +54,10 @@ public class TransformElement extends Element {
     public void draw(Context ctx) {
         ctx.pose().pushMatrix();
         if (scaleX != 1 || scaleY != 1) {
-            ctx.pose().translate(borderBox.x + borderBox.width / 2, borderBox.y + borderBox.height / 2);
-            ctx.pose().scale(scaleX, scaleY);
-            ctx.pose().translate(-(borderBox.x + borderBox.width / 2), -(borderBox.y + borderBox.height / 2));
+            ctx.pose().scaleAround(
+                scaleX, scaleY,
+                borderBox.x + borderBox.width / 2, borderBox.y + borderBox.height / 2
+            );
         }
         if (rotation != 0)
             ctx.pose().rotateAbout(rotation * GMath.DEG_TO_RAD, borderBox.x + borderBox.width / 2, borderBox.y + borderBox.height / 2);
