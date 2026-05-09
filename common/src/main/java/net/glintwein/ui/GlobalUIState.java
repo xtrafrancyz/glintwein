@@ -126,11 +126,11 @@ public class GlobalUIState {
     }
 
     public static float getScaledWidth() {
-        return uiResolutionWidth;
+        return lastWindowWidth / scale;
     }
 
     public static float getScaledHeight() {
-        return uiResolutionHeight;
+        return lastWindowHeight / scale;
     }
 
     public static float getPixelSize() {
