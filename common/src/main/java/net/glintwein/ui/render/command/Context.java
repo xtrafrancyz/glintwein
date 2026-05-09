@@ -432,8 +432,8 @@ public class Context {
     }
 
     private static void enableScissor(Bounds bounds, float frameHeight) {
-        int width = GMath.ceil((bounds.maxX - bounds.minX));
-        int height = GMath.ceil((bounds.maxY - bounds.minY));
+        int width = GMath.ceil(bounds.getWidth());
+        int height = GMath.ceil(bounds.getHeight());
         int x = GMath.floor(bounds.minX);
         int y = GMath.floor(frameHeight - bounds.maxY);
         Platform.render().stateEnableScissor(x, y, width, height);

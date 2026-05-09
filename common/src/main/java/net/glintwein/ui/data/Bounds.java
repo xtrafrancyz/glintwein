@@ -23,6 +23,22 @@ public class Bounds {
         this.maxY = maxY;
     }
 
+    public float getWidth() {
+        return maxX - minX;
+    }
+
+    public float getHeight() {
+        return maxY - minY;
+    }
+
+    public float getCenterX() {
+        return (minX + maxX) / 2f;
+    }
+
+    public float getCenterY() {
+        return (minY + maxY) / 2f;
+    }
+
     public boolean intersects(Bounds other) {
         return this.minX < other.maxX && this.maxX > other.minX &&
             this.minY < other.maxY && this.maxY > other.minY;

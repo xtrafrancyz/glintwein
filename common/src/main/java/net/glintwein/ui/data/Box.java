@@ -51,6 +51,30 @@ public class Box {
         this.height = bottom - this.y;
     }
 
+    public float getCenterX() {
+        return x + width / 2f;
+    }
+
+    public float getCenterY() {
+        return y + height / 2f;
+    }
+
+    public float getLeft() {
+        return x;
+    }
+
+    public float getTop() {
+        return y;
+    }
+
+    public float getRight() {
+        return x + width;
+    }
+
+    public float getBottom() {
+        return y + height;
+    }
+
     public boolean contains(float px, float py) {
         return px >= x && px <= x + width && py >= y && py <= y + height;
     }
