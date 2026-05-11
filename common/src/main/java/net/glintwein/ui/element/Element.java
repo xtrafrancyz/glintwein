@@ -21,7 +21,8 @@ public class Element extends YogaNode {
     protected LayoutBoxLerp layoutLerp;
     private List<Animated> animations = Collections.emptyList();
 
-    private boolean hovered;
+    // 0 = not hovered, 1 = hovered by self, 2 = hovered by child
+    private byte hovered;
     private boolean pressed;
 
     private int backgroundColor = 0x00000000;
@@ -206,22 +207,30 @@ public class Element extends YogaNode {
     }
 
     protected void handleMouseMoved(float mouseX, float mouseY, boolean canHover) {
-        boolean wasHovered = hovered;
-        hovered = canHover && getDisplayType() != Display.NONE && borderBox.contains(mouseX, mouseY);
-        if (wasHovered != hovered) {
-            if (hovered && onMouseEnter != null)
-                onMouseEnter.run();
-            else if (!hovered && onMouseExit != null)
-                onMouseExit.run();
-        }
+        canHover &= getDisplayType() != Display.NONE;
+
+        boolean wasHovered = isHovered();
+        boolean hoverSelf = canHover && borderBox.contains(mouseX, mouseY);
+        hovered = hoverSelf ? (byte) 1 : 0;
 
         float localX = mouseX - borderBox.x;
         float localY = mouseY - borderBox.y;
         for (int i = children.size() - 1; i >= 0; i--) {
             Element child = children.get(i);
             child.handleMouseMoved(localX, localY, canHover);
-            if (child.hovered)
+            if (child.isHovered()) {
+                if (canHover && !hoverSelf)
+                    hovered = 2;
                 canHover = false;
+            }
+        }
+
+        boolean isNowHovered = isHovered();
+        if (wasHovered != isNowHovered) {
+            if (isNowHovered && onMouseEnter != null)
+                onMouseEnter.run();
+            else if (!isNowHovered && onMouseExit != null)
+                onMouseExit.run();
         }
     }
 
@@ -258,7 +267,7 @@ public class Element extends YogaNode {
             pressed = false;
             if (onMouseRelease != null)
                 blocked |= onMouseRelease.onMouseRelease(localX, localY, button);
-            if (hovered && !blocked && onClick != null)
+            if (isHovered() && !blocked && onClick != null)
                 blocked = onClick.onClick(button);
         }
         return blocked;
@@ -281,7 +290,7 @@ public class Element extends YogaNode {
     }
 
     public boolean canHandleClick() {
-        return getDisplayType() != Display.NONE && hovered;
+        return getDisplayType() != Display.NONE && isHovered();
     }
 
     public boolean handleKeyPress(int keyCode, int scanCode, int modifiers) {
@@ -359,7 +368,15 @@ public class Element extends YogaNode {
     }
 
     public boolean isHovered() {
-        return hovered;
+        return hovered != 0;
+    }
+
+    public boolean isHoveredSelf() {
+        return hovered == 1;
+    }
+
+    public boolean isHoveredByChild() {
+        return hovered == 2;
     }
 
     public interface ClickHandler {
