@@ -20,11 +20,12 @@ public class Window {
     private float dragStartY;
     private float dragCurrentPosX;
     private float dragCurrentPosY;
-    private Anchor anchor = Anchor.TOP_LEFT;
     private boolean moved;
 
+    private Anchor anchor = Anchor.TOP_LEFT;
     private float posXPct = 0f;
     private float posYPct = 0f;
+    private float scale = 1f;
 
     private static final float SNAP_THRESHOLD = 12f;
     private Float activeGuideX = null;
@@ -53,6 +54,8 @@ public class Window {
 
         ctx.pose().pushMatrix();
         ctx.pose().translate(getScreenXY());
+        if (scale != 1f)
+            ctx.pose().scale(scale);
         root.draw(ctx);
         ctx.pose().popMatrix();
     }
@@ -94,16 +97,14 @@ public class Window {
         }
 
         Vector2f xy = getScreenXY();
-        root.updateMouse(mouseX - xy.x, mouseY - xy.y, canHover);
+        root.updateMouse((mouseX - xy.x) / scale, (mouseY - xy.y) / scale, canHover);
     }
 
     private void applySnapping(float rawX, float rawY) {
         float screenW = GlobalUIState.getScaledWidth();
         float screenH = GlobalUIState.getScaledHeight();
-        float w = root.getComputedWidth();
-        float h = root.getComputedHeight();
-        if (Float.isNaN(w)) w = 0f;
-        if (Float.isNaN(h)) h = 0f;
+        float w = getComputedWidth();
+        float h = getComputedHeight();
 
         List<Float> guidesX = new ArrayList<>();
         List<Float> guidesY = new ArrayList<>();
@@ -127,8 +128,8 @@ public class Window {
                 continue; // Себя не учитываем
 
             Vector2f otherXY = other.getScreenXY();
-            float otherW = other.root.getComputedWidth();
-            float otherH = other.root.getComputedHeight();
+            float otherW = other.getComputedWidth();
+            float otherH = other.getComputedHeight();
 
             // Добавляем края и центры других окон как магниты
             guidesX.add(otherXY.x);
@@ -267,7 +268,7 @@ public class Window {
 
     public boolean onMousePress(float mouseX, float mouseY, int button) {
         Vector2f xy = getScreenXY();
-        boolean handled = root.handleMousePress(mouseX - xy.x, mouseY - xy.y, button);
+        boolean handled = root.handleMousePress((mouseX - xy.x) / scale, (mouseY - xy.y) / scale, button);
 
         if (!handled && root.isHovered()) {
             dragged = true;
@@ -287,19 +288,19 @@ public class Window {
         activeGuideX = null;
         activeGuideY = null;
         Vector2f xy = getScreenXY();
-        return root.handleMouseRelease(mouseX - xy.x, mouseY - xy.y, button);
+        return root.handleMouseRelease((mouseX - xy.x) / scale, (mouseY - xy.y) / scale, button);
     }
 
     public boolean onMouseScroll(float mouseX, float mouseY, float horizontal, float vertical) {
         Vector2f xy = getScreenXY();
-        return root.handleMouseScroll(mouseX - xy.x, mouseY - xy.y, horizontal, vertical);
+        return root.handleMouseScroll((mouseX - xy.x) / scale, (mouseY - xy.y) / scale, horizontal, vertical);
     }
 
-    protected Vector2f getScreenXY() {
+    public Vector2f getScreenXY() {
         float x = (posXPct / 100f) * GlobalUIState.getScaledWidth();
         float y = (posYPct / 100f) * GlobalUIState.getScaledHeight();
-        float width = root.getComputedWidth();
-        float height = root.getComputedHeight();
+        float width = getComputedWidth();
+        float height = getComputedHeight();
         switch (anchor) {
             case TOP_LEFT:
                 break;
@@ -336,6 +337,25 @@ public class Window {
         return new Vector2f(GlobalUIState.snapToPixel(x), GlobalUIState.snapToPixel(y));
     }
 
+    public void setScale(float newScale) {
+        if (scale == newScale)
+            return;
+        this.scale = newScale;
+        savePosition();
+    }
+
+    public float getScale() {
+        return scale;
+    }
+
+    public float getComputedWidth() {
+        return root.getComputedWidth() * scale;
+    }
+
+    public float getComputedHeight() {
+        return root.getComputedHeight() * scale;
+    }
+
     private String savePrefix() {
         return "window_" + id + "_";
     }
@@ -343,8 +363,9 @@ public class Window {
     private void savePosition() {
         String prefix = savePrefix();
         KVStore.put(prefix + "anchor", anchor.name());
-        KVStore.put(prefix + "pos_x_pct", posXPct); // Сохраняем %
-        KVStore.put(prefix + "pos_y_pct", posYPct); // Сохраняем %
+        KVStore.put(prefix + "pos_x_pct", posXPct);
+        KVStore.put(prefix + "pos_y_pct", posYPct);
+        KVStore.put(prefix + "scale", scale);
     }
 
     private void loadPosition() {
@@ -352,6 +373,7 @@ public class Window {
         anchor = Anchor.fromString(KVStore.getString(prefix + "anchor", ""));
         posXPct = KVStore.getFloat(prefix + "pos_x_pct", 0f);
         posYPct = KVStore.getFloat(prefix + "pos_y_pct", 0f);
+        scale = KVStore.getFloat(prefix + "scale", 1f);
     }
 
     private enum Anchor {

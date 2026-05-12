@@ -9,6 +9,7 @@ import net.glintwein.ui.element.Text;
 import net.glintwein.ui.element.TextInput;
 import net.glintwein.ui.element.VerticalScrollView;
 import net.glintwein.ui.element.component.Dropdown;
+import net.glintwein.ui.element.component.Slider;
 import net.glintwein.ui.render.command.Context;
 import net.glintwein.ui.render.command.DrawRectBuilder;
 import net.glintwein.ui.render.command.DrawTextBuilder;
@@ -44,6 +45,7 @@ public class DemoWindow extends Window {
         root.addChild(new Collapse("Drawing", new DrawingDemo()));
         root.addChild(new Collapse("Text Input", new InputDemo()));
         root.addChild(new Collapse("Popup", new PopupDemo()));
+        root.addChild(new Collapse("Scaling", new ScaleDemo(this)));
     }
 
     private Element titleBar() {
@@ -321,6 +323,24 @@ public class DemoWindow extends Window {
                 hoverOpacity.animate(0);
                 hoverOpacity.createFuture().thenAccept(end -> hoverBox.setDisplay(Display.NONE));
             });
+        }
+    }
+
+    public static class ScaleDemo extends Element {
+        public ScaleDemo(DemoWindow demo) {
+            this.setPadding(Edge.ALL, 5);
+
+            Text text = new Text(String.format("Window scaling: %.2f", demo.getScale()));
+            text.setAlignSelf(Align.FLEX_START);
+            this.addChild(text);
+
+            Slider slider = new Slider(0.2f, 2f, demo.getScale());
+            slider.setMargin(Edge.TOP, 5);
+            slider.setOnValueChanged(value -> {
+                demo.setScale(value);
+                text.setText(String.format("Window scaling: %.2f", value));
+            });
+            this.addChild(slider);
         }
     }
 }
