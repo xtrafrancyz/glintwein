@@ -40,7 +40,6 @@ public class VerticalScrollView extends Element {
     public VerticalScrollView() {
         setOverflow(Overflow.SCROLL);
         this.content = new ScrollableContent();
-        content.setWidthPercent(100);
         super.addChild(content);
 
         trackAnimation(barThumbColorAnim = new Animated.Color(c -> barThumbColorComputed = c, barThumbColor));
@@ -108,6 +107,10 @@ public class VerticalScrollView extends Element {
     @Override
     public void clearChildren() {
         content.clearChildren();
+    }
+
+    public float getContentHeight() {
+        return contentHeight;
     }
 
     @Override

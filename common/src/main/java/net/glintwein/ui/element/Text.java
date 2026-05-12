@@ -21,6 +21,8 @@ public class Text extends LeafElement {
     private float splitLinesMaxWidth = 0;
     private final List<WrappedLine> wrappedLines = new ArrayList<>();
     private final List<RenderLine> renderLines = new ArrayList<>();
+    private float cachedContentBoxX = Float.NaN;
+    private float cachedContentBoxY = Float.NaN;
 
     public Text() {
         this("");
@@ -136,13 +138,16 @@ public class Text extends LeafElement {
     }
 
     protected List<RenderLine> getRenderLines() {
-        if (renderLines.isEmpty()) {
+        if (renderLines.isEmpty() || cachedContentBoxX != contentBox.x || cachedContentBoxY != contentBox.y) {
             if (wrappedLines.isEmpty()) {
                 wrapAndMeasure(
                     contentBox.width, YogaMeasureFunction.SizeMode.EXACTLY,
                     contentBox.height, YogaMeasureFunction.SizeMode.EXACTLY
                 );
             }
+            renderLines.clear();
+            cachedContentBoxX = contentBox.x;
+            cachedContentBoxY = contentBox.y;
 
             float y = contentBox.y;
             for (WrappedLine line : wrappedLines) {

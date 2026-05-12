@@ -46,6 +46,7 @@ public class DemoWindow extends Window {
         root.addChild(new Collapse("Text Input", new InputDemo()));
         root.addChild(new Collapse("Popup", new PopupDemo()));
         root.addChild(new Collapse("Scaling", new ScaleDemo(this)));
+        root.addChild(new Collapse("Layout Lerp", new LayoutLerpDemo()));
     }
 
     private Element titleBar() {
@@ -84,7 +85,14 @@ public class DemoWindow extends Window {
             setMargin(Edge.ALL, 5);
             setMargin(Edge.TOP, 0);
 
-            VerticalScrollView scrollView = new VerticalScrollView();
+            VerticalScrollView scrollView = new VerticalScrollView() {
+                @Override
+                public void draw(Context ctx) {
+                    if (getComputedHeight() == 0)
+                        return;
+                    super.draw(ctx);
+                }
+            };
             Animated.Float height = new Animated.Float(scrollView::setMaxHeight, 0, 300, Easing.EASE);
             trackAnimation(height);
 
@@ -102,11 +110,17 @@ public class DemoWindow extends Window {
                 titleColorAnim.animate(titleColor);
             });
             titleText.setOnClick(button -> {
+                if (expanded) {
+                    if (height.get() > scrollView.getContentHeight())
+                        height.set(scrollView.getContentHeight());
+                    height.animate(0);
+                } else {
+                    height.animate(Math.min(300, scrollView.getContentHeight()));
+                    height.createFuture().thenAccept(end -> {
+                        height.set(300);
+                    });
+                }
                 expanded = !expanded;
-                height.animate(expanded ? 300 : 0);
-                scrollView.setDisplay(Display.FLEX);
-                if (!expanded)
-                    height.createFuture().thenAccept(end -> scrollView.setDisplay(Display.NONE));
                 return true;
             });
 
@@ -120,7 +134,7 @@ public class DemoWindow extends Window {
 
     private static class DrawingDemo extends Element {
         public DrawingDemo() {
-            this.setHeight(250);
+            this.setHeight(225);
             this.setPadding(Edge.ALL, 5);
         }
 
@@ -341,6 +355,106 @@ public class DemoWindow extends Window {
                 text.setText(String.format("Window scaling: %.2f", value));
             });
             this.addChild(slider);
+        }
+    }
+
+    public static class LayoutLerpDemo extends Element {
+        public LayoutLerpDemo() {
+            this.setPadding(Edge.ALL, 5);
+
+            createBoxDemo();
+            createTextDemo();
+        }
+
+        private void createBoxDemo() {
+            Element row = new Element();
+            row.setFlexDirection(FlexDirection.ROW);
+            row.setMargin(Edge.BOTTOM, 5);
+            addChild(row);
+
+            Text addBox = new Text("Add box");
+            addBox.setAlignSelf(Align.FLEX_START);
+            addBox.setOnMouseEnter(() -> addBox.setBackground(BG_ACCENT));
+            addBox.setOnMouseExit(() -> addBox.setBackground(0));
+            addBox.setMargin(Edge.RIGHT, 5);
+            row.addChild(addBox);
+
+            Text removeBox = new Text("Remove random box");
+            removeBox.setAlignSelf(Align.FLEX_START);
+            removeBox.setOnMouseEnter(() -> removeBox.setBackground(BG_ACCENT));
+            removeBox.setOnMouseExit(() -> removeBox.setBackground(0));
+            row.addChild(removeBox);
+
+            Element container = new Element();
+            container.setBackground(BG);
+            container.setPadding(Edge.BOTTOM, 5);
+            container.setPadding(Edge.RIGHT, 5);
+            container.setFlexDirection(FlexDirection.ROW);
+            container.setWrap(Wrap.WRAP);
+            container.setMaxWidth(205);
+            container.setMinWidth(10);
+            container.setMinHeight(10);
+            container.setAlignSelf(Align.FLEX_START);
+            container.enableLayoutLerp(300, Easing.EASE);
+            this.addChild(container);
+
+            addBox.setOnClick(button -> {
+                Element box = new Element();
+                box.setBackground(ARGB.ofHSLA((float) Math.random(), 0.7f, 0.6f, 1f));
+                box.setSize(20);
+                box.setMargin(Edge.TOP, 5);
+                box.setMargin(Edge.LEFT, 5);
+                box.enableLayoutLerp(300, Easing.EASE);
+                container.addChild(box, 0);
+                return true;
+            });
+
+            removeBox.setOnClick(button -> {
+                if (container.getChildren().isEmpty())
+                    return true;
+                int index = (int) (Math.random() * container.getChildren().size());
+                container.removeChild(container.getChildren().get(index));
+                return true;
+            });
+        }
+
+        private void createTextDemo() {
+            Element row = new Element();
+            row.setFlexDirection(FlexDirection.ROW);
+            row.setMargin(Edge.BOTTOM, 5);
+            row.setMargin(Edge.TOP, 5);
+            row.enableLayoutLerp(300, Easing.EASE);
+            addChild(row);
+
+            Text setText1 = new Text("Set Text 1");
+            setText1.setAlignSelf(Align.FLEX_START);
+            setText1.setOnMouseEnter(() -> setText1.setBackground(BG_ACCENT));
+            setText1.setOnMouseExit(() -> setText1.setBackground(0));
+            setText1.setMargin(Edge.RIGHT, 5);
+            row.addChild(setText1);
+
+            Text setText2 = new Text("Set Text 2");
+            setText2.setAlignSelf(Align.FLEX_START);
+            setText2.setOnMouseEnter(() -> setText2.setBackground(BG_ACCENT));
+            setText2.setOnMouseExit(() -> setText2.setBackground(0));
+            row.addChild(setText2);
+
+            Text text = new Text("Hello");
+            text.setAlignSelf(Align.FLEX_START);
+            text.setBackground(ORANGE);
+            text.setPadding(Edge.ALL, 5);
+            text.enableLayoutLerp(300, Easing.EASE);
+            this.addChild(text);
+
+            setText1.setOnClick(button -> {
+                text.setText("Hello");
+                return true;
+            });
+
+            setText2.setOnClick(button -> {
+                text.setText("Hello, World!");
+                return true;
+            });
         }
     }
 }
