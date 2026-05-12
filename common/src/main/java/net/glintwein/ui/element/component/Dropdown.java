@@ -1,7 +1,6 @@
 package net.glintwein.ui.element.component;
 
 import net.glintwein.ui.data.Bounds;
-import net.glintwein.ui.data.Display;
 import net.glintwein.ui.data.Edge;
 import net.glintwein.ui.data.PositionType;
 import net.glintwein.ui.element.Element;
@@ -61,6 +60,7 @@ public class Dropdown extends Element {
     public static class Ticking extends Dropdown {
         private final Function<Dropdown, Vector2f> positionGetter;
         private float lastX, lastY;
+        private int ticks;
 
         public Ticking(Function<Dropdown, Vector2f> positionGetter) {
             super(0, 0);
@@ -71,19 +71,22 @@ public class Dropdown extends Element {
          * Необходимо для того чтобы dropdown не появлялся на неправильных координатах
          * в первом кадре, когда его размер еще не вычислен, а координаты уже запрашиваются
          */
-        private void delayVisibility() {
-            setDisplay(Display.NONE);
+        public void delayVisibility() {
+            setOpacity(0);
         }
 
         @Override
         public void tick() {
+            if (ticks == 1)
+                setOpacity(1);
+            if (ticks < 100) // overflow protection
+                ticks++;
+
             super.tick();
             update();
-            if (getDisplayType() == Display.NONE && getComputedWidth() != 0)
-                setDisplay(Display.FLEX);
         }
 
-        private void update() {
+        public void update() {
             Vector2f pos = positionGetter.apply(this);
             if (pos.x != lastX) {
                 setPosition(Edge.LEFT, pos.x);
