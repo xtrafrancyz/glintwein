@@ -1,10 +1,12 @@
 # Glintwein
 
-Glintwein is a **client-side Minecraft UI framework/mod** focused on building custom HUDs and in-game windows with a shared rendering/runtime layer between Minecraft versions and mod loaders.
+Glintwein is a **client-side Minecraft UI framework/mod** focused on building custom HUDs and in-game windows with a
+shared rendering/runtime layer between Minecraft versions and mod loaders.
 
 ## Demo
 
-Full code for the demo shown below is available in [DemoWindow.java](common/src/main/java/net/glintwein/demo/DemoWindow.java).
+Full code for the demo shown below is available
+in [DemoWindow.java](common/src/main/java/net/glintwein/demo/DemoWindow.java).
 
 ![Demo of custom UI elements rendered by Glintwein ingame](.github/demo.png)
 
@@ -25,14 +27,13 @@ Current modules in this repository:
 - **Minecraft 1.16.5 (Fabric)** - included in the root Gradle build.
 - **Minecraft 1.16.5 (Forge)** - standalone Gradle project under `mod/1.16.5-forge/`.
 - **Minecraft 1.21.4 (Fabric)** - standalone Gradle project under `mod/1.21.4-fabric/`.
+- **Minecraft 26.1.2 (Fabric)** - standalone Gradle project under `mod/26.1.2-fabric/`.
 
 ## Project Layout
 
 - `common/` - shared UI engine, rendering pipeline, font loading, and platform abstraction.
-- `version/1.16.5/`, `version/1.21.4/` - Minecraft-version-specific platform, mixin, and render implementations.
-- `mod/1.16.5-fabric/` - Fabric loader module for Minecraft 1.16.5.
-- `mod/1.16.5-forge/` - Forge loader module for Minecraft 1.16.5 (standalone Gradle project).
-- `mod/1.21.4-fabric/` - Fabric loader module for Minecraft 1.21.4 (standalone Gradle project).
+- `version/*` - Minecraft-version-specific platform, mixin, and render implementations.
+- `mod/*` - loader-specific wiring and mod metadata for each supported Minecraft version.
 - `font/` - generated font atlases plus scripts/tools to regenerate them.
 
 ## Build
@@ -46,7 +47,6 @@ gradle :mod:1.16.5-fabric:build
 Standalone module builds:
 
 ```powershell
-.\mod\1.16.5-forge\gradlew.bat build
 .\mod\1.21.4-fabric\gradlew.bat build
 ```
 
@@ -68,5 +68,6 @@ See `font/README.md` for additional generation notes.
 
 ## Contributing
 
-Issues and pull requests are welcome. When changing input hooks or rendering integration, keep loader and version wiring aligned so behavior remains consistent across supported targets.
+Issues and pull requests are welcome. When changing input hooks or rendering integration, keep loader and version wiring
+aligned so behavior remains consistent across supported targets.
 
