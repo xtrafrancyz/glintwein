@@ -11,7 +11,7 @@ Full code for the demo shown below is available in [DemoWindow.java](common/src/
 ## Features
 
 - Client-side UI layer and window manager pipeline.
-- Elements based on [facebook/yoga](https://githu/b.com/facebook/yoga) flexbox layout.
+- Elements based on [facebook/yoga](https://github.com/facebook/yoga) flexbox layout.
 - MSDF font rendering (supporting any scale without quality loss).
 - Shader-based rendering pipeline with rounded borders etc.
 - Shared rendering commands and composition primitives in `common/`.
