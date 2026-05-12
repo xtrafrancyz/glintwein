@@ -33,7 +33,6 @@ public class GlProgram {
     private int vaoId = -1;
     private int vboId = -1;
     private boolean vaoInitialized = false;
-    private int lastAutoIndexMaxSize = 0;
 
     public GlProgram(String vertexShader, String fragmentShader, GlintVertexFormat format) {
         this.format = format;
@@ -112,11 +111,9 @@ public class GlProgram {
 
                 if (state.mode() == GL20.GL_QUADS) {
                     int indexCount = state.vertexCount() / 4 * 6;
-                    AutoQuadIndexBuffer indexBuffer = Platform.render().getQuadAutoIndexBuffer();
-                    if (lastAutoIndexMaxSize <= 0 || !indexBuffer.hasCapacity(indexCount))
-                        indexBuffer.bind(indexCount);
-                    lastAutoIndexMaxSize = Math.max(lastAutoIndexMaxSize, indexCount);
-
+                    AutoQuadIndexBuffer indexBuffer = Platform.render().getQuadAutoIndexBuffer(indexCount);
+                    if (indexBuffer.getGlId() != -1)
+                        GL30.glBindBuffer(GL30.GL_ELEMENT_ARRAY_BUFFER, indexBuffer.getGlId());
                     GL30.glDrawElements(GL11.GL_TRIANGLES, indexCount, indexBuffer.getGlType(), 0);
                 } else {
                     GL20.glDrawArrays(state.mode(), 0, state.vertexCount());

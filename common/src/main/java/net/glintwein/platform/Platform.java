@@ -98,8 +98,10 @@ public interface Platform {
             return false;
         }
 
-        default AutoQuadIndexBuffer getQuadAutoIndexBuffer() {
+        default AutoQuadIndexBuffer getQuadAutoIndexBuffer(int indexCount) {
             throw new UnsupportedOperationException("AutoQuadIndexBuffer is not supported on this platform");
         }
+
+        PlatformTexture createTexture(int width, int height);
     }
 }

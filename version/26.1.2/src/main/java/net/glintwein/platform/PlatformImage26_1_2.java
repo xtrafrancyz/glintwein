@@ -2,11 +2,12 @@ package net.glintwein.platform;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.GpuTexture;
 
-public class PlatformImage1_21_4 implements GlintImage {
+public class PlatformImage26_1_2 implements GlintImage {
     private final NativeImage image;
 
-    public PlatformImage1_21_4(NativeImage image) {
+    public PlatformImage26_1_2(NativeImage image) {
         this.image = image;
     }
 
@@ -22,8 +23,8 @@ public class PlatformImage1_21_4 implements GlintImage {
 
     @Override
     public void upload(PlatformTexture texture) {
-        RenderSystem.bindTexture(texture.getGlId());
-        image.upload(0, 0, 0, 0, 0, image.getWidth(), image.getHeight(), false);
+        GpuTexture gpuTexture = ((PlatformTexture26_1_2) texture).gpuTexture;
+        RenderSystem.getDevice().createCommandEncoder().writeToTexture(gpuTexture, image);
     }
 
     @Override

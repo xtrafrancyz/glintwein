@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "glintwein",
+  "version": "${version}",
+  "name": "Glintwein",
+  "description": "UI rendering framework for Minecraft.",
+  "authors": [
+    "xtrafrancyz"
+  ],
+  "contact": {
+    "homepage": "https://github.com/xtrafrancyz/glintwein",
+    "sources": "https://github.com/xtrafrancyz/glintwein"
+  },
+  "license": "CC0-1.0",
+  "icon": "assets/glintwein/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "net.glintwein.fabric.GlintweinFabricMod"
+    ]
+  },
+  "mixins": [
+    "glintwein-fabric.mixins.json",
+    "glintwein.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.19.2",
+    "minecraft": "~26.1.2",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

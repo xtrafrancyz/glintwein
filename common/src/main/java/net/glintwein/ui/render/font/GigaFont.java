@@ -6,14 +6,13 @@ import it.unimi.dsi.fastutil.ints.Int2FloatOpenHashMap;
 import net.glintwein.platform.GlintImage;
 import net.glintwein.platform.Platform;
 import net.glintwein.ui.render.program.GlintVertexConsumer;
+import net.glintwein.ui.render.texture.TextureSimple;
 import net.glintwein.ui.util.ARGB;
 import net.glintwein.util.ResourceLoaderUtil;
 import org.joml.Matrix3x2f;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
 
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,14 +50,7 @@ public class GigaFont {
 
         spaceWidth = getWidth(" ", 1.0f);
 
-        textureId = GL11.glGenTextures();
-        Platform.render().stateBindTexture(textureId);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
-        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA8, image.getWidth(), image.getHeight(), 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, (ByteBuffer) null);
-        image.upload(textureId, true, true);
+        textureId = new TextureSimple(image).getSprite().textureId;
     }
 
     public float getWidth(String text, float size) {

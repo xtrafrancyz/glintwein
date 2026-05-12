@@ -1,36 +1,47 @@
 package net.glintwein.platform;
 
 import com.mojang.blaze3d.ProjectionType;
+import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.opengl.GlConst;
+import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.blaze3d.opengl.GlTexture;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.blaze3d.textures.TextureFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import net.glintwein.mixin.ui.AccessorGlBuffer;
 import net.glintwein.ui.ContextExt;
 import net.glintwein.ui.data.Bounds;
 import net.glintwein.ui.render.command.PipCommand;
 import net.glintwein.ui.render.texture.AtlasPacker;
 import net.glintwein.ui.util.GMath;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.Projection;
+import net.minecraft.client.renderer.ProjectionMatrixBuffer;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL33;
 
-import java.nio.ByteBuffer;
 import java.util.PriorityQueue;
+import java.util.concurrent.ThreadLocalRandom;
 
-public class PlatformRender1_21_4 implements Platform.Render {
+public class PlatformRender26_1_2 implements Platform.Render {
     public static boolean isFrameBufferLocked = false;
 
     public static Matrix4f projMatrix = new Matrix4f();
     public static Matrix4f viewMatrix = new Matrix4f();
 
+    private final ProjectionMatrixBuffer projectionMatrixBuffer = new ProjectionMatrixBuffer("glintwein offscreen");
+    private final Projection projection = new Projection();
+
     @Override
     public Vector3f getCameraPos() {
-        Vec3 cameraVec3 = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
+        Vec3 cameraVec3 = Minecraft.getInstance().gameRenderer.getMainCamera().position();
         return new Vector3f((float) cameraVec3.x, (float) cameraVec3.y, (float) cameraVec3.z);
     }
 
@@ -56,17 +67,18 @@ public class PlatformRender1_21_4 implements Platform.Render {
 
     @Override
     public GlintRenderTarget createRenderTarget(int width, int height, boolean useDepth) {
-        return new RenderTargetWrapper(new TextureTarget(width, height, useDepth));
+        return new RenderTargetWrapper(new TextureTarget("glintwein/fbo", width, height, useDepth));
     }
 
     @Override
     public void stateEnableScissor(int x, int y, int width, int height) {
-        RenderSystem.enableScissor(x, y, width, height);
+        GlStateManager._enableScissorTest();
+        GlStateManager._scissorBox(x, y, width, height);
     }
 
     @Override
     public void stateDisableScissor() {
-        RenderSystem.disableScissor();
+        GlStateManager._disableScissorTest();
     }
 
     @Override
@@ -75,11 +87,9 @@ public class PlatformRender1_21_4 implements Platform.Render {
         GlintRenderTarget firstTarget = commands.peek().sprite.target;
         isFrameBufferLocked = true;
 
-        // builtin backup and restore can be used in some pips, so need to do it manually
-        Matrix4f projMatBackup = new Matrix4f(RenderSystem.getProjectionMatrix());
-        RenderSystem.getProjectionMatrix()
-            .identity()
-            .ortho(0.0f, firstTarget.getWidth(), firstTarget.getHeight(), 0.0f, -3000, 3000.0f);
+        RenderSystem.backupProjectionMatrix();
+        projection.setupOrtho(-3000, 3000.0f, firstTarget.getWidth(), firstTarget.getHeight(), true);
+        RenderSystem.setProjectionMatrix(projectionMatrixBuffer.getBuffer(projection), ProjectionType.ORTHOGRAPHIC);
         RenderSystem.getModelViewStack().pushMatrix();
         RenderSystem.getModelViewStack().identity();
 
@@ -89,14 +99,17 @@ public class PlatformRender1_21_4 implements Platform.Render {
             for (PipCommand cmd : commands) {
                 if (cmd.sprite.target != target) {
                     target = (RenderTargetWrapper) cmd.sprite.target;
-                    isFrameBufferLocked = false;
-                    target.handle.clear();
-                    target.handle.bindWrite(true);
-                    isFrameBufferLocked = true;
+                    RenderSystem.outputColorTextureOverride = target.handle.getColorTextureView();
+                    RenderSystem.outputDepthTextureOverride = target.handle.getDepthTextureView();
+                    RenderSystem.getDevice().createCommandEncoder().clearColorAndDepthTextures(
+                        target.handle.getColorTexture(), 0,
+                        target.handle.getDepthTexture(), 1
+                    );
                 }
 
                 AtlasPacker.Sprite sprite = cmd.sprite.sprite;
-                enableScissor(Bounds.fromMinMax(sprite.left, sprite.top, sprite.right, sprite.bottom), target.getHeight());
+                //RenderSystem.enableScissorForRenderTypeDraws();
+                //enableScissor(Bounds.fromMinMax(sprite.left, sprite.top, sprite.right, sprite.bottom), target.getHeight());
                 ContextExt.pose.pushPose();
                 ContextExt.pose.translate(sprite.left, sprite.top, -3000);
                 float sx = sprite.right - sprite.left;
@@ -108,33 +121,27 @@ public class PlatformRender1_21_4 implements Platform.Render {
         } catch (Exception e) {
             Platform.log().error("Exception while rendering pip list", e);
         }
-        isFrameBufferLocked = false;
-
-        RenderSystem.setProjectionMatrix(projMatBackup, ProjectionType.ORTHOGRAPHIC);
+        RenderSystem.outputColorTextureOverride = null;
+        RenderSystem.outputDepthTextureOverride = null;
+        RenderSystem.disableScissorForRenderTypeDraws();
+        RenderSystem.restoreProjectionMatrix();
         RenderSystem.getModelViewStack().popMatrix();
 
-        RenderSystem.disableScissor();
-        Minecraft.getInstance().getMainRenderTarget().bindWrite(true);
-
-        BufferUploader.invalidate();
-        GlStateManager._glBindVertexArray(0);
+        stateDisableScissor();
     }
 
     @Override
     public void beforeDraw() {
-        BufferUploader.invalidate();
-        GlStateManager._glBindVertexArray(0);
-        RenderSystem.disableCull();
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableDepthTest();
+        GlStateManager._disableCull();
+        GlStateManager._enableBlend();
+        GlStateManager._blendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GlStateManager._disableDepthTest();
+        GL33.glBindSampler(0, 0);
     }
 
     @Override
     public void afterDraw() {
-        RenderSystem.disableScissor();
-        RenderSystem.enableDepthTest();
-        RenderSystem.disableBlend();
+        GlStateManager._glBindVertexArray(0);
     }
 
     @Override
@@ -145,26 +152,31 @@ public class PlatformRender1_21_4 implements Platform.Render {
     @Override
     public AutoQuadIndexBuffer getQuadAutoIndexBuffer(int indexCount) {
         RenderSystem.AutoStorageIndexBuffer buffer = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS);
-        buffer.bind(indexCount);
+        GpuBuffer gpuBuffer = buffer.getBuffer(indexCount);
+        int glId = ((AccessorGlBuffer) gpuBuffer).getHandle();
+        int glType = GlConst.toGl(buffer.type());
         return new AutoQuadIndexBuffer() {
             @Override
             public int getGlId() {
-                return -1; // autobind pizdec
+                return glId;
             }
 
             @Override
             public int getGlType() {
-                return buffer.type().asGLType;
+                return glType;
             }
         };
     }
 
     @Override
     public PlatformTexture createTexture(int width, int height) {
-        int id = GlStateManager._genTexture();
-        GlStateManager._bindTexture(id);
-        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA8, width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, (ByteBuffer) null);
-        return new PlatformTexture1_21_4(id);
+        GpuTexture gpuTexture = RenderSystem.getDevice().createTexture(
+            "glintwein/tex" + ThreadLocalRandom.current().nextInt(),
+            GpuTexture.USAGE_TEXTURE_BINDING | GpuTexture.USAGE_COPY_DST,
+            TextureFormat.RGBA8, width, height,
+            1, 1
+        );
+        return new PlatformTexture26_1_2(gpuTexture);
     }
 
     private void enableScissor(Bounds bounds, float frameHeight) {
@@ -172,7 +184,7 @@ public class PlatformRender1_21_4 implements Platform.Render {
         int height = GMath.ceil((bounds.maxY - bounds.minY));
         int x = GMath.floor(bounds.minX);
         int y = GMath.floor(frameHeight - bounds.maxY);
-        RenderSystem.enableScissor(x, y, width, height);
+        stateEnableScissor(x, y, width, height);
     }
 
     private static class RenderTargetWrapper implements GlintRenderTarget {
@@ -184,7 +196,7 @@ public class PlatformRender1_21_4 implements Platform.Render {
 
         @Override
         public int getColorTextureId() {
-            return handle.getColorTextureId();
+            return ((GlTexture) handle.getColorTexture()).glId();
         }
 
         @Override

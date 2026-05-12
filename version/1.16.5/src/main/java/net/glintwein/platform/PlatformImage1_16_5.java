@@ -21,14 +21,9 @@ public class PlatformImage1_16_5 implements GlintImage {
     }
 
     @Override
-    public void upload(int texture) {
-        upload(texture, true, false);
-    }
-
-    @Override
-    public void upload(int texture, boolean blur, boolean clamp) {
-        RenderSystem.bindTexture(texture);
-        image.upload(0, 0, 0, 0, 0, image.getWidth(), image.getHeight(), blur, clamp, false, false);
+    public void upload(PlatformTexture texture) {
+        RenderSystem.bindTexture(texture.getGlId());
+        image.upload(0, 0, 0, 0, 0, image.getWidth(), image.getHeight(), true, true, false, false);
     }
 
     @Override

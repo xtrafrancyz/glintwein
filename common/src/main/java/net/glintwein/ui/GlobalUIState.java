@@ -22,7 +22,7 @@ public class GlobalUIState {
     private static boolean focusAlive = false;
     private static long yogaConfigHandle;
     private static float scale = 1;
-    private static final Matrix4f guiProxMatrix = new Matrix4f();
+    private static final Matrix4f guiProjMatrix = new Matrix4f();
     private static int lastWindowWidth = -1;
     private static int lastWindowHeight = -1;
 
@@ -164,7 +164,7 @@ public class GlobalUIState {
         lastWindowWidth = width;
         lastWindowHeight = height;
 
-        guiProxMatrix.setOrtho2D(0, width, height, 0);
+        guiProjMatrix.setOrtho2D(0, width, height, 0);
 
         scale = Math.min((float) width / uiResolutionWidth, (float) height / uiResolutionHeight);
         //Platform.yoga().ConfigSetPointScaleFactor(yogaConfigHandle, scale);
@@ -176,6 +176,6 @@ public class GlobalUIState {
     }
 
     public static Matrix4f getGuiProjectionMatrix() {
-        return guiProxMatrix;
+        return guiProjMatrix;
     }
 }

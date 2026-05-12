@@ -5,9 +5,7 @@ public interface GlintImage {
 
     int getHeight();
 
-    void upload(int texture);
-
-    void upload(int texture, boolean blur, boolean clamp);
+    void upload(PlatformTexture texture);
 
     void close();
 }

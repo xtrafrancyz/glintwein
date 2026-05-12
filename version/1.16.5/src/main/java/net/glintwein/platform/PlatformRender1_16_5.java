@@ -13,6 +13,7 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
 
+import java.nio.ByteBuffer;
 import java.util.PriorityQueue;
 
 public class PlatformRender1_16_5 implements Platform.Render {
@@ -116,6 +117,14 @@ public class PlatformRender1_16_5 implements Platform.Render {
         RenderSystem.disableScissor();
         RenderSystem.enableAlphaTest();
         RenderSystem.enableDepthTest();
+    }
+
+    @Override
+    public PlatformTexture createTexture(int width, int height) {
+        int id = GlStateManager._genTexture();
+        GlStateManager._bindTexture(id);
+        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA8, width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, (ByteBuffer) null);
+        return new PlatformTexture1_16_5(id);
     }
 
     private void enableScissor(Bounds bounds, float frameHeight) {

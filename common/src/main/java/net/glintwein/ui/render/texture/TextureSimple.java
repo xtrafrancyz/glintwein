@@ -2,10 +2,9 @@ package net.glintwein.ui.render.texture;
 
 import net.glintwein.platform.GlintImage;
 import net.glintwein.platform.Platform;
+import net.glintwein.platform.PlatformTexture;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
-
-import java.nio.ByteBuffer;
 
 public class TextureSimple implements Texture {
     private final Sprite sprite;
@@ -15,15 +14,16 @@ public class TextureSimple implements Texture {
     public TextureSimple(GlintImage image) {
         this.width = image.getWidth();
         this.height = image.getHeight();
-        this.sprite = new Sprite(GL11.glGenTextures(), 0, 0, 1, 1);
+        PlatformTexture texture = Platform.render().createTexture(width, height);
+        this.sprite = new Sprite(texture.getGlId(), 0, 0, 1, 1);
 
         Platform.render().stateBindTexture(sprite.textureId);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
-        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA8, width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, (ByteBuffer) null);
-        image.upload(sprite.textureId);
+        image.upload(texture);
+        Platform.render().stateBindTexture(0);
     }
 
     @Override

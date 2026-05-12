@@ -14,6 +14,10 @@ public class UILayer {
         root = new RootElement();
     }
 
+    public boolean hasAnyContent() {
+        return !windowManager.windows.isEmpty() || !root.getChildren().isEmpty();
+    }
+
     public Element getContent() {
         return root;
     }
