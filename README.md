@@ -2,6 +2,12 @@
 
 Glintwein is a **client-side Minecraft UI framework/mod** focused on building custom HUDs and in-game windows with a shared rendering/runtime layer between Minecraft versions and mod loaders.
 
+## Demo
+
+Full code for the demo shown below is available in [DemoWindow.java](common/src/main/java/net/glintwein/demo/DemoWindow.java).
+
+![Demo of custom UI elements rendered by Glintwein ingame](.github/demo.png)
+
 ## Features
 
 - Client-side UI layer and window manager pipeline.
