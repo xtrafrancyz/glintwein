@@ -63,10 +63,13 @@ In your mod's client initializer, you can then create and register windows with 
 public class MyModClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
-        // Create a new window, use demo for example
-        Window myWindow = new net.glintwein.demo.DemoWindow();
-        // Register the window with the Glintwein window manager
-        Glintwein.instance.layerIngame.getWindowManager().addWindow(myWindow);
+        // Glintwein initializes after graphics context is ready, need to wait
+        Glintwein.addInitListener(() -> {
+            // Create a new window, use demo for example
+            Window myWindow = new net.glintwein.demo.DemoWindow();
+            // Register the window with the Glintwein window manager
+            Glintwein.instance.layerIngame.getWindowManager().addWindow(myWindow);
+        });
     }
 }
 ```

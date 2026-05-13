@@ -23,6 +23,8 @@ public class Glintwein {
     private static long timeStart;
     public static long time;
 
+    private static final List<Runnable> initListeners = new ArrayList<>();
+
     private final Context sharedDrawContext = new Context();
 
     private final List<UILayer> uiLayers = new ArrayList<>();
@@ -44,6 +46,15 @@ public class Glintwein {
 
         if (Boolean.getBoolean("glintwein.devtest"))
             layerIngame.getWindowManager().addWindow(new DemoWindow());
+
+        for (Runnable listener : initListeners) {
+            try {
+                listener.run();
+            } catch (Exception e) {
+                Platform.log().error("Init listener error", e);
+            }
+        }
+        initListeners.clear();
     }
 
     void tickEnd() {
@@ -174,6 +185,14 @@ public class Glintwein {
             }
         }
         return false;
+    }
+
+    public static void addInitListener(Runnable listener) {
+        if (instance == null) {
+            initListeners.add(listener);
+        } else {
+            listener.run();
+        }
     }
 
     public static GigaFont loadFont(InputStream json, InputStream texture) {
