@@ -1,0 +1,26 @@
+def propsGlob = new Properties()
+new File(buildscript.sourceFile.parentFile, "shared.properties")
+        .withInputStream { propsGlob.load(it) }
+
+group = "net.glintwein"
+
+ext {
+    artifactVersion = propsGlob.getProperty("version")
+    artifactId = "glintwein"
+    getModVersion = { mcVersion -> {
+        if (artifactVersion.endsWith("-SNAPSHOT")) {
+            return artifactVersion.replace("-SNAPSHOT", "") + "+mc" + mcVersion + "-SNAPSHOT"
+        } else {
+            return artifactVersion + "+mc" + mcVersion
+        }
+    }}
+
+    publishRepo = publishing.repositories.maven {
+        name = "maven.xtrafrancyz.net"
+        url = uri("https://maven.xtrafrancyz.net" + (artifactVersion.contains("-SNAPSHOT") ? "/snapshots" : "/releases"))
+        credentials {
+            username = System.getenv("MVN_USERNAME") ?: property("mvn.xtrafrancyz.user") ?: ""
+            password = System.getenv("MVN_PASSWORD") ?: property("mvn.xtrafrancyz.token") ?: ""
+        }
+    }
+}

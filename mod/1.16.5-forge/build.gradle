@@ -3,6 +3,14 @@ plugins {
     id "maven-publish"
 }
 
+apply from: '../../shared_util.gradle'
+
+version = getModVersion('1.16.5')
+
+base {
+    archivesName = artifactId + "-forge"
+}
+
 loom {
     // Suppress the warning about the ambiguity of MojMap license
     silentMojangMappingsLicense()
@@ -39,6 +47,7 @@ dependencies {
 
 java {
     toolchain.languageVersion = JavaLanguageVersion.of(8)
+    withSourcesJar()
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
 }
@@ -55,5 +64,17 @@ processResources {
     // with the version you've defined in your gradle.properties
     filesMatching("META-INF/mods.toml") {
         expand "version": project.version
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            groupId = group
+            artifactId = base.archivesName.get()
+            version = version
+        }
     }
 }

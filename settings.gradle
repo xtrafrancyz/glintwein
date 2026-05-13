@@ -9,5 +9,4 @@ pluginManagement {
 }
 
 include ':common'
-include ':version:1.16.5'
 include ':mod:1.16.5-fabric'

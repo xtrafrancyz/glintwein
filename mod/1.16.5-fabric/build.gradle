@@ -6,11 +6,12 @@ plugins {
 def minecraft_version = "1.16.5"
 def fabric_loader_version = "0.18.4"
 
-version = project.mod_version
-group = project.maven_group
+apply from: '../../shared_util.gradle'
+
+version = getModVersion(minecraft_version)
 
 base {
-    archivesName = project.archives_base_name
+    archivesName = artifactId + "-fabric"
 }
 
 repositories {
@@ -22,8 +23,12 @@ repositories {
 
 sourceSets {
     main {
-        java.srcDirs += project(':version:1.16.5').file('src/main/java')
-        resources.srcDirs += project(':version:1.16.5').file('src/main/resources')
+        java {
+            srcDir '../../version/1.16.5/src/main/java'
+        }
+        resources {
+            srcDir '../../version/1.16.5/src/main/resources'
+        }
     }
 }
 
@@ -41,7 +46,6 @@ dependencies {
     include implementation("org.lwjgl:lwjgl-yoga:3.2.2:natives-windows")
 
     implementation project(":common")
-    implementation project(":version:1.16.5")
 }
 
 processResources {
@@ -65,8 +69,28 @@ tasks.withType(JavaCompile).configureEach {
     it.options.encoding = "UTF-8"
 }
 
+tasks.register('sourcesJar', Jar) {
+    archiveClassifier = 'sources'
+    from sourceSets.main.allSource
+    from project(':common').sourceSets.main.allSource
+}
+
 java {
     toolchain.languageVersion = JavaLanguageVersion.of(8)
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            artifact sourcesJar
+
+            groupId = group
+            artifactId = base.archivesName.get()
+            version = version
+        }
+    }
 }

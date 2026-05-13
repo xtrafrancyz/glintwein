@@ -3,6 +3,14 @@ plugins {
     id 'maven-publish'
 }
 
+apply from: '../../shared_util.gradle'
+
+version = getModVersion('26.1.2')
+
+base {
+    archivesName = artifactId + "-fabric"
+}
+
 sourceSets {
     main {
         java {
@@ -52,4 +60,16 @@ java {
 
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            groupId = group
+            artifactId = base.archivesName.get()
+            version = version
+        }
+    }
 }
