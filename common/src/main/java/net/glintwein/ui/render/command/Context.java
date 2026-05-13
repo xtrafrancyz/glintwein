@@ -188,37 +188,42 @@ public class Context {
     public void drawLine(float x0, float y0, float x1, float y1, float width, BorderRadius radius, int color) {
         if (ARGB.alpha(color = mulOpacity(color)) == 0)
             return;
-        float length = GMath.sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));
-        Matrix3x2f pose = new Matrix3x2f(transform);
-        pose.translate(x0, y0);
-        pose.rotate((float) Math.atan2(y1 - y0, x1 - x0));
-        pose.translate(0, -width / 2);
-
-        addCommand(new DrawRectCommand(
-            pose,
-            0, 0, length, width,
-            radius,
-            color,
-            0, 0
-        ));
+        drawLineInner(x0, y0, x1, y1, width, radius, color, color, color, color);
     }
 
     public void drawLine(float x0, float y0, float x1, float y1, float width, BorderRadius radius, Gradient color) {
         Gradient gradient = mulOpacity(color);
         if (gradient.isFullyTransparent())
             return;
+        drawLineInner(
+            x0, y0, x1, y1, width, radius,
+            gradient.topLeft(), gradient.topRight(), gradient.bottomRight(), gradient.bottomLeft()
+        );
+    }
 
-        float length = GMath.sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));
-        Matrix3x2f pose = new Matrix3x2f(transform);
-        pose.translate(x0, y0);
-        pose.rotate((float) Math.atan2(y1 - y0, x1 - x0));
-        pose.translate(0, -width / 2);
+    private void drawLineInner(float x0, float y0, float x1, float y1, float width, BorderRadius radius, int colorTL, int colorTR, int colorBR, int colorBL) {
+        float dx = x1 - x0;
+        float dy = y1 - y0;
+        float length = GMath.sqrt(dx * dx + dy * dy);
+        if (length == 0)
+            return;
+
+        float nx = dx / length;
+        float ny = dy / length;
+        float cx = (x0 + x1) * 0.5f;
+        float cy = (y0 + y1) * 0.5f;
+
+        Matrix3x2f pose = new Matrix3x2f(nx, ny, -ny, nx, cx, cy);
+        transform.mul(pose, pose);
+
+        float half = length * 0.5f;
+        float halfW = width * 0.5f;
 
         addCommand(new DrawRectCommand(
             pose,
-            0, 0, length, width,
+            -half, -halfW, half, halfW,
             radius,
-            gradient.topLeft(), gradient.topRight(), gradient.bottomRight(), gradient.bottomLeft(),
+            colorTL, colorTR, colorBR, colorBL,
             0, 0
         ));
     }
