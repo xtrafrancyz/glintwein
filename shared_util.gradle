@@ -19,8 +19,8 @@ ext {
         name = "maven.xtrafrancyz.net"
         url = uri("https://maven.xtrafrancyz.net" + (artifactVersion.contains("-SNAPSHOT") ? "/snapshots" : "/releases"))
         credentials {
-            username = System.getenv("MVN_USERNAME") ?: property("mvn.xtrafrancyz.user") ?: ""
-            password = System.getenv("MVN_PASSWORD") ?: property("mvn.xtrafrancyz.token") ?: ""
+            username = System.getenv("MVN_USERNAME") ?: findProperty("mvn.xtrafrancyz.user") ?: ""
+            password = System.getenv("MVN_PASSWORD") ?: findProperty("mvn.xtrafrancyz.token") ?: ""
         }
     }
 }
