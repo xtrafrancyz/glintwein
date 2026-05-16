@@ -316,7 +316,7 @@ public class TextInput extends Text {
         }
 
         RenderLine line = getRenderLines().get(0);
-        hasOverflow = line.width > contentBox.width;
+        hasOverflow = line.width - contentBox.width > GlobalUIState.getPixelSize();
         if (!hasOverflow) {
             scrollX = 0;
             return;

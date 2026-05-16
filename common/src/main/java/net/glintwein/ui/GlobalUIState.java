@@ -175,6 +175,10 @@ public class GlobalUIState {
         return (float) (Math.floor(value * scale + 0.5) / scale);
     }
 
+    public static float floorToPixel(float value) {
+        return (float) (Math.floor(value * scale) / scale);
+    }
+
     public static Matrix4f getGuiProjectionMatrix() {
         return guiProjMatrix;
     }
