@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 public class GigaFont {
     private static final int CACHE_MAX_ENTRIES = 500;
@@ -33,6 +34,7 @@ public class GigaFont {
             return size() > CACHE_MAX_ENTRIES;
         }
     };
+    private final Function<String, Float> widthCacheLoader = this::calculateWidth;
 
     private GigaFont(MsdfModel model, GlintImage image) {
         this.atlas = model.atlas;
@@ -53,22 +55,24 @@ public class GigaFont {
         textureId = new TextureSimple(image).getSprite().textureId;
     }
 
-    public float getWidth(String text, float size) {
-        float result = widthCache.computeIfAbsent(text, t -> {
-            float width = 0;
-            int len = t.length();
-            char prevChar = 0;
-            for (int i = 0; i < len; i++) {
-                char c = t.charAt(i);
-                Glyph glyph = glyphs.get(c);
-                if (glyph != null) {
-                    float kerning = this.kerning.getOrDefault(((prevChar << 16) | c), 0.0f);
-                    width += glyph.advance + kerning;
-                    prevChar = c;
-                }
+    private float calculateWidth(String text) {
+        float width = 0;
+        int len = text.length();
+        char prevChar = 0;
+        for (int i = 0; i < len; i++) {
+            char c = text.charAt(i);
+            Glyph glyph = glyphs.get(c);
+            if (glyph != null) {
+                float kerning = this.kerning.getOrDefault(((prevChar << 16) | c), 0.0f);
+                width += glyph.advance + kerning;
+                prevChar = c;
             }
-            return width;
-        });
+        }
+        return width;
+    }
+
+    public float getWidth(String text, float size) {
+        float result = widthCache.computeIfAbsent(text, widthCacheLoader);
         return result * size;
     }
 
