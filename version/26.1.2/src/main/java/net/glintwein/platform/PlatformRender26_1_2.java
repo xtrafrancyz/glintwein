@@ -18,12 +18,12 @@ import net.glintwein.ui.data.Bounds;
 import net.glintwein.ui.render.command.PipCommand;
 import net.glintwein.ui.render.texture.AtlasPacker;
 import net.glintwein.ui.util.GMath;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.Projection;
 import net.minecraft.client.renderer.ProjectionMatrixBuffer;
-import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
+import org.joml.Matrix4fc;
 import org.joml.Vector3f;
+import org.joml.Vector3fc;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL33;
 
@@ -33,25 +33,25 @@ import java.util.concurrent.ThreadLocalRandom;
 public class PlatformRender26_1_2 implements Platform.Render {
     public static boolean isFrameBufferLocked = false;
 
-    public static Matrix4f projMatrix = new Matrix4f();
-    public static Matrix4f viewMatrix = new Matrix4f();
+    public static final Matrix4f projMatrix = new Matrix4f();
+    public static final Matrix4f viewMatrix = new Matrix4f();
+    public static final Vector3f cameraPos = new Vector3f();
 
     private final ProjectionMatrixBuffer projectionMatrixBuffer = new ProjectionMatrixBuffer("glintwein offscreen");
     private final Projection projection = new Projection();
 
     @Override
-    public Vector3f getCameraPos() {
-        Vec3 cameraVec3 = Minecraft.getInstance().gameRenderer.getMainCamera().position();
-        return new Vector3f((float) cameraVec3.x, (float) cameraVec3.y, (float) cameraVec3.z);
+    public Vector3fc getCameraPos() {
+        return cameraPos;
     }
 
     @Override
-    public Matrix4f getWorldProjMatrix() {
+    public Matrix4fc getWorldProjMatrix() {
         return projMatrix;
     }
 
     @Override
-    public Matrix4f getWorldViewMatrix() {
+    public Matrix4fc getWorldViewMatrix() {
         return viewMatrix;
     }
 

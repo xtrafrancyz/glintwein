@@ -18,5 +18,6 @@ public class MixinLevelRenderer {
     private void captureProjViewMatrix(GraphicsResourceAllocator allocator, DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, Matrix4f viewMatrix, Matrix4f proxMatrix, CallbackInfo ci) {
         PlatformRender1_21_4.projMatrix.set(proxMatrix);
         PlatformRender1_21_4.viewMatrix.set(viewMatrix);
+        PlatformRender1_21_4.cameraPos.set(camera.getPosition().x, camera.getPosition().y, camera.getPosition().z);
     }
 }

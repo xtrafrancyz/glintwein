@@ -1,13 +1,11 @@
 package net.glintwein.demo;
 
 import net.glintwein.Glintwein;
+import net.glintwein.platform.Platform;
 import net.glintwein.ui.GlobalUIState;
 import net.glintwein.ui.Window;
 import net.glintwein.ui.data.*;
-import net.glintwein.ui.element.Element;
-import net.glintwein.ui.element.Text;
-import net.glintwein.ui.element.TextInput;
-import net.glintwein.ui.element.VerticalScrollView;
+import net.glintwein.ui.element.*;
 import net.glintwein.ui.element.component.Dropdown;
 import net.glintwein.ui.element.component.Slider;
 import net.glintwein.ui.render.command.Context;
@@ -17,6 +15,7 @@ import net.glintwein.ui.render.font.GigaFont;
 import net.glintwein.ui.util.ARGB;
 import net.glintwein.ui.util.Animated;
 import net.glintwein.ui.util.Easing;
+import org.joml.Vector3f;
 
 public class DemoWindow extends Window {
     public static final String ANIME_URL = "https://other.xtrafrancyz.net/graphen/chise.png";
@@ -47,6 +46,7 @@ public class DemoWindow extends Window {
         root.addChild(new Collapse("Popup", new PopupDemo()));
         root.addChild(new Collapse("Scaling", new ScaleDemo(this)));
         root.addChild(new Collapse("Layout Lerp", new LayoutLerpDemo()));
+        root.addChild(new Collapse("Waypoints", new WaypointDemo()));
     }
 
     private Element titleBar() {
@@ -455,6 +455,48 @@ public class DemoWindow extends Window {
                 text.setText("Hello, World!");
                 return true;
             });
+        }
+    }
+
+    public static class WaypointDemo extends Element {
+        public WaypointDemo() {
+            this.setPadding(Edge.ALL, 5);
+
+            Text spawnWaypoint = new Text("Spawn waypoint");
+            spawnWaypoint.setAlignSelf(Align.FLEX_START);
+            spawnWaypoint.setOnMouseEnter(() -> spawnWaypoint.setBackground(BG_ACCENT));
+            spawnWaypoint.setOnMouseExit(() -> spawnWaypoint.setBackground(0));
+            spawnWaypoint.setOnClick(button -> {
+                WaypointElement waypointElement = new WaypointElement() {
+                    @Override
+                    public void tick() {
+                        super.tick();
+                        if (isNearScreenCenter(150)) {
+                            setWidth(100);
+                        } else {
+                            setWidth(30);
+                        }
+                    }
+                };
+                waypointElement.enableLayoutLerp(400, Easing.OUT_BACK);
+                waypointElement.setTargetPos(Platform.render().getCameraPos().sub(0, 1.8f, 0, new Vector3f()));
+                waypointElement.setSize(30);
+                waypointElement.setBackground(0xffff0000);
+                Glintwein.instance.layerIngame.getContent().addChild(waypointElement);
+                return true;
+            });
+            this.addChild(spawnWaypoint);
+
+            Text clearWaypoints = new Text("Clear waypoints");
+            clearWaypoints.setAlignSelf(Align.FLEX_START);
+            clearWaypoints.setMargin(Edge.TOP, 5);
+            clearWaypoints.setOnMouseEnter(() -> clearWaypoints.setBackground(BG_ACCENT));
+            clearWaypoints.setOnMouseExit(() -> clearWaypoints.setBackground(0));
+            clearWaypoints.setOnClick(button -> {
+                Glintwein.instance.layerIngame.getContent().getChildren().removeIf(child -> child instanceof WaypointElement);
+                return true;
+            });
+            this.addChild(clearWaypoints);
         }
     }
 }

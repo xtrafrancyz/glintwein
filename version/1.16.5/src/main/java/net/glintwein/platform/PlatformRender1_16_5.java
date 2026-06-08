@@ -3,37 +3,33 @@ package net.glintwein.platform;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.glintwein.RenderMatrixTracker;
 import net.glintwein.ui.data.Bounds;
 import net.glintwein.ui.render.command.PipCommand;
 import net.glintwein.ui.render.texture.AtlasPacker;
 import net.glintwein.ui.util.GMath;
 import net.minecraft.client.Minecraft;
-import net.minecraft.world.phys.Vec3;
-import org.joml.Matrix4f;
-import org.joml.Vector3f;
+import org.joml.Matrix4fc;
+import org.joml.Vector3fc;
 import org.lwjgl.opengl.GL11;
 
 import java.nio.ByteBuffer;
 import java.util.PriorityQueue;
 
 public class PlatformRender1_16_5 implements Platform.Render {
-    public static Matrix4f projMatrix = new Matrix4f();
-    public static Matrix4f viewMatrix = new Matrix4f();
-
     @Override
-    public Vector3f getCameraPos() {
-        Vec3 cameraVec3 = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
-        return new Vector3f((float) cameraVec3.x, (float) cameraVec3.y, (float) cameraVec3.z);
+    public Vector3fc getCameraPos() {
+        return RenderMatrixTracker.CAMERA_POS;
     }
 
     @Override
-    public Matrix4f getWorldProjMatrix() {
-        return projMatrix;
+    public Matrix4fc getWorldProjMatrix() {
+        return RenderMatrixTracker.PROJ_MATRIX;
     }
 
     @Override
-    public Matrix4f getWorldViewMatrix() {
-        return viewMatrix;
+    public Matrix4fc getWorldViewMatrix() {
+        return RenderMatrixTracker.VIEW_MATRIX;
     }
 
     @Override

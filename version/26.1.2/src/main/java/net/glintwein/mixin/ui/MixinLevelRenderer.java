@@ -15,5 +15,6 @@ public class MixinLevelRenderer {
     private void captureCamera(DeltaTracker deltaTracker, Camera camera, float deltaPartialTick, CallbackInfo ci) {
         camera.getViewRotationMatrix(PlatformRender26_1_2.viewMatrix);
         camera.getViewRotationProjectionMatrix(PlatformRender26_1_2.projMatrix);
+        PlatformRender26_1_2.cameraPos.set(camera.position().x, camera.position().y, camera.position().z);
     }
 }
