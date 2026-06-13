@@ -9,13 +9,21 @@ import net.glintwein.ui.element.*;
 import net.glintwein.ui.element.component.Dropdown;
 import net.glintwein.ui.element.component.Slider;
 import net.glintwein.ui.render.command.Context;
+import net.glintwein.ui.render.command.DrawCommand;
 import net.glintwein.ui.render.command.DrawRectBuilder;
 import net.glintwein.ui.render.command.DrawTextBuilder;
 import net.glintwein.ui.render.font.GigaFont;
+import net.glintwein.ui.render.program.GlProgram;
+import net.glintwein.ui.render.program.GlintVertexConsumer;
+import net.glintwein.ui.render.program.GlintVertexFormat;
+import net.glintwein.ui.render.program.GlintVertexFormatElement;
 import net.glintwein.ui.util.ARGB;
 import net.glintwein.ui.util.Animated;
 import net.glintwein.ui.util.Easing;
+import org.joml.Matrix3x2f;
 import org.joml.Vector3f;
+
+import java.util.List;
 
 public class DemoWindow extends Window {
     public static final String ANIME_URL = "https://other.xtrafrancyz.net/graphen/chise.png";
@@ -47,6 +55,7 @@ public class DemoWindow extends Window {
         root.addChild(new Collapse("Scaling", new ScaleDemo(this)));
         root.addChild(new Collapse("Layout Lerp", new LayoutLerpDemo()));
         root.addChild(new Collapse("Waypoints", new WaypointDemo()));
+        root.addChild(new Collapse("Custom Shader", new CustomShaderDemo()));
     }
 
     private Element titleBar() {
@@ -497,6 +506,104 @@ public class DemoWindow extends Window {
                 return true;
             });
             this.addChild(clearWaypoints);
+        }
+    }
+
+    public static class CustomShaderDemo extends Element {
+        private static final GlProgram PROGRAM = new GlProgram(
+            // VERTEX SHADER
+            "#version 130\n" +
+                "\n" +
+                "in vec2 in_Position;\n" +
+                "in vec3 in_Color;\n" +
+                "\n" +
+                "out vec3 ex_Color;\n" +
+                "out vec2 v_LocalPos;\n" +
+                "\n" +
+                "uniform float u_time;\n" +
+                "uniform mat4 u_ProjMat;\n" +
+                "\n" +
+                "void main() {\n" +
+                "    ex_Color = in_Color;\n" +
+                "    v_LocalPos = in_Position;\n" +
+                "    gl_Position = u_ProjMat * vec4(in_Position, 0.0, 1.0);\n" +
+                "}",
+            // FRAGMENT SHADER
+            "#version 130\n" +
+                "\n" +
+                "in vec3 ex_Color;\n" +
+                "in vec2 v_LocalPos;;\n" +
+                "out vec4 fragColor;\n" +
+                "\n" +
+                "uniform float u_time;\n" +
+                "\n" +
+                "void main() {\n" +
+                "    float rShift = sin(u_time + ex_Color.r * 2.0) * 0.5 + 0.5;\n" +
+                "    float gShift = sin(u_time * 1.5 + ex_Color.g * 3.0) * 0.5 + 0.5;\n" +
+                "    float bShift = cos(u_time * 2.0 + ex_Color.b * 1.0) * 0.5 + 0.5;\n" +
+                "    \n" +
+                "    vec3 dynamicColor = vec3(rShift, gShift, bShift);\n" +
+                "    \n" +
+                "    float shimmer = sin(v_LocalPos.x * 5.0 + v_LocalPos.y * 5.0 + u_time * 5.0);\n" +
+                "    shimmer = smoothstep(0.8, 1.0, shimmer);\n" +
+                "    \n" +
+                "    vec3 finalColor = mix(dynamicColor, vec3(1.0, 1.0, 1.0), shimmer * 0.6);\n" +
+                "    \n" +
+                "    fragColor = vec4(finalColor, 1.0);\n" +
+                "}",
+            new GlintVertexFormat(
+                new GlintVertexFormatElement("in_Position", GlintVertexFormatElement.Type.FLOAT, 2, false),
+                new GlintVertexFormatElement("in_Color", GlintVertexFormatElement.Type.UBYTE, 4, true)
+            )
+        );
+
+        static {
+            Context.registerExecutor(CustomDrawCommand.class, new CustomDrawCommandExecutor());
+        }
+
+        public CustomShaderDemo() {
+            setHeight(300);
+        }
+
+        @Override
+        protected void drawContent(Context ctx) {
+            ctx.addCommand(new CustomDrawCommand(
+                new Matrix3x2f(ctx.pose()),
+                paddingBox.x + 5, paddingBox.y + 5,
+                paddingBox.x + paddingBox.width - 5, paddingBox.y + paddingBox.height - 5
+            ));
+        }
+
+        public static class CustomDrawCommand extends DrawCommand {
+            private final Matrix3x2f pose;
+            private final float x0, y0, x1, y1;
+
+            public CustomDrawCommand(Matrix3x2f pose, float x0, float y0, float x1, float y1) {
+                this.pose = pose;
+                this.x0 = x0;
+                this.y0 = y0;
+                this.x1 = x1;
+                this.y1 = y1;
+                this.bounds = Bounds.fromMinMax(x0, y0, x1, y1).transformMaxBounds(pose);
+            }
+        }
+
+        public static class CustomDrawCommandExecutor implements DrawCommand.Executor<CustomDrawCommand> {
+            @Override
+            public void execute(List<CustomDrawCommand> commands) {
+                GlProgram program = CustomShaderDemo.PROGRAM;
+                program.bind();
+                program.getUniform("u_ProjMat").setMat4(GlobalUIState.getGuiProjectionMatrix());
+                program.getUniform("u_time").setFloat((float) (Glintwein.time / 1000d));
+                GlintVertexConsumer consumer = program.begin();
+                for (CustomDrawCommand cmd : commands) {
+                    consumer.vertex2(cmd.pose, cmd.x0, cmd.y0).color(0xff0000ff).endVertex();
+                    consumer.vertex2(cmd.pose, cmd.x1, cmd.y0).color(0xffff0000).endVertex();
+                    consumer.vertex2(cmd.pose, cmd.x1, cmd.y1).color(0xff00ff00).endVertex();
+                    consumer.vertex2(cmd.pose, cmd.x0, cmd.y1).color(0xff0000ff).endVertex();
+                }
+                program.draw();
+            }
         }
     }
 }

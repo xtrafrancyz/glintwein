@@ -4,6 +4,8 @@ import net.glintwein.ui.data.BorderRadius;
 import org.joml.Matrix3x2fc;
 import org.joml.Vector2f;
 
+import java.util.function.Consumer;
+
 public class GlintVertexConsumer {
     private static final Vector2f TEMP_VEC = new Vector2f();
 
@@ -30,19 +32,13 @@ public class GlintVertexConsumer {
         return this;
     }
 
-    public GlintVertexConsumer color(int color) {
-        int a = (color >> 24) & 0xFF;
-        int r = (color >> 16) & 0xFF;
-        int g = (color >> 8) & 0xFF;
-        int b = color & 0xFF;
-        return color(r, g, b, a);
-    }
-
-    public GlintVertexConsumer color(int red, int green, int blue, int alpha) {
-        builder.putByte(0, (byte) red);
-        builder.putByte(1, (byte) green);
-        builder.putByte(2, (byte) blue);
-        builder.putByte(3, (byte) alpha);
+    public GlintVertexConsumer color(int argb) {
+        int abgr = ((argb & 0xFF000000)) | // A
+            ((argb & 0x00FF0000) >> 16) | // R
+            ((argb & 0x0000FF00)) |       // G
+            ((argb & 0x000000FF) << 16);   // B
+        // byte order is reversed in the shader
+        builder.putInt(0, abgr);
         builder.nextElement();
         return this;
     }
@@ -60,18 +56,13 @@ public class GlintVertexConsumer {
         int topRight = (int) Math.min(radius.topRight * scale, maxRadius);
         int bottomRight = (int) Math.min(radius.bottomRight * scale, maxRadius);
         int bottomLeft = (int) Math.min(radius.bottomLeft * scale, maxRadius);
+        // byte order is reversed in the shader
         return (topLeft & 0xFF) | ((topRight & 0xFF) << 8) | ((bottomRight & 0xFF) << 16) | ((bottomLeft & 0xFF) << 24);
     }
 
     public GlintVertexConsumer radius(int packedRadius) {
-        byte topLeft = (byte) (packedRadius & 0xFF);
-        byte topRight = (byte) ((packedRadius >> 8) & 0xFF);
-        byte bottomRight = (byte) ((packedRadius >> 16) & 0xFF);
-        byte bottomLeft = (byte) ((packedRadius >> 24) & 0xFF);
-        builder.putByte(0, topLeft);
-        builder.putByte(1, topRight);
-        builder.putByte(2, bottomRight);
-        builder.putByte(3, bottomLeft);
+        // in vec4 FragRadius; // x: top-left, y: top-right, z: bottom-right, w: bottom-left
+        builder.putInt(0, packedRadius);
         builder.nextElement();
         return this;
     }
@@ -84,7 +75,17 @@ public class GlintVertexConsumer {
         return this;
     }
 
+    public GlintVertexConsumer customElement(Consumer<BufferBuilder> consumer) {
+        consumer.accept(builder);
+        builder.nextElement();
+        return this;
+    }
+
     public void endVertex() {
         builder.endVertex();
+    }
+
+    public BufferBuilder getBufferBuilder() {
+        return builder;
     }
 }

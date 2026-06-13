@@ -134,6 +134,10 @@ public class BufferBuilder {
         this.buffer.putFloat(this.nextElementByte + index, floatValue);
     }
 
+    public void putInt(int index, int intValue) {
+        this.buffer.putInt(this.nextElementByte + index, intValue);
+    }
+
     public void endVertex() {
         if (this.elementIndex != 0) {
             throw new IllegalStateException("Not filled all elements of the vertex");
