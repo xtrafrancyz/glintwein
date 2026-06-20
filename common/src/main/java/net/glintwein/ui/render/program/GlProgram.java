@@ -4,6 +4,7 @@ import net.glintwein.platform.AutoQuadIndexBuffer;
 import net.glintwein.platform.Platform;
 import net.glintwein.util.ResourceLoaderUtil;
 import org.joml.Matrix4f;
+import org.joml.Vector4f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
@@ -12,10 +13,10 @@ import org.lwjgl.system.MemoryUtil;
 
 import java.io.InputStream;
 import java.nio.FloatBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class GlProgram {
     public static final GlProgram MSDF = loadFromJar("msdf", GlintVertexFormat.MSDF);
@@ -176,15 +177,12 @@ public class GlProgram {
     }
 
     public static class Uniform {
+        private static final Vector4f TEMP_VECTOR4F = new Vector4f();
+
         private final GlProgram program;
         private final int location;
 
-        private float f0 = Float.NaN;
-        private float f1 = Float.NaN;
-        private float f2 = Float.NaN;
-        private float f3 = Float.NaN;
-        private int i0 = Integer.MIN_VALUE;
-        private Matrix4f mat4 = null;
+        private Object val = null;
 
         public Uniform(GlProgram program, int location) {
             this.program = program;
@@ -196,20 +194,7 @@ public class GlProgram {
         }
 
         public void setFloat(float value) {
-            if (this.f0 != value) {
-                GL20.glUniform1f(location, value);
-                this.f0 = value;
-            }
-        }
-
-        public void setFloat4(float x, float y, float z, float w) {
-            if (this.f0 != x || this.f1 != y || this.f2 != z || this.f3 != w) {
-                GL20.glUniform4f(location, x, y, z, w);
-                this.f0 = x;
-                this.f1 = y;
-                this.f2 = z;
-                this.f3 = w;
-            }
+            setCustomType(value, GL20::glUniform1f);
         }
 
         public void setColor4f(int color) {
@@ -220,38 +205,122 @@ public class GlProgram {
             setFloat4(r, g, b, a);
         }
 
+        public void setFloat4(float x, float y, float z, float w) {
+            setCustomTypeCopy(
+                TEMP_VECTOR4F.set(x, y, z, w),
+                (loc, val) -> GL20.glUniform4f(loc, val.x, val.y, val.z, val.w),
+                Vector4f::new,
+                Vector4f::set
+            );
+        }
+
         public void setInt(int value) {
-            if (this.i0 != value) {
-                GL20.glUniform1i(location, value);
-                this.i0 = value;
-            }
+            setCustomType(value, GL20::glUniform1i);
         }
 
         public void setMat4(Matrix4f matrix) {
-            if (this.mat4 == null || !mat4.equals(matrix)) {
-                if (this.mat4 == null)
-                    this.mat4 = new Matrix4f();
-                this.mat4.set(matrix);
+            setCustomTypeCopy(
+                matrix,
+                (loc, val) -> {
+                    try (MemoryStack stack = MemoryStack.stackPush()) {
+                        FloatBuffer fb = val.get(stack.mallocFloat(16));
+                        GL20.glUniformMatrix4fv(loc, false, fb);
+                    }
+                },
+                Matrix4f::new,
+                Matrix4f::set
+            );
+        }
 
-                try (MemoryStack stack = MemoryStack.stackPush()) {
-                    FloatBuffer fb = this.mat4.get(stack.mallocFloat(16));
-                    GL20.glUniformMatrix4fv(location, false, fb);
-                }
-            }
+        public void setFloatArray(float[] values) {
+            setCustomTypeClone(
+                values,
+                GL20::glUniform1fv,
+                arr -> Arrays.copyOf(arr, arr.length)
+            );
         }
 
         public void setTexture(int textureId) {
-            int textureUnit = i0;
-            if (textureUnit == Integer.MIN_VALUE) {
+            int textureUnit;
+            if (val == null) {
                 textureUnit = program.samplerUnits.indexOf(this);
                 if (textureUnit == -1) {
                     textureUnit = program.samplerUnits.size();
                     program.samplerUnits.add(this);
                 }
                 setInt(textureUnit);
+            } else {
+                textureUnit = (int) val;
             }
             Platform.render().stateActiveTexture(GL20.GL_TEXTURE0 + textureUnit);
             Platform.render().stateBindTexture(textureId);
+        }
+
+        /**
+         * Helper method to set a uniform value that is an immutable type, where we can just compare the values directly.
+         * <p>
+         * Example:
+         * <pre>{@code
+         * uniform.setCustomType(1.0f, GL20::glUniform1f);
+         * }</pre>
+         */
+        public <T> void setCustomType(T value, GlUniformSetter<T> setter) {
+            if (!Objects.equals(this.val, value)) {
+                setter.setUniform(location, value);
+                this.val = value;
+            }
+        }
+
+        /**
+         * Helper method to set a uniform value that is a mutable type, where we want to copy the value before storing it.
+         * <p>
+         * Example:
+         * <pre>{@code
+         * Vector4f vec = new Vector4f(1.0f, 2.0f, 3.0f, 4.0f);
+         * uniform.setCustomTypeCopy(
+         *     vec,
+         *     (loc, val) -> GL20.glUniform4f(loc, val.x, val.y, val.z, val.w),
+         *     Vector4f::new,
+         *     Vector4f::set
+         * );
+         * }</pre>
+         */
+        public <T> void setCustomTypeCopy(T value, GlUniformSetter<T> setter, Supplier<T> constructor, BiConsumer<T, T> copy) {
+            T val = (this.val != null) ? (T) this.val : null;
+            if (val == null || !val.equals(value)) {
+                if (val == null)
+                    val = constructor.get();
+                copy.accept(val, value);
+                setter.setUniform(location, val);
+                this.val = val;
+            }
+        }
+
+        /**
+         * Helper method to set a uniform value that is an array or other mutable type, where we want to clone the value before storing it.
+         * <p>
+         * Example:
+         * <pre>{@code
+         * float[] values = new float[]{1.0f, 2.0f, 3.0f};
+         * uniform.setCustomTypeClone(
+         *     values,
+         *     GL20::glUniform1fv,
+         *     arr -> Arrays.copyOf(arr, arr.length)
+         * );
+         * }</pre>
+         */
+        public <T> void setCustomTypeClone(T value, GlUniformSetter<T> setter, Function<T, T> clone) {
+            T val = (this.val != null) ? (T) this.val : null;
+            if (val == null || !val.equals(value)) {
+                val = clone.apply(value);
+                setter.setUniform(location, val);
+                this.val = val;
+            }
+        }
+
+        @FunctionalInterface
+        public interface GlUniformSetter<T> {
+            void setUniform(int location, T value);
         }
     }
 }
