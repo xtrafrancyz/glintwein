@@ -1,8 +1,10 @@
 package net.glintwein.ui;
 
+import net.glintwein.ui.data.BorderRadius;
 import net.glintwein.ui.data.PositionType;
 import net.glintwein.ui.element.RootElement;
 import net.glintwein.ui.render.command.Context;
+import net.glintwein.ui.util.GMath;
 import net.glintwein.util.KVStore;
 import org.joml.Vector2f;
 
@@ -11,6 +13,8 @@ import java.util.Collections;
 import java.util.List;
 
 public class Window {
+    private static final float RESIZE_HANDLE_SIZE = 12f;
+
     private final String id;
     public final RootElement root;
     public WindowManager windowManager;
@@ -21,6 +25,17 @@ public class Window {
     private float dragCurrentPosX;
     private float dragCurrentPosY;
     private boolean moved;
+
+    private boolean resizeable = false;
+    private boolean resizing;
+    private float resizeStartMouseX;
+    private float resizeStartMouseY;
+    private float resizeStartScale;
+    private float resizeStartContentWidth;
+    private float resizeStartContentHeight;
+
+    private float scaleMin = 0.2f;
+    private float scaleMax = 4f;
 
     private Anchor anchor = Anchor.TOP_LEFT;
     private float posXPct = 0f;
@@ -57,7 +72,26 @@ public class Window {
         if (scale != 1f)
             ctx.pose().scale(scale);
         root.draw(ctx);
+        if (resizeable && (resizing || root.isHoveredSelf()))
+            drawResizeHandle(ctx, RESIZE_HANDLE_SIZE, 0xCCFFFFFF);
         ctx.pose().popMatrix();
+    }
+
+    protected void drawResizeHandle(Context ctx, float handleSize, int color) {
+        float scaledHandleSize = Math.min(handleSize / scale, Math.min(root.getComputedWidth(), root.getComputedHeight()));
+        float contentW = root.getComputedWidth();
+        float contentH = root.getComputedHeight();
+
+        float lineWidth = 1f / scale;
+        float inset = 2f / scale;
+        float spacing = 3f / scale;
+
+        float right = contentW - inset;
+        float bottom = contentH - inset;
+        float start = Math.max(0f, Math.min(scaledHandleSize - inset, scaledHandleSize * 0.75f));
+
+        ctx.drawLine(right - start, bottom, right, bottom - start, lineWidth, BorderRadius.ZERO, color);
+        ctx.drawLine(right - start + spacing, bottom, right, bottom - start + spacing, lineWidth, BorderRadius.ZERO, color);
     }
 
     private void drawGuides(Context ctx, float screenW, float screenH) {
@@ -79,7 +113,9 @@ public class Window {
     }
 
     private void updateMouse(float mouseX, float mouseY, boolean canHover) {
-        if (dragged) {
+        if (resizing) {
+            updateResize(mouseX, mouseY);
+        } else if (dragged) {
             moved = moved || dragStartX != mouseX || dragStartY != mouseY;
 
             float deltaX = mouseX - dragStartX;
@@ -98,6 +134,18 @@ public class Window {
 
         Vector2f xy = getScreenXY();
         root.updateMouse((mouseX - xy.x) / scale, (mouseY - xy.y) / scale, canHover);
+    }
+
+    private void updateResize(float mouseX, float mouseY) {
+        float dx = mouseX - resizeStartMouseX;
+        float dy = mouseY - resizeStartMouseY;
+
+        float denom = resizeStartContentWidth * resizeStartContentWidth + resizeStartContentHeight * resizeStartContentHeight;
+        if (denom <= 0f)
+            return;
+
+        float newScale = resizeStartScale + ((resizeStartContentWidth * dx) + (resizeStartContentHeight * dy)) / denom;
+        setScale(newScale);
     }
 
     private void applySnapping(float rawX, float rawY) {
@@ -186,38 +234,28 @@ public class Window {
         }
 
         if (xIndex == -1) {
-            minDiffX = Float.MAX_VALUE;
-            float abs = Math.abs(rawX - 0);
-            if (abs < minDiffX) {
-                minDiffX = abs;
-                xIndex = 0;
-            }
-            abs = Math.abs(rawX + w / 2f - screenW / 2f);
-            if (abs < minDiffX) {
-                minDiffX = abs;
+            float bestDiffX = Math.abs(rawX - 0);
+            xIndex = 0;
+            float abs = Math.abs(rawX + w / 2f - screenW / 2f);
+            if (abs < bestDiffX) {
+                bestDiffX = abs;
                 xIndex = 1;
             }
             abs = Math.abs(rawX + w - screenW);
-            if (abs < minDiffX) {
-                minDiffX = abs;
+            if (abs < bestDiffX) {
                 xIndex = 2;
             }
         }
         if (yIndex == -1) {
-            minDiffY = Float.MAX_VALUE;
-            float abs = Math.abs(rawY - 0);
-            if (abs < minDiffY) {
-                minDiffY = abs;
-                yIndex = 0;
-            }
-            abs = Math.abs(rawY + h / 2f - screenH / 2f);
-            if (abs < minDiffY) {
-                minDiffY = abs;
+            float bestDiffY = Math.abs(rawY - 0);
+            yIndex = 0;
+            float abs = Math.abs(rawY + h / 2f - screenH / 2f);
+            if (abs < bestDiffY) {
+                bestDiffY = abs;
                 yIndex = 1;
             }
             abs = Math.abs(rawY + h - screenH);
-            if (abs < minDiffY) {
-                minDiffY = abs;
+            if (abs < bestDiffY) {
                 yIndex = 2;
             }
         }
@@ -268,10 +306,19 @@ public class Window {
 
     public boolean onMousePress(float mouseX, float mouseY, int button) {
         Vector2f xy = getScreenXY();
-        boolean handled = root.handleMousePress((mouseX - xy.x) / scale, (mouseY - xy.y) / scale, button);
+        float localX = (mouseX - xy.x) / scale;
+        float localY = (mouseY - xy.y) / scale;
+
+        if (button == 0 && resizeable && isOnResizeHandle(localX, localY)) {
+            startResizing(mouseX, mouseY);
+            return true;
+        }
+
+        boolean handled = root.handleMousePress(localX, localY, button);
 
         if (!handled && root.isHovered()) {
             dragged = true;
+            resizing = false;
             moved = false;
             dragStartX = mouseX;
             dragStartY = mouseY;
@@ -285,6 +332,7 @@ public class Window {
     public boolean onMouseRelease(float mouseX, float mouseY, int button) {
         if (dragged) savePosition();
         dragged = false;
+        resizing = false;
         activeGuideX = null;
         activeGuideY = null;
         Vector2f xy = getScreenXY();
@@ -337,11 +385,98 @@ public class Window {
         return new Vector2f(GlobalUIState.snapToPixel(x), GlobalUIState.snapToPixel(y));
     }
 
+    public void setResizeable(boolean resizeable) {
+        this.resizeable = resizeable;
+        this.resizing = false;
+    }
+
+    public boolean isResizeable() {
+        return resizeable;
+    }
+
+    public void setScaleLimit(float minScale, float maxScale) {
+        if (minScale > maxScale)
+            throw new IllegalArgumentException("minScale cannot be greater than maxScale");
+        if (minScale <= 0f || maxScale <= 0f)
+            throw new IllegalArgumentException("Scale limits must be positive");
+        this.scaleMin = minScale;
+        this.scaleMax = maxScale;
+    }
+
     public void setScale(float newScale) {
-        if (scale == newScale)
+        float clampedScale = GMath.clamp(newScale, scaleMin, scaleMax);
+        if (scale == clampedScale)
             return;
-        this.scale = newScale;
+        Vector2f topLeft = getScreenXY();
+        this.scale = clampedScale;
+        applyTopLeft(topLeft.x, topLeft.y);
         savePosition();
+    }
+
+    private void applyTopLeft(float topLeftX, float topLeftY) {
+        float screenW = GlobalUIState.getScaledWidth();
+        float screenH = GlobalUIState.getScaledHeight();
+        float width = getComputedWidth();
+        float height = getComputedHeight();
+
+        float anchorX = topLeftX;
+        float anchorY = topLeftY;
+
+        switch (anchor) {
+            case TOP_LEFT:
+                break;
+            case TOP:
+                anchorX += width / 2f;
+                break;
+            case TOP_RIGHT:
+                anchorX += width;
+                break;
+            case LEFT:
+                anchorY += height / 2f;
+                break;
+            case CENTER:
+                anchorX += width / 2f;
+                anchorY += height / 2f;
+                break;
+            case RIGHT:
+                anchorX += width;
+                anchorY += height / 2f;
+                break;
+            case BOTTOM_LEFT:
+                anchorY += height;
+                break;
+            case BOTTOM:
+                anchorX += width / 2f;
+                anchorY += height;
+                break;
+            case BOTTOM_RIGHT:
+                anchorX += width;
+                anchorY += height;
+                break;
+        }
+
+        posXPct = (screenW > 0) ? (anchorX / screenW) * 100f : 0f;
+        posYPct = (screenH > 0) ? (anchorY / screenH) * 100f : 0f;
+    }
+
+    private boolean isOnResizeHandle(float localX, float localY) {
+        float handleSize = Math.min(RESIZE_HANDLE_SIZE / scale, Math.min(root.getComputedWidth(), root.getComputedHeight()));
+        float width = root.getComputedWidth();
+        float height = root.getComputedHeight();
+        return localX >= width - handleSize && localY >= height - handleSize;
+    }
+
+    private void startResizing(float mouseX, float mouseY) {
+        resizing = true;
+        dragged = false;
+        moved = false;
+        activeGuideX = null;
+        activeGuideY = null;
+        resizeStartMouseX = mouseX;
+        resizeStartMouseY = mouseY;
+        resizeStartScale = scale;
+        resizeStartContentWidth = root.getComputedWidth();
+        resizeStartContentHeight = root.getComputedHeight();
     }
 
     public float getScale() {
