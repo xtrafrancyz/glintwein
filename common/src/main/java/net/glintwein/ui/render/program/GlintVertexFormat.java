@@ -15,6 +15,13 @@ public class GlintVertexFormat {
         GlintVertexFormatElement.OUTLINE_COLOR // 4
     ); // sum = 32 bytes, quad = 128 bytes
 
+    public static final GlintVertexFormat RECT_SHADOW = new GlintVertexFormat(
+        GlintVertexFormatElement.POSITION2, // 8
+        GlintVertexFormatElement.COLOR, // 4
+        GlintVertexFormatElement.RADIUS, // 4
+        GlintVertexFormatElement.SIZE // 12
+    );
+
     public static final GlintVertexFormat TEXTURED_RECT = new GlintVertexFormat(
         GlintVertexFormatElement.POSITION2, // 8
         GlintVertexFormatElement.COLOR, // 4

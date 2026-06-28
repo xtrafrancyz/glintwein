@@ -21,6 +21,7 @@ import java.util.function.Supplier;
 public class GlProgram {
     public static final GlProgram MSDF = loadFromJar("msdf", GlintVertexFormat.MSDF);
     public static final GlProgram RECT = loadFromJar("rect", GlintVertexFormat.RECT);
+    public static final GlProgram RECT_SHADOW = loadFromJar("rect_shadow", GlintVertexFormat.RECT_SHADOW);
     public static final GlProgram RECT_TEXTURED = loadFromJar("rect_textured", GlintVertexFormat.TEXTURED_RECT);
 
     private static final BufferBuilder BUFFER_BUILDER = new BufferBuilder(98304);

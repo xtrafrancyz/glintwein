@@ -386,6 +386,8 @@ public class Window {
     }
 
     public void setResizeable(boolean resizeable) {
+        if (this.resizeable == resizeable)
+            return;
         this.resizeable = resizeable;
         this.resizing = false;
     }

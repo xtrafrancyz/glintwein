@@ -62,6 +62,8 @@ public class UILayer {
     }
 
     public boolean onMousePress(float mouseX, float mouseY, int button) {
+        if (!canHandleMouseInput())
+            return false;
         boolean cancelled = windowManager.onMousePress(mouseX, mouseY, button);
         if (!cancelled)
             cancelled = root.handleMousePress(mouseX, mouseY, button);
@@ -76,6 +78,8 @@ public class UILayer {
     }
 
     public boolean onMouseScroll(float mouseX, float mouseY, float horizontal, float vertical) {
+        if (!canHandleMouseInput())
+            return false;
         boolean cancelled = windowManager.onMouseScroll(mouseX, mouseY, horizontal, vertical);
         if (!cancelled)
             cancelled = root.handleMouseScroll(mouseX, mouseY, horizontal, vertical);

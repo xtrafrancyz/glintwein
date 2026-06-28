@@ -27,6 +27,7 @@ public class Context {
         registerExecutor(DrawRectCommand.class, new DrawRectCommand.Executor());
         registerExecutor(DrawTextCommand.class, new DrawTextCommand.Executor());
         registerExecutor(DrawTextureCommand.class, new DrawTextureCommand.Executor());
+        registerExecutor(DrawShadowCommand.class, new DrawShadowCommand.Executor());
     }
 
     public static <T extends DrawCommand> void registerExecutor(Class<T> cmdClass, DrawCommand.Executor<T> executor) {
@@ -182,6 +183,37 @@ public class Context {
             builder.radius,
             color00, color10, color11, color01,
             outlineColor, builder.outlineWidth
+        ));
+    }
+
+    public void drawShadow(Box box, BorderRadius radius, int color, float blurSpread) {
+        color = mulOpacity(color);
+        if (ARGB.alpha(color) == 0)
+            return;
+        addCommand(new DrawShadowCommand(
+            new Matrix3x2f(transform),
+            box.x, box.y, box.x + box.width, box.y + box.height,
+            radius,
+            color, color, color, color,
+            blurSpread
+        ));
+    }
+
+    public void drawShadow(DrawShadowBuilder builder) {
+        int color00, color10, color11, color01;
+        color00 = mulOpacity(builder.colorTL);
+        color10 = mulOpacity(builder.colorTR);
+        color11 = mulOpacity(builder.colorBR);
+        color01 = mulOpacity(builder.colorBL);
+        if (ARGB.alpha(color00) == 0 && ARGB.alpha(color10) == 0 && ARGB.alpha(color11) == 0 && ARGB.alpha(color01) == 0)
+            return;
+
+        addCommand(new DrawShadowCommand(
+            new Matrix3x2f(transform),
+            builder.x0, builder.y0, builder.x1, builder.y1,
+            builder.radius,
+            color00, color10, color11, color01,
+            builder.blurSpread
         ));
     }
 

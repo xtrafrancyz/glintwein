@@ -40,6 +40,7 @@ public class DemoWindow extends Window {
 
     public DemoWindow() {
         super("glintwein_demo");
+        setResizeable(true);
         init();
     }
 
@@ -48,6 +49,14 @@ public class DemoWindow extends Window {
         root.setMinWidth(300);
         root.setBackground(BG);
         root.setBorderRadius(BorderRadius.of(5));
+        root.addChild(new Element() {
+            @Override
+            protected void drawContent(Context ctx) {
+                ctx.pushDrawPriority(-10);
+                ctx.drawShadow(root.borderBox, BorderRadius.of(5), 0xffffffff, 5);
+                ctx.popDrawPriority(-10);
+            }
+        });
         root.addChild(titleBar());
         root.addChild(new Collapse("Drawing", new DrawingDemo()));
         root.addChild(new Collapse("Text Input", new InputDemo()));

@@ -51,6 +51,22 @@ public class DrawRectBuilder {
         return this;
     }
 
+    public DrawRectBuilder offset(float dx, float dy) {
+        this.x0 += dx;
+        this.y0 += dy;
+        this.x1 += dx;
+        this.y1 += dy;
+        return this;
+    }
+
+    public DrawRectBuilder expand(float amount) {
+        this.x0 -= amount;
+        this.y0 -= amount;
+        this.x1 += amount;
+        this.y1 += amount;
+        return this;
+    }
+
     public DrawRectBuilder expandByOutline() {
         this.x0 -= outlineWidth;
         this.y0 -= outlineWidth;

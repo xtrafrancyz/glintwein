@@ -54,25 +54,51 @@ public class Bounds {
             this.minY <= y && this.maxY >= y;
     }
 
-    public void set(float minX, float minY, float maxX, float maxY) {
+    public Bounds set(float minX, float minY, float maxX, float maxY) {
         this.minX = minX;
         this.minY = minY;
         this.maxX = maxX;
         this.maxY = maxY;
+        return this;
     }
 
-    public void set(Bounds other) {
+    public Bounds set(Bounds other) {
         this.minX = other.minX;
         this.minY = other.minY;
         this.maxX = other.maxX;
         this.maxY = other.maxY;
+        return this;
     }
 
-    public void setEmpty() {
+    public Bounds setEmpty() {
         this.minX = Float.POSITIVE_INFINITY;
         this.minY = Float.POSITIVE_INFINITY;
         this.maxX = Float.NEGATIVE_INFINITY;
         this.maxY = Float.NEGATIVE_INFINITY;
+        return this;
+    }
+
+    public Bounds setEmptyIfInvalid() {
+        if (this.minX > this.maxX || this.minY > this.maxY) {
+            setEmpty();
+        }
+        return this;
+    }
+
+    public Bounds expand(float amount) {
+        this.minX -= amount;
+        this.minY -= amount;
+        this.maxX += amount;
+        this.maxY += amount;
+        return this;
+    }
+
+    public Bounds shrink(float amount) {
+        this.minX += amount;
+        this.minY += amount;
+        this.maxX -= amount;
+        this.maxY -= amount;
+        return this;
     }
 
     public Bounds intersectionOrNull(Bounds other) {

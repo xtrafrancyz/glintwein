@@ -1,0 +1,67 @@
+package net.glintwein.ui.render.command;
+
+import net.glintwein.ui.GlobalUIState;
+import net.glintwein.ui.data.BorderRadius;
+import net.glintwein.ui.data.Bounds;
+import net.glintwein.ui.render.program.GlProgram;
+import net.glintwein.ui.render.program.GlintVertexConsumer;
+import org.joml.Matrix3x2fc;
+
+import java.util.List;
+
+public class DrawShadowCommand extends DrawCommand {
+    private final Matrix3x2fc pose;
+    private final float x0, y0, x1, y1;
+    private final BorderRadius radius;
+    private final int colorTL, colorTR, colorBR, colorBL;
+    private final float blurSpread;
+
+    public DrawShadowCommand(Matrix3x2fc pose, float x0, float y0, float x1, float y1, BorderRadius radius, int colorTL, int colorTR, int colorBR, int colorBL, float blurSpread) {
+        blurSpread /= 2.0f;
+        this.x0 = x0 - blurSpread;
+        this.y0 = y0 - blurSpread;
+        this.x1 = x1 + blurSpread;
+        this.y1 = y1 + blurSpread;
+        this.bounds = Bounds.fromMinMax(this.x0, this.y0, this.x1, this.y1).transformMaxBounds(pose);
+        this.pose = pose;
+        this.radius = radius;
+        this.colorTL = colorTL;
+        this.colorTR = colorTR;
+        this.colorBR = colorBR;
+        this.colorBL = colorBL;
+        this.blurSpread = blurSpread;
+    }
+
+    public static class Executor implements DrawCommand.Executor<DrawShadowCommand> {
+        @Override
+        public void execute(List<DrawShadowCommand> commands) {
+            GlProgram program = GlProgram.RECT_SHADOW;
+            program.bind();
+            program.getUniform("ProjMat").setMat4(GlobalUIState.getGuiProjectionMatrix());
+            GlintVertexConsumer consumer = program.begin();
+            for (DrawShadowCommand cmd : commands) {
+                float sx = (float) Math.sqrt(cmd.pose.m00() * cmd.pose.m00() + cmd.pose.m01() * cmd.pose.m01());
+                float sy = (float) Math.sqrt(cmd.pose.m10() * cmd.pose.m10() + cmd.pose.m11() * cmd.pose.m11());
+                float avg = (sx + sy) / 2.0f;
+                float spread = cmd.blurSpread * avg;
+                float w = (cmd.x1 - cmd.x0 - cmd.blurSpread * 2) * sx;
+                float h = (cmd.y1 - cmd.y0 - cmd.blurSpread * 2) * sy;
+                int radiusPacked = GlintVertexConsumer.packRadius(cmd.radius, avg, w, h);
+
+                vertex(consumer, cmd, cmd.x0, cmd.y0, cmd.colorTL, w, h, radiusPacked, spread);
+                vertex(consumer, cmd, cmd.x0, cmd.y1, cmd.colorBL, w, h, radiusPacked, spread);
+                vertex(consumer, cmd, cmd.x1, cmd.y1, cmd.colorBR, w, h, radiusPacked, spread);
+                vertex(consumer, cmd, cmd.x1, cmd.y0, cmd.colorTR, w, h, radiusPacked, spread);
+            }
+            program.draw();
+        }
+
+        private void vertex(GlintVertexConsumer consumer, DrawShadowCommand cmd, float x, float y, int color, float w, float h, int radiusPacked, float spread) {
+            consumer.vertex2(cmd.pose, x, y)
+                .color(color)
+                .radius(radiusPacked)
+                .size(w, h, spread)
+                .endVertex();
+        }
+    }
+}
