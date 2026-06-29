@@ -465,7 +465,7 @@ public class Window {
         float handleSize = Math.min(RESIZE_HANDLE_SIZE / scale, Math.min(root.getComputedWidth(), root.getComputedHeight()));
         float width = root.getComputedWidth();
         float height = root.getComputedHeight();
-        return localX >= width - handleSize && localY >= height - handleSize;
+        return localX >= width - handleSize && localY >= height - handleSize && localX <= width && localY <= height;
     }
 
     private void startResizing(float mouseX, float mouseY) {
