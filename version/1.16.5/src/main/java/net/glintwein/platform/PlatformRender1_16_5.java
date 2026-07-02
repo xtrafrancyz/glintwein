@@ -103,7 +103,8 @@ public class PlatformRender1_16_5 implements Platform.Render {
     public void beforeDraw() {
         RenderSystem.disableCull();
         RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
+        // Pre-multiplied alpha blending
+        RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
         RenderSystem.disableAlphaTest();
         RenderSystem.disableDepthTest();
     }
@@ -113,6 +114,7 @@ public class PlatformRender1_16_5 implements Platform.Render {
         RenderSystem.disableScissor();
         RenderSystem.enableAlphaTest();
         RenderSystem.enableDepthTest();
+        RenderSystem.defaultBlendFunc();
     }
 
     @Override

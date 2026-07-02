@@ -66,10 +66,10 @@ void main() {
         vec3 final_color = mix(FragColor.rgb, FragOutlineColor.rgb, min(1.0, max(outline_alpha, inner_dist)));
         float final_alpha = alpha * mix(FragColor.a, FragOutlineColor.a, outline_alpha);
 
-        OutColor = vec4(final_color, final_alpha);
+        OutColor = vec4(final_color * final_alpha, final_alpha);
     } else {
         // No outline, just use the fill color
-        OutColor = vec4(FragColor.rgb, FragColor.a * alpha);
+        OutColor = FragColor * alpha;
     }
 	//OutColor = vec4(fract(pixel_pos),0,1);
 }

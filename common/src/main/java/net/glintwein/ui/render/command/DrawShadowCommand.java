@@ -5,6 +5,7 @@ import net.glintwein.ui.data.BorderRadius;
 import net.glintwein.ui.data.Bounds;
 import net.glintwein.ui.render.program.GlProgram;
 import net.glintwein.ui.render.program.GlintVertexConsumer;
+import net.glintwein.ui.util.ARGB;
 import org.joml.Matrix3x2fc;
 
 import java.util.List;
@@ -48,20 +49,28 @@ public class DrawShadowCommand extends DrawCommand {
                 float h = (cmd.y1 - cmd.y0 - cmd.blurSpread * 2) * sy;
                 int radiusPacked = GlintVertexConsumer.packRadius(cmd.radius, avg, w, h);
 
-                vertex(consumer, cmd, cmd.x0, cmd.y0, cmd.colorTL, w, h, radiusPacked, spread);
-                vertex(consumer, cmd, cmd.x0, cmd.y1, cmd.colorBL, w, h, radiusPacked, spread);
-                vertex(consumer, cmd, cmd.x1, cmd.y1, cmd.colorBR, w, h, radiusPacked, spread);
-                vertex(consumer, cmd, cmd.x1, cmd.y0, cmd.colorTR, w, h, radiusPacked, spread);
+                consumer.vertex2(cmd.pose, cmd.x0, cmd.y0)
+                    .color(ARGB.premulAlpha(cmd.colorTL))
+                    .radius(radiusPacked)
+                    .size(w, h, spread)
+                    .endVertex();
+                consumer.vertex2(cmd.pose, cmd.x0, cmd.y1)
+                    .color(ARGB.premulAlpha(cmd.colorBL))
+                    .radius(radiusPacked)
+                    .size(w, h, spread)
+                    .endVertex();
+                consumer.vertex2(cmd.pose, cmd.x1, cmd.y1)
+                    .color(ARGB.premulAlpha(cmd.colorBR))
+                    .radius(radiusPacked)
+                    .size(w, h, spread)
+                    .endVertex();
+                consumer.vertex2(cmd.pose, cmd.x1, cmd.y0)
+                    .color(ARGB.premulAlpha(cmd.colorTR))
+                    .radius(radiusPacked)
+                    .size(w, h, spread)
+                    .endVertex();
             }
             program.draw();
-        }
-
-        private void vertex(GlintVertexConsumer consumer, DrawShadowCommand cmd, float x, float y, int color, float w, float h, int radiusPacked, float spread) {
-            consumer.vertex2(cmd.pose, x, y)
-                .color(color)
-                .radius(radiusPacked)
-                .size(w, h, spread)
-                .endVertex();
         }
     }
 }

@@ -22,11 +22,12 @@ void main() {
     vec2 h = vec2(dFdx(TexCoord.x), dFdy(TexCoord.y)) * textureSize(Atlas, 0);
     float pixels = Range * 1.0 / length(h.xy);
     float alpha = smoothstep(-Smoothness, Smoothness, dist * pixels);
-    vec4 color = vec4(FragColor.rgb, FragColor.a * alpha);
+    vec4 color = FragColor * alpha;
 
     if (OutlineThickness > 0.0) {
         color = mix(OutlineColor, FragColor, alpha);
-        color.a *= smoothstep(-Smoothness, Smoothness, (dist + OutlineThickness) * pixels);
+        float finalAlpha = smoothstep(-Smoothness, Smoothness, (dist + OutlineThickness) * pixels);
+        color *= finalAlpha;
     }
 
     OutColor = color;

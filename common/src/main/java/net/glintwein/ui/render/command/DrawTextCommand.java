@@ -5,6 +5,7 @@ import net.glintwein.ui.data.Bounds;
 import net.glintwein.ui.render.font.GigaFont;
 import net.glintwein.ui.render.program.GlProgram;
 import net.glintwein.ui.render.program.GlintVertexConsumer;
+import net.glintwein.ui.util.ARGB;
 import org.joml.Matrix3x2f;
 
 import java.util.List;
@@ -70,9 +71,13 @@ public class DrawTextCommand extends DrawCommand {
             GlintVertexConsumer consumer = msdf.begin();
             for (DrawTextCommand cmd : commands) {
                 if (cmd.solidColor)
-                    cmd.font.render(consumer, cmd.pose, cmd.text, cmd.x, cmd.y, cmd.size, cmd.colorTL);
+                    cmd.font.render(consumer, cmd.pose, cmd.text, cmd.x, cmd.y, cmd.size, ARGB.premulAlpha(cmd.colorTL));
                 else
-                    cmd.font.renderGlyphColor(consumer, cmd.pose, cmd.text, cmd.x, cmd.y, cmd.size, cmd.colorTL, cmd.colorTR, cmd.colorBR, cmd.colorBL);
+                    cmd.font.renderGlyphColor(
+                        consumer, cmd.pose, cmd.text, cmd.x, cmd.y, cmd.size,
+                        ARGB.premulAlpha(cmd.colorTL), ARGB.premulAlpha(cmd.colorTR),
+                        ARGB.premulAlpha(cmd.colorBR), ARGB.premulAlpha(cmd.colorBL)
+                    );
             }
             msdf.draw();
         }

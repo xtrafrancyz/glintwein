@@ -134,7 +134,7 @@ public class PlatformRender26_1_2 implements Platform.Render {
     public void beforeDraw() {
         GlStateManager._disableCull();
         GlStateManager._enableBlend();
-        GlStateManager._blendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GlStateManager._blendFuncSeparate(GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA);
         GlStateManager._disableDepthTest();
         GL33.glBindSampler(0, 0);
     }

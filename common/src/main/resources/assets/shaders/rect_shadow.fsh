@@ -93,5 +93,7 @@ void main() {
 
     float alpha = shadowAlpha(pos, halfSize, radius, sigma);
 
-    outColor = vec4(FragColor.rgb, FragColor.a * alpha);
+    if (alpha <= 0.0) discard;
+
+    outColor = FragColor * alpha;
 }

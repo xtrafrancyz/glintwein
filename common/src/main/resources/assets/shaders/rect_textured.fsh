@@ -43,6 +43,7 @@ void main() {
     if (alpha_mask <= 0.0) discard;
 
     vec4 tex_sample = texture(Texture, TexCoord);
+    tex_sample.rgb *= tex_sample.a; // Premultiply alpha
 
     float outline_width = FragSize.z;
     if (outline_width > 0.0) {
@@ -60,11 +61,9 @@ void main() {
         vec4 fill_color = tex_sample * FragColor;
         vec4 final_color = mix(fill_color, FragOutlineColor, min(1.0, max(outline_alpha, inner_dist)));
 
-        OutColor = final_color;
-        OutColor.a *= alpha_mask;
+        OutColor = final_color * alpha_mask;
     } else {
         // No outline, just use the textured fill
-        OutColor = tex_sample * FragColor;
-        OutColor.a *= alpha_mask;
+        OutColor = tex_sample * FragColor * alpha_mask;
     }
 }

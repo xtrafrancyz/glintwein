@@ -33,6 +33,16 @@ public class ARGB {
         return setAlpha(color, (int) (alpha * 255));
     }
 
+    public static int premulAlpha(int color) {
+        float alpha = alphaF(color);
+        return ofARGB(
+            alpha(color),
+            (int) (red(color) * alpha),
+            (int) (green(color) * alpha),
+            (int) (blue(color) * alpha)
+        );
+    }
+
     public static int ofRGB(int r, int g, int b) {
         return 0xFF000000 | ((r & 0xFF) << 16) | ((g & 0xFF) << 8) | (b & 0xFF);
     }

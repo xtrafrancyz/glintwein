@@ -5,6 +5,7 @@ import net.glintwein.ui.data.BorderRadius;
 import net.glintwein.ui.data.Bounds;
 import net.glintwein.ui.render.program.GlProgram;
 import net.glintwein.ui.render.program.GlintVertexConsumer;
+import net.glintwein.ui.util.ARGB;
 import org.joml.Matrix3x2fc;
 
 import java.util.List;
@@ -78,7 +79,7 @@ public class DrawTextureCommand extends DrawCommand {
 
         private void vertex(GlintVertexConsumer consumer, DrawTextureCommand cmd, float x, float y, float u, float v, float w, float h, int radiusPacked, float outlineWidth) {
             consumer.vertex2(cmd.pose, x, y)
-                .color(cmd.color)
+                .color(ARGB.premulAlpha(cmd.color))
                 .uv(u, v)
                 .radius(radiusPacked)
                 .size(w, h, outlineWidth)

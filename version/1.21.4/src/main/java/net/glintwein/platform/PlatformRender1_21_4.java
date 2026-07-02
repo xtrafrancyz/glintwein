@@ -127,7 +127,7 @@ public class PlatformRender1_21_4 implements Platform.Render {
         GlStateManager._glBindVertexArray(0);
         RenderSystem.disableCull();
         RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
+        RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
         RenderSystem.disableDepthTest();
     }
 
@@ -136,6 +136,7 @@ public class PlatformRender1_21_4 implements Platform.Render {
         RenderSystem.disableScissor();
         RenderSystem.enableDepthTest();
         RenderSystem.disableBlend();
+        RenderSystem.defaultBlendFunc();
     }
 
     @Override
