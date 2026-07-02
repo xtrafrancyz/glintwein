@@ -58,6 +58,7 @@ public class Glintwein {
     }
 
     void tickEnd() {
+        PipAtlasManager.reset();
         NativeCleaner.cleanUp();
         KVStore.save();
     }

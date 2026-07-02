@@ -131,13 +131,13 @@ public class AtlasPacker {
         root.occupied = false;
     }
 
-    public Sprite insert(int width, int height) {
+    public Rect insert(int width, int height) {
         Node node = root.insert(width, height);
         if (node == null)
             return null;
         node.occupied = true;
         Rectangle r = node.rect;
-        return new Sprite(
+        return new Rect(
             r.left, r.top, r.right + 1, r.bottom + 1,
             (float) r.left / atlasWidth,
             (float) r.top / atlasHeight,
@@ -154,11 +154,11 @@ public class AtlasPacker {
         return atlasHeight;
     }
 
-    public static class Sprite {
+    public static class Rect {
         public final float left, top, right, bottom;
         public float u0, v0, u1, v1;
 
-        public Sprite(
+        public Rect(
             float left, float top, float right, float bottom,
             float u0, float v0, float u1, float v1
         ) {

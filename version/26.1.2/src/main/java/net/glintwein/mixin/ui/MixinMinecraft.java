@@ -2,8 +2,10 @@ package net.glintwein.mixin.ui;
 
 import net.glintwein.GlintweinHook;
 import net.glintwein.OffscreenHudRenderer;
+import net.glintwein.demo.DemoWindow;
 import net.glintwein.platform.Platform26_1_2;
 import net.glintwein.platform.PlatformProvider;
+import net.glintwein.ui.DemoSection26_1_2;
 import net.minecraft.client.Minecraft;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -16,6 +18,9 @@ public class MixinMinecraft {
     private void init(CallbackInfo info) {
         PlatformProvider.set(new Platform26_1_2());
         GlintweinHook.init();
+        DemoWindow.addCustomInitializer(demo -> {
+            demo.root.addChild(new DemoWindow.Collapse("26.1.2 Specific", new DemoSection26_1_2()));
+        });
     }
 
     @Inject(at = @At("TAIL"), method = "tick()V")

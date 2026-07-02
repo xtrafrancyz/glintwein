@@ -1,23 +1,25 @@
 package net.glintwein;
 
-import com.mojang.blaze3d.GraphicsWorkarounds;
 import com.mojang.blaze3d.opengl.DirectStateAccess;
 import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.opengl.GlTextureView;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.Window;
+import com.mojang.blaze3d.systems.GpuDeviceBackend;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.GpuTextureView;
+import com.mojang.blaze3d.textures.FilterMode;
+import net.glintwein.mixin.ui.AccessorBackendGlDevice;
+import net.glintwein.mixin.ui.AccessorGpuDevice;
 import net.minecraft.client.Minecraft;
-import org.lwjgl.opengl.GL;
+import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.resources.Identifier;
 import org.lwjgl.opengl.GL30;
 
-import java.util.HashSet;
-
 public class OffscreenHudRenderer {
+    public static final Identifier TEXTURE = Identifier.fromNamespaceAndPath("glintwein", "hud_element_texture");
+
     private static RenderTarget target = null;
-    private static DirectStateAccess dsa = null;
 
     public static boolean needRender() {
         return Glintwein.instance.layerIngame.hasAnyContent();
@@ -33,24 +35,32 @@ public class OffscreenHudRenderer {
                 target.destroyBuffers();
             }
             target = new TextureTarget("Glintwein ingame layer", window.getWidth(), window.getHeight(), false);
-            if (dsa == null) {
-                dsa = DirectStateAccess.create(
-                    GL.getCapabilities(),
-                    new HashSet<>(),
-                    GraphicsWorkarounds.get(RenderSystem.getDevice())
-                );
-            }
+            Minecraft.getInstance().getTextureManager().register(TEXTURE, new FboTexture(target));
         }
 
         RenderSystem.getDevice().createCommandEncoder().clearColorTexture(target.getColorTexture(), 0);
-        int fbo = ((GlTextureView) target.getColorTextureView()).getFbo(dsa, target.getDepthTexture());
-        GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, fbo);
+        GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, getFbo(target));
         GlStateManager._viewport(0, 0, target.width, target.height);
         GlintweinHook.renderLayerIngame();
         GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
     }
 
-    public static GpuTextureView getTextureView() {
-        return target.getColorTextureView();
+    public static int getFbo(RenderTarget target) {
+        GpuDeviceBackend backend = ((AccessorGpuDevice) RenderSystem.getDevice()).getBackend();
+        DirectStateAccess dsa = ((AccessorBackendGlDevice) backend).getDirectStateAccess();
+        return ((GlTextureView) target.getColorTextureView()).getFbo(dsa, target.getDepthTexture());
+    }
+
+    private static class FboTexture extends AbstractTexture {
+        public FboTexture(RenderTarget target) {
+            this.texture = target.getColorTexture();
+            this.textureView = target.getColorTextureView();
+            this.sampler = RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR);
+        }
+
+        @Override
+        public void close() {
+            // Do not close the underlying texture, as it is managed by the RenderTarget
+        }
     }
 }

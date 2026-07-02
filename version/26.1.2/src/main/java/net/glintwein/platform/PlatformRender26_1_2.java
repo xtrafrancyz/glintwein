@@ -2,6 +2,7 @@ package net.glintwein.platform;
 
 import com.mojang.blaze3d.ProjectionType;
 import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.opengl.GlConst;
 import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.opengl.GlTexture;
@@ -9,11 +10,11 @@ import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.textures.TextureFormat;
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import net.glintwein.OffscreenHudRenderer;
 import net.glintwein.mixin.ui.AccessorGlBuffer;
-import net.glintwein.ui.ContextExt;
 import net.glintwein.ui.data.Bounds;
 import net.glintwein.ui.render.command.PipCommand;
 import net.glintwein.ui.render.texture.AtlasPacker;
@@ -31,8 +32,6 @@ import java.util.PriorityQueue;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class PlatformRender26_1_2 implements Platform.Render {
-    public static boolean isFrameBufferLocked = false;
-
     public static final Matrix4f projMatrix = new Matrix4f();
     public static final Matrix4f viewMatrix = new Matrix4f();
     public static final Vector3f cameraPos = new Vector3f();
@@ -84,10 +83,14 @@ public class PlatformRender26_1_2 implements Platform.Render {
     @Override
     public void renderPipList(PriorityQueue<PipCommand> commands) {
         //noinspection DataFlowIssue
-        GlintRenderTarget firstTarget = commands.peek().sprite.target;
-        isFrameBufferLocked = true;
+        GlintRenderTarget firstTarget = commands.peek().sprite.target();
+        int prevFBO = GlStateManager.getFrameBuffer(GL33.GL_DRAW_FRAMEBUFFER);
 
-        RenderSystem.backupProjectionMatrix();
+        GpuTextureView prevColorTextureOverride = RenderSystem.outputColorTextureOverride;
+        GpuTextureView prevDepthTextureOverride = RenderSystem.outputDepthTextureOverride;
+
+        GpuBufferSlice prevProjBuffer = RenderSystem.getProjectionMatrixBuffer();
+        ProjectionType prevProjType = RenderSystem.getProjectionType();
         projection.setupOrtho(-3000, 3000.0f, firstTarget.getWidth(), firstTarget.getHeight(), true);
         RenderSystem.setProjectionMatrix(projectionMatrixBuffer.getBuffer(projection), ProjectionType.ORTHOGRAPHIC);
         RenderSystem.getModelViewStack().pushMatrix();
@@ -95,37 +98,36 @@ public class PlatformRender26_1_2 implements Platform.Render {
 
         try {
             RenderTargetWrapper target = null;
-            ContextExt.pose = new PoseStack();
+            int fbo = -1;
             for (PipCommand cmd : commands) {
-                if (cmd.sprite.target != target) {
-                    target = (RenderTargetWrapper) cmd.sprite.target;
-                    RenderSystem.outputColorTextureOverride = target.handle.getColorTextureView();
-                    RenderSystem.outputDepthTextureOverride = target.handle.getDepthTextureView();
+                if (cmd.sprite.target() != target) {
+                    target = (RenderTargetWrapper) cmd.sprite.target();
+                    fbo = OffscreenHudRenderer.getFbo(target.handle);
                     RenderSystem.getDevice().createCommandEncoder().clearColorAndDepthTextures(
                         target.handle.getColorTexture(), 0,
                         target.handle.getDepthTexture(), 1
                     );
                 }
+                RenderSystem.outputColorTextureOverride = target.handle.getColorTextureView();
+                RenderSystem.outputDepthTextureOverride = target.handle.getDepthTextureView();
 
-                AtlasPacker.Sprite sprite = cmd.sprite.sprite;
+                GlStateManager._glBindFramebuffer(GL33.GL_DRAW_FRAMEBUFFER, fbo);
+
+                AtlasPacker.Rect sprite = cmd.sprite.atlasRect();
                 //RenderSystem.enableScissorForRenderTypeDraws();
                 //enableScissor(Bounds.fromMinMax(sprite.left, sprite.top, sprite.right, sprite.bottom), target.getHeight());
-                ContextExt.pose.pushPose();
-                ContextExt.pose.translate(sprite.left, sprite.top, -3000);
-                float sx = sprite.right - sprite.left;
-                float sy = sprite.bottom - sprite.top;
-                ContextExt.pose.scale(sx, sy, (sx + sy) / 2f);
-                cmd.render.run();
-                ContextExt.pose.popPose();
+                cmd.render.accept(cmd);
             }
         } catch (Exception e) {
             Platform.log().error("Exception while rendering pip list", e);
         }
-        RenderSystem.outputColorTextureOverride = null;
-        RenderSystem.outputDepthTextureOverride = null;
+        RenderSystem.outputColorTextureOverride = prevColorTextureOverride;
+        RenderSystem.outputDepthTextureOverride = prevDepthTextureOverride;
         RenderSystem.disableScissorForRenderTypeDraws();
-        RenderSystem.restoreProjectionMatrix();
+        RenderSystem.setProjectionMatrix(prevProjBuffer, prevProjType);
         RenderSystem.getModelViewStack().popMatrix();
+
+        GlStateManager._glBindFramebuffer(GL33.GL_DRAW_FRAMEBUFFER, prevFBO);
 
         stateDisableScissor();
     }

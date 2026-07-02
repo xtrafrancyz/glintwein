@@ -4,7 +4,6 @@ import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.glintwein.RenderMatrixTracker;
-import net.glintwein.ui.data.Bounds;
 import net.glintwein.ui.render.command.PipCommand;
 import net.glintwein.ui.render.texture.AtlasPacker;
 import net.glintwein.ui.util.GMath;
@@ -60,8 +59,9 @@ public class PlatformRender1_16_5 implements Platform.Render {
     @SuppressWarnings({"DataFlowIssue", "deprecation"})
     @Override
     public void renderPipList(PriorityQueue<PipCommand> commands) {
-        GlintRenderTarget firstTarget = commands.peek().sprite.target;
+        GlintRenderTarget firstTarget = commands.peek().sprite.target();
 
+        // common setup for native rendering
         GlStateManager._matrixMode(GL11.GL_PROJECTION);
         GlStateManager._pushMatrix();
         GlStateManager._loadIdentity();
@@ -72,21 +72,16 @@ public class PlatformRender1_16_5 implements Platform.Render {
 
         RenderTargetWrapper target = null;
         for (PipCommand cmd : commands) {
-            if (cmd.sprite.target != target) {
-                target = (RenderTargetWrapper) cmd.sprite.target;
+            if (cmd.sprite.target() != target) {
+                target = (RenderTargetWrapper) cmd.sprite.target();
                 target.handle.clear(false);
                 target.handle.bindWrite(true);
+                if (target.handle.filterMode != GL11.GL_LINEAR)
+                    target.handle.setFilterMode(GL11.GL_LINEAR);
             }
 
-            AtlasPacker.Sprite sprite = cmd.sprite.sprite;
-            enableScissor(Bounds.fromMinMax(sprite.left, sprite.top, sprite.right, sprite.bottom), target.getHeight());
-            GlStateManager._pushMatrix();
-            GlStateManager._translatef(sprite.left, sprite.top, -3000);
-            float sx = sprite.right - sprite.left;
-            float sy = sprite.bottom - sprite.top;
-            GlStateManager._scalef(sx, sy, (sx + sy) / 2f);
-            cmd.render.run();
-            GlStateManager._popMatrix();
+            enableScissor(cmd.sprite.atlasRect(), target.getHeight());
+            cmd.render.accept(cmd);
         }
 
 
@@ -125,11 +120,11 @@ public class PlatformRender1_16_5 implements Platform.Render {
         return new PlatformTexture1_16_5(id);
     }
 
-    private void enableScissor(Bounds bounds, float frameHeight) {
-        int width = GMath.ceil((bounds.maxX - bounds.minX));
-        int height = GMath.ceil((bounds.maxY - bounds.minY));
-        int x = GMath.floor(bounds.minX);
-        int y = GMath.floor(frameHeight - bounds.maxY);
+    private void enableScissor(AtlasPacker.Rect rect, float frameHeight) {
+        int width = GMath.ceil((rect.right - rect.left));
+        int height = GMath.ceil((rect.bottom - rect.top));
+        int x = GMath.floor(rect.left);
+        int y = GMath.floor(frameHeight - rect.bottom);
         RenderSystem.enableScissor(x, y, width, height);
     }
 

@@ -1,8 +1,6 @@
 package net.glintwein.fabric;
 
 import com.mojang.blaze3d.platform.Window;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.FilterMode;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
@@ -13,6 +11,7 @@ import net.glintwein.GlintweinHook;
 import net.glintwein.OffscreenHudRenderer;
 import net.glintwein.platform.Platform26_1_2;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
 
 public class GlintweinFabricMod implements ModInitializer {
@@ -43,11 +42,14 @@ public class GlintweinFabricMod implements ModInitializer {
                 if (!OffscreenHudRenderer.needRender())
                     return;
                 Window window = Minecraft.getInstance().getWindow();
+                int width = window.getGuiScaledWidth();
+                int height = window.getGuiScaledHeight();
                 context.blit(
-                    OffscreenHudRenderer.getTextureView(),
-                    RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR),
-                    0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(),
-                    0, 1, 1, 0
+                    RenderPipelines.GUI_TEXTURED_PREMULTIPLIED_ALPHA,
+                    OffscreenHudRenderer.TEXTURE,
+                    0, 0, 0, 0, width, height,
+                    width, -height,
+                    width, height
                 );
             }
         );

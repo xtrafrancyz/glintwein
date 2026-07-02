@@ -6,8 +6,9 @@
   "mixins": [
   ],
   "client": [
+    "ui.AccessorBackendGlDevice",
+    "ui.AccessorGpuDevice",
     "ui.AccessorGlBuffer",
-    "ui.MixinGlStateManager",
     "ui.MixinLevelRenderer",
     "ui.MixinMinecraft"
   ],

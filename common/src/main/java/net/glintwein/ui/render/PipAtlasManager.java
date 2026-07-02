@@ -35,43 +35,94 @@ public class PipAtlasManager {
             return null;
 
         for (Atlas atlas : atlases) {
-            AtlasPacker.Sprite sprite = atlas.packer.insert(width, height);
-            if (sprite != null)
-                return new Sprite(atlas.target, sprite);
+            AtlasPacker.Rect rect = atlas.packer.insert(width, height);
+            if (rect != null) {
+                atlas.spriteRefCount++;
+                return new Sprite(atlas, rect);
+            }
         }
         Atlas atlas = createAtlas();
         atlases.add(atlas);
-        AtlasPacker.Sprite sprite = atlas.packer.insert(width, height);
-        if (sprite == null)
+        AtlasPacker.Rect rect = atlas.packer.insert(width, height);
+        if (rect == null)
             return null;
-        return new Sprite(atlas.target, sprite);
+        atlas.spriteRefCount++;
+        return new Sprite(atlas, rect);
     }
 
     public static void reset() {
         for (Atlas atlas : atlases)
-            atlas.packer.reset();
+            atlas.reset();
     }
 
     private static class Atlas {
         private final GlintRenderTarget target;
         private final AtlasPacker packer;
+        private int spriteRefCount = 0;
 
         public Atlas(GlintRenderTarget target) {
             this.target = target;
             this.packer = new AtlasPacker(target.getWidth(), target.getHeight());
         }
+
+        public void reset() {
+            packer.reset();
+        }
     }
 
     public static class Sprite {
-        public final GlintRenderTarget target;
-        public final AtlasPacker.Sprite sprite;
+        private final Atlas atlas;
+        private final AtlasPacker.Rect rect;
+        private boolean closed = false;
 
-        public Sprite(GlintRenderTarget target, AtlasPacker.Sprite sprite) {
-            this.target = target;
-            this.sprite = sprite;
+        private Sprite(Atlas atlas, AtlasPacker.Rect rect) {
+            this.atlas = atlas;
+            this.rect = rect;
 
-            sprite.v0 = 1 - sprite.v0;
-            sprite.v1 = 1 - sprite.v1;
+            rect.v0 = 1 - rect.v0;
+            rect.v1 = 1 - rect.v1;
+        }
+
+        public float u0() {
+            return rect.u0;
+        }
+
+        public float v0() {
+            return rect.v0;
+        }
+
+        public float u1() {
+            return rect.u1;
+        }
+
+        public float v1() {
+            return rect.v1;
+        }
+
+        public int textureId() {
+            return atlas.target.getColorTextureId();
+        }
+
+        public AtlasPacker.Rect atlasRect() {
+            return rect;
+        }
+
+        public GlintRenderTarget target() {
+            return atlas.target;
+        }
+
+        public net.glintwein.ui.render.texture.Sprite toSprite() {
+            return new net.glintwein.ui.render.texture.Sprite(textureId(), u0(), v0(), u1(), v1());
+        }
+
+        public void release() {
+            if (!closed) {
+                closed = true;
+                atlas.spriteRefCount--;
+                if (atlas.spriteRefCount == 0) {
+                    atlas.reset();
+                }
+            }
         }
     }
 }

@@ -10,14 +10,17 @@ import net.glintwein.ui.data.Box;
 import net.glintwein.ui.data.Gradient;
 import net.glintwein.ui.render.PipAtlasManager;
 import net.glintwein.ui.render.font.GigaFont;
+import net.glintwein.ui.render.texture.AtlasPacker;
 import net.glintwein.ui.render.texture.Sprite;
 import net.glintwein.ui.util.ARGB;
 import net.glintwein.ui.util.GMath;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2f;
 import org.joml.Matrix3x2fStack;
 import org.joml.Vector2f;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 public class Context {
     private static final Bounds UNBOUNDED = Bounds.fromMinMax(Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY);
@@ -53,8 +56,9 @@ public class Context {
         scissorStack.clear();
         priorityCommandMap.clear();
         currentPriority = 0;
+        for (PipCommand cmd : pipCommands)
+            cmd.sprite.release();
         pipCommands.clear();
-        PipAtlasManager.reset();
     }
 
     public Matrix3x2fStack pose() {
@@ -344,29 +348,56 @@ public class Context {
         ));
     }
 
-    public void addPipCommand(Runnable render, float x, float y, float width, float height) {
-        Matrix3x2f pose = new Matrix3x2f(pose());
+    /**
+     * Captures the output of a render function into a sprite that can be drawn as image.
+     * <b>Actual rendering of the content will be done in the future.</b>
+     */
+    public @Nullable Sprite captureSubContext(Consumer<Context> render, float width, float height) {
+        float scaleX = transform.m00();
+        float scaleY = transform.m11();
+        return capturePip(cmd -> {
+            Context subContext = new Context();
 
-        Vector2f screenSize = pose.transformDirection(width, height, new Vector2f());
+            AtlasPacker.Rect rect = cmd.sprite.atlasRect();
+            subContext.transform.translate(rect.left, rect.top);
+
+            subContext.transform.scaling(scaleX, scaleY);
+            render.accept(subContext);
+            subContext.execute();
+        }, width, height);
+    }
+
+    public void addPipCommand(Consumer<PipCommand> render, float x, float y, float width, float height) {
+        Sprite sprite = capturePip(render, width, height);
+        if (sprite == null)
+            return;
+        addCommand(new DrawTextureCommand(
+            new Matrix3x2f(pose()),
+            x, y, x + width, y + height,
+            sprite.u0, sprite.v0, sprite.u1, sprite.v1,
+            BorderRadius.ZERO, sprite.textureId,
+            0xFFFFFFFF,
+            0, 0
+        ));
+    }
+
+    /**
+     * Captures the output of a render function into a sprite that can be drawn as image.
+     * <b>Actual rendering of the content will be done in the future.</b>
+     */
+    private @Nullable Sprite capturePip(Consumer<PipCommand> render, float width, float height) {
+        Vector2f screenSize = pose().transformDirection(width, height, new Vector2f());
         PipAtlasManager.Sprite sprite = PipAtlasManager.insert(
             GMath.ceil(screenSize.x),
             GMath.ceil(screenSize.y)
         );
-        // Skip rendering if we can't get a sprite
         if (sprite == null)
-            return;
-
+            return null;
         pipCommands.add(new PipCommand(render, sprite));
-
-        addCommand(new DrawTextureCommand(
-            pose,
-            x, y, x + width, y + height,
-            sprite.sprite.u0, sprite.sprite.v0, sprite.sprite.u1, sprite.sprite.v1,
-            //0, 1, 1, 0,
-            BorderRadius.ZERO, sprite.target.getColorTextureId(),
-            0xFFFFFFFF,
-            0, 0
-        ));
+        return new Sprite(
+            sprite.textureId(),
+            sprite.u0(), sprite.v0(), sprite.u1(), sprite.v1()
+        );
     }
 
     public void addCommand(DrawCommand cmd) {

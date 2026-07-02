@@ -7,43 +7,59 @@ import net.glintwein.ui.Window;
 import net.glintwein.ui.data.*;
 import net.glintwein.ui.element.*;
 import net.glintwein.ui.element.component.Dropdown;
-import net.glintwein.ui.render.command.Context;
-import net.glintwein.ui.render.command.DrawCommand;
-import net.glintwein.ui.render.command.DrawRectBuilder;
-import net.glintwein.ui.render.command.DrawTextBuilder;
+import net.glintwein.ui.render.command.*;
 import net.glintwein.ui.render.font.GigaFont;
 import net.glintwein.ui.render.program.GlProgram;
 import net.glintwein.ui.render.program.GlintVertexConsumer;
 import net.glintwein.ui.render.program.GlintVertexFormat;
 import net.glintwein.ui.render.program.GlintVertexFormatElement;
+import net.glintwein.ui.render.texture.Sprite;
 import net.glintwein.ui.util.ARGB;
 import net.glintwein.ui.util.Animated;
 import net.glintwein.ui.util.Easing;
 import org.joml.Matrix3x2f;
 import org.joml.Vector3f;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class DemoWindow extends Window {
+    private static final boolean ENABLED = Boolean.getBoolean("glintwein.devtest");
+    private static final List<Consumer<DemoWindow>> CUSTOM_INITIALIZERS = new ArrayList<>();
+
+    public static boolean isEnabled() {
+        return ENABLED;
+    }
+
+    public static void addCustomInitializer(Consumer<DemoWindow> initializer) {
+        if (!ENABLED)
+            return;
+        CUSTOM_INITIALIZERS.add(initializer);
+    }
+
     public static final String ANIME_URL = "https://other.xtrafrancyz.net/graphen/chise.png";
 
-    private static final int BG = 0xff17181c;
-    private static final int BG2 = 0xff23262f;
-    private static final int BG_ACCENT = 0xffb3c7ff;
-    private static final int TEXT_COLOR = 0xffc1c3c8;
-    private static final int TEXT_INVERT = 0xff17264f;
-    private static final int WHITE = 0xffffffff;
-    private static final int BLUE = 0xff82AAFF;
-    private static final int GREEN = 0xffC5E478;
-    private static final int ORANGE = 0xffF78C6C;
+
+    public static final int BG = 0xff17181c;
+    public static final int BG2 = 0xff23262f;
+    public static final int BG_ACCENT = 0xffb3c7ff;
+    public static final int TEXT_COLOR = 0xffc1c3c8;
+    public static final int TEXT_INVERT = 0xff17264f;
+    public static final int WHITE = 0xffffffff;
+    public static final int BLUE = 0xff82AAFF;
+    public static final int GREEN = 0xffC5E478;
+    public static final int ORANGE = 0xffF78C6C;
+
+    private int initWithInitializers = -1;
 
     public DemoWindow() {
         super("glintwein_demo");
         setResizeable(true);
-        init();
     }
 
     private void init() {
+        initWithInitializers = CUSTOM_INITIALIZERS.size();
         this.root.clearChildren();
         root.setMinWidth(300);
         root.setBackground(BG);
@@ -63,6 +79,17 @@ public class DemoWindow extends Window {
         root.addChild(new Collapse("Layout Lerp", new LayoutLerpDemo()));
         root.addChild(new Collapse("Waypoints", new WaypointDemo()));
         root.addChild(new Collapse("Custom Shader", new CustomShaderDemo()));
+        for (Consumer<DemoWindow> initializer : CUSTOM_INITIALIZERS) {
+            initializer.accept(this);
+        }
+    }
+
+    @Override
+    public void tick(float mouseX, float mouseY, boolean canHover) {
+        if (initWithInitializers != CUSTOM_INITIALIZERS.size()) {
+            init();
+        }
+        super.tick(mouseX, mouseY, canHover);
     }
 
     private Element titleBar() {
@@ -94,10 +121,10 @@ public class DemoWindow extends Window {
         return titleBar;
     }
 
-    private static class Collapse extends Element {
+    public static class Collapse extends Element {
         boolean expanded = false;
 
-        Collapse(String title, Element content) {
+        public Collapse(String title, Element content) {
             setMargin(Edge.ALL, 5);
             setMargin(Edge.TOP, 0);
 
@@ -150,7 +177,7 @@ public class DemoWindow extends Window {
 
     private static class DrawingDemo extends Element {
         public DrawingDemo() {
-            this.setHeight(225);
+            this.setHeight(275);
             this.setPadding(Edge.ALL, 5);
         }
 
@@ -256,6 +283,21 @@ public class DemoWindow extends Window {
                 }
                 ctx.popScissor();
             }
+
+            y += 30;
+
+            Sprite capture = ctx.captureSubContext(ctx0 -> {
+                ctx0.drawRect(0, 0, 200, 40, 0xffff0000);
+                ctx0.drawText(GlobalUIState.getDefaultFont(), "Picture in Picture", 2, 2, 16, WHITE);
+                ctx0.drawRect(150, 20, 100, 20, BorderRadius.ZERO, Gradient.leftToRight(0xffffffff, 0x00000000));
+            }, contentBox.width, 40);
+
+            if (capture != null)
+                ctx.drawTexture(DrawTextureBuilder.fromXYWH(0, y, contentBox.width, 40)
+                    .texture(capture)
+                    .radius(20)
+                    .outline(0xffffffff, 2)
+                );
 
             ctx.pose().popMatrix();
         }

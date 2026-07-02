@@ -24,6 +24,8 @@ public class DrawRectBuilder {
     }
 
     public DrawRectBuilder radius(BorderRadius radius) {
+        if (radius == null)
+            throw new IllegalArgumentException("radius cannot be null");
         this.radius = radius;
         return this;
     }

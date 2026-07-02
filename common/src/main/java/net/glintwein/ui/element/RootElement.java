@@ -50,6 +50,7 @@ public class RootElement extends Element {
     }
 
     public void invalidateLayout() {
+        // TODO support for new yoga without this method
         Platform.yoga().NodeMarkDirtyAndPropogateToDescendants(getYogaNodeHandle(this));
     }
 }

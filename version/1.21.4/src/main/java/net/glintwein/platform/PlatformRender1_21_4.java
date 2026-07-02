@@ -6,10 +6,7 @@ import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import net.glintwein.ui.ContextExt;
-import net.glintwein.ui.data.Bounds;
 import net.glintwein.ui.render.command.PipCommand;
 import net.glintwein.ui.render.texture.AtlasPacker;
 import net.glintwein.ui.util.GMath;
@@ -73,7 +70,8 @@ public class PlatformRender1_21_4 implements Platform.Render {
     @Override
     public void renderPipList(PriorityQueue<PipCommand> commands) {
         //noinspection DataFlowIssue
-        GlintRenderTarget firstTarget = commands.peek().sprite.target;
+        GlintRenderTarget firstTarget = commands.peek().sprite.target();
+        boolean previouslyLocked = isFrameBufferLocked;
         isFrameBufferLocked = true;
 
         // builtin backup and restore can be used in some pips, so need to do it manually
@@ -86,30 +84,23 @@ public class PlatformRender1_21_4 implements Platform.Render {
 
         try {
             RenderTargetWrapper target = null;
-            ContextExt.pose = new PoseStack();
             for (PipCommand cmd : commands) {
-                if (cmd.sprite.target != target) {
-                    target = (RenderTargetWrapper) cmd.sprite.target;
+                if (cmd.sprite.target() != target) {
+                    target = (RenderTargetWrapper) cmd.sprite.target();
                     isFrameBufferLocked = false;
                     target.handle.clear();
                     target.handle.bindWrite(true);
+                    target.handle.setFilterMode(GL11.GL_LINEAR);
                     isFrameBufferLocked = true;
                 }
 
-                AtlasPacker.Sprite sprite = cmd.sprite.sprite;
-                enableScissor(Bounds.fromMinMax(sprite.left, sprite.top, sprite.right, sprite.bottom), target.getHeight());
-                ContextExt.pose.pushPose();
-                ContextExt.pose.translate(sprite.left, sprite.top, -3000);
-                float sx = sprite.right - sprite.left;
-                float sy = sprite.bottom - sprite.top;
-                ContextExt.pose.scale(sx, sy, (sx + sy) / 2f);
-                cmd.render.run();
-                ContextExt.pose.popPose();
+                enableScissor(cmd.sprite.atlasRect(), target.getHeight());
+                cmd.render.accept(cmd);
             }
         } catch (Exception e) {
             Platform.log().error("Exception while rendering pip list", e);
         }
-        isFrameBufferLocked = false;
+        isFrameBufferLocked = previouslyLocked;
 
         RenderSystem.setProjectionMatrix(projMatBackup, ProjectionType.ORTHOGRAPHIC);
         RenderSystem.getModelViewStack().popMatrix();
@@ -169,11 +160,11 @@ public class PlatformRender1_21_4 implements Platform.Render {
         return new PlatformTexture1_21_4(id);
     }
 
-    private void enableScissor(Bounds bounds, float frameHeight) {
-        int width = GMath.ceil((bounds.maxX - bounds.minX));
-        int height = GMath.ceil((bounds.maxY - bounds.minY));
-        int x = GMath.floor(bounds.minX);
-        int y = GMath.floor(frameHeight - bounds.maxY);
+    private void enableScissor(AtlasPacker.Rect rect, float frameHeight) {
+        int width = GMath.ceil((rect.right - rect.left));
+        int height = GMath.ceil((rect.bottom - rect.top));
+        int x = GMath.floor(rect.left);
+        int y = GMath.floor(frameHeight - rect.bottom);
         RenderSystem.enableScissor(x, y, width, height);
     }
 
