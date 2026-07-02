@@ -44,7 +44,7 @@ public class Glintwein {
         uiLayers.add(layerAlwaysOnTop);
         uiLayers.add(layerIngame);
 
-        if (Boolean.getBoolean("glintwein.devtest"))
+        if (DemoWindow.isEnabled())
             layerIngame.getWindowManager().addWindow(new DemoWindow());
 
         for (Runnable listener : initListeners) {
