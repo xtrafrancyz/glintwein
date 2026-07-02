@@ -74,6 +74,7 @@ public class PlatformRender1_16_5 implements Platform.Render {
         for (PipCommand cmd : commands) {
             if (cmd.sprite.target() != target) {
                 target = (RenderTargetWrapper) cmd.sprite.target();
+                target.handle.setClearColor(0, 0, 0, 0);
                 target.handle.clear(false);
                 target.handle.bindWrite(true);
                 if (target.handle.filterMode != GL11.GL_LINEAR)

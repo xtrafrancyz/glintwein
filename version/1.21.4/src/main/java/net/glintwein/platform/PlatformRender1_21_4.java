@@ -88,6 +88,7 @@ public class PlatformRender1_21_4 implements Platform.Render {
                 if (cmd.sprite.target() != target) {
                     target = (RenderTargetWrapper) cmd.sprite.target();
                     isFrameBufferLocked = false;
+                    target.handle.setClearColor(0, 0, 0, 0);
                     target.handle.clear();
                     target.handle.bindWrite(true);
                     target.handle.setFilterMode(GL11.GL_LINEAR);
