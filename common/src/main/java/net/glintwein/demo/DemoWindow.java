@@ -7,7 +7,6 @@ import net.glintwein.ui.Window;
 import net.glintwein.ui.data.*;
 import net.glintwein.ui.element.*;
 import net.glintwein.ui.element.component.Dropdown;
-import net.glintwein.ui.element.component.Slider;
 import net.glintwein.ui.render.command.Context;
 import net.glintwein.ui.render.command.DrawCommand;
 import net.glintwein.ui.render.command.DrawRectBuilder;
@@ -61,7 +60,6 @@ public class DemoWindow extends Window {
         root.addChild(new Collapse("Drawing", new DrawingDemo()));
         root.addChild(new Collapse("Text Input", new InputDemo()));
         root.addChild(new Collapse("Popup", new PopupDemo()));
-        root.addChild(new Collapse("Scaling", new ScaleDemo(this)));
         root.addChild(new Collapse("Layout Lerp", new LayoutLerpDemo()));
         root.addChild(new Collapse("Waypoints", new WaypointDemo()));
         root.addChild(new Collapse("Custom Shader", new CustomShaderDemo()));
@@ -218,6 +216,11 @@ public class DemoWindow extends Window {
             ctx.drawLine(0, y, 20, y + 20, 3, BorderRadius.ZERO, WHITE);
             ctx.drawLine(30, y, 50, y + 20, 4, BorderRadius.of(5), WHITE);
 
+            ctx.drawRect(180, 0, 40, 60, 0xffffffff);
+            ctx.drawRect(185, 5, 30, 20, BorderRadius.ZERO, Gradient.leftToRight(0x00000000, 0x800000ff));
+            ctx.drawRect(185, 15, 30, 30, BorderRadius.ZERO, Gradient.leftToRight(0x80000000, 0x00000000));
+            ctx.drawRect(185, 35, 30, 20, BorderRadius.ZERO, Gradient.leftToRight(0xff00ff00, 0x00000000));
+
             y += 30;
 
             GigaFont font = GlobalUIState.getDefaultFont();
@@ -228,7 +231,7 @@ public class DemoWindow extends Window {
             y += 60;
 
             ctx.drawText(DrawTextBuilder.of("Gradient", font, 32)
-                .color(Gradient.topToBottom(BLUE, ORANGE))
+                .color(Gradient.topToBottom(WHITE, ORANGE))
                 .offset(0, y)
             );
             ctx.drawText(DrawTextBuilder.of("Outline", font, 32)
@@ -355,24 +358,6 @@ public class DemoWindow extends Window {
                 hoverOpacity.animate(0);
                 hoverOpacity.createFuture().thenAccept(end -> hoverBox.setDisplay(Display.NONE));
             });
-        }
-    }
-
-    public static class ScaleDemo extends Element {
-        public ScaleDemo(DemoWindow demo) {
-            this.setPadding(Edge.ALL, 5);
-
-            Text text = new Text(String.format("Window scaling: %.2f", demo.getScale()));
-            text.setAlignSelf(Align.FLEX_START);
-            this.addChild(text);
-
-            Slider slider = new Slider(0.2f, 2f, demo.getScale());
-            slider.setMargin(Edge.TOP, 5);
-            slider.setOnValueChanged(value -> {
-                demo.setScale(value);
-                text.setText(String.format("Window scaling: %.2f", value));
-            });
-            this.addChild(slider);
         }
     }
 
