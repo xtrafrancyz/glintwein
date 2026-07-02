@@ -291,9 +291,19 @@ public class DemoWindow extends Window {
                 ctx0.drawText(GlobalUIState.getDefaultFont(), "Picture in Picture", 2, 2, 16, WHITE);
                 ctx0.drawRect(150, 20, 100, 20, BorderRadius.ZERO, Gradient.leftToRight(0xffffffff, 0x00000000));
             }, contentBox.width, 40);
-
             if (capture != null)
-                ctx.drawTexture(DrawTextureBuilder.fromXYWH(0, y, contentBox.width, 40)
+                ctx.drawTexture(DrawTextureBuilder.fromXYWH(0, y, contentBox.width / 2, 40)
+                    .texture(capture)
+                    .radius(20)
+                    .outline(0xffffffff, 2)
+                );
+            capture = ctx.captureSubContext(ctx0 -> {
+                ctx0.drawRect(0, 0, 200, 40, 0xff0000ff);
+                ctx0.drawText(GlobalUIState.getDefaultFont(), "Second capture", 2, 2, 16, WHITE);
+                ctx0.drawRect(150, 20, 100, 20, BorderRadius.ZERO, Gradient.leftToRight(0xffffffff, 0x00000000));
+            }, contentBox.width, 40);
+            if (capture != null)
+                ctx.drawTexture(DrawTextureBuilder.fromXYWH(contentBox.width / 2, y, contentBox.width / 2, 40)
                     .texture(capture)
                     .radius(20)
                     .outline(0xffffffff, 2)

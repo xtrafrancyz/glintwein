@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.floats.FloatArrayFIFOQueue;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.glintwein.platform.Platform;
+import net.glintwein.ui.GlobalUIState;
 import net.glintwein.ui.data.BorderRadius;
 import net.glintwein.ui.data.Bounds;
 import net.glintwein.ui.data.Box;
@@ -15,9 +16,7 @@ import net.glintwein.ui.render.texture.Sprite;
 import net.glintwein.ui.util.ARGB;
 import net.glintwein.ui.util.GMath;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix3x2f;
-import org.joml.Matrix3x2fStack;
-import org.joml.Vector2f;
+import org.joml.*;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -361,7 +360,7 @@ public class Context {
             AtlasPacker.Rect rect = cmd.sprite.atlasRect();
             subContext.transform.translate(rect.left, rect.top);
 
-            subContext.transform.scaling(scaleX, scaleY);
+            subContext.transform.scale(scaleX, scaleY);
             render.accept(subContext);
             subContext.execute();
         }, width, height);
