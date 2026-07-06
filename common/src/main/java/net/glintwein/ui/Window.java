@@ -1,9 +1,11 @@
 package net.glintwein.ui;
 
+import net.glintwein.platform.Platform;
 import net.glintwein.ui.data.BorderRadius;
 import net.glintwein.ui.data.PositionType;
 import net.glintwein.ui.element.RootElement;
 import net.glintwein.ui.render.command.Context;
+import net.glintwein.ui.render.font.GigaFont;
 import net.glintwein.ui.util.GMath;
 import net.glintwein.util.KVStore;
 import org.joml.Vector2f;
@@ -34,7 +36,7 @@ public class Window {
     private float resizeStartContentWidth;
     private float resizeStartContentHeight;
 
-    private float scaleMin = 0.2f;
+    private float scaleMin = 0.5f;
     private float scaleMax = 4f;
 
     private Anchor anchor = Anchor.TOP_LEFT;
@@ -63,7 +65,7 @@ public class Window {
         float screenW = GlobalUIState.getScaledWidth();
         float screenH = GlobalUIState.getScaledHeight();
 
-        if (dragged && moved) {
+        if (dragged && moved && !isIgnoreSnapping()) {
             drawGuides(ctx, screenW, screenH);
         }
 
@@ -78,13 +80,13 @@ public class Window {
     }
 
     protected void drawResizeHandle(Context ctx, float handleSize, int color) {
-        float scaledHandleSize = Math.min(handleSize / scale, Math.min(root.getComputedWidth(), root.getComputedHeight()));
+        float scaledHandleSize = Math.min(handleSize, Math.min(root.getComputedWidth(), root.getComputedHeight()));
         float contentW = root.getComputedWidth();
         float contentH = root.getComputedHeight();
 
-        float lineWidth = 1f / scale;
-        float inset = 2f / scale;
-        float spacing = 3f / scale;
+        float lineWidth = 1f;
+        float inset = 2f;
+        float spacing = 3f;
 
         float right = contentW - inset;
         float bottom = contentH - inset;
@@ -92,6 +94,17 @@ public class Window {
 
         ctx.drawLine(right - start, bottom, right, bottom - start, lineWidth, BorderRadius.ZERO, color);
         ctx.drawLine(right - start + spacing, bottom, right, bottom - start + spacing, lineWidth, BorderRadius.ZERO, color);
+
+        if (resizing) {
+            float size = 16;
+            GigaFont font = GlobalUIState.getDefaultFont();
+            String text = "x" + String.format("%.2f", scale);
+            float width = font.getWidth(text, size);
+            float x = right - scaledHandleSize;
+            float y = bottom - scaledHandleSize;
+            ctx.drawRect(x - 2, y, width + 4, size + 4, 0xCC000000);
+            ctx.drawText(font, text, x, y, size, 0xFFFFFFFF);
+        }
     }
 
     private void drawGuides(Context ctx, float screenW, float screenH) {
@@ -145,6 +158,18 @@ public class Window {
             return;
 
         float newScale = resizeStartScale + ((resizeStartContentWidth * dx) + (resizeStartContentHeight * dy)) / denom;
+
+        if (!isIgnoreSnapping()) {
+            float snapIncrement = 0.5f;
+            float snapThreshold = 0.05f;
+            float remainder = newScale % snapIncrement;
+            if (remainder < snapThreshold) {
+                newScale -= remainder;
+            } else if (remainder > snapIncrement - snapThreshold) {
+                newScale += snapIncrement - remainder;
+            }
+        }
+
         setScale(newScale);
     }
 
@@ -154,81 +179,83 @@ public class Window {
         float w = getComputedWidth();
         float h = getComputedHeight();
 
-        List<Float> guidesX = new ArrayList<>();
-        List<Float> guidesY = new ArrayList<>();
-
-        // 1. Сетка экрана (5%, 50%, 95%)
-        guidesX.add(screenW * 0.05f);
-        guidesX.add(screenW * 0.5f);
-        guidesX.add(screenW * 0.95f);
-
-        guidesY.add(screenH * 0.05f);
-        guidesY.add(screenH * 0.5f);
-        guidesY.add(screenH * 0.95f);
-
-        // =========================================================
-        // 2. ДИНАМИЧЕСКИЕ НАПРАВЛЯЮЩИЕ ОТ ДРУГИХ ОКОН
-        // =========================================================
-
-        List<Window> otherWindows = windowManager == null ? Collections.emptyList() : windowManager.windows;
-        for (Window other : otherWindows) {
-            if (other == this)
-                continue; // Себя не учитываем
-
-            Vector2f otherXY = other.getScreenXY();
-            float otherW = other.getComputedWidth();
-            float otherH = other.getComputedHeight();
-
-            // Добавляем края и центры других окон как магниты
-            guidesX.add(otherXY.x);
-            guidesX.add(otherXY.x + otherW / 2f);
-            guidesX.add(otherXY.x + otherW);
-
-            guidesY.add(otherXY.y);
-            guidesY.add(otherXY.y + otherH / 2f);
-            guidesY.add(otherXY.y + otherH);
-        }
-
-        // Точки нашего окна (лево, центр, право / верх, центр, низ)
-        float[] windowPointsX = {rawX, rawX + w / 2f, rawX + w};
-        float[] windowPointsY = {rawY, rawY + h / 2f, rawY + h};
-
         float bestX = rawX;
         float bestY = rawY;
-
-        float minDiffX = SNAP_THRESHOLD;
-        float minDiffY = SNAP_THRESHOLD;
-
-        activeGuideX = null;
-        activeGuideY = null;
 
         int xIndex = -1;
         int yIndex = -1;
 
-        for (float guideX : guidesX) {
-            for (int i = 0; i < windowPointsX.length; i++) {
-                float diff = Math.abs(guideX - windowPointsX[i]);
-                if (diff < minDiffX) {
-                    minDiffX = diff;
-                    activeGuideX = guideX;
-                    xIndex = i;
-                    if (i == 0) bestX = guideX;
-                    else if (i == 1) bestX = guideX - w / 2f;
-                    else if (i == 2) bestX = guideX - w;
+        if (!isIgnoreSnapping()) {
+            List<Float> guidesX = new ArrayList<>();
+            List<Float> guidesY = new ArrayList<>();
+
+            // 1. Сетка экрана (5%, 50%, 95%)
+            guidesX.add(screenW * 0.05f);
+            guidesX.add(screenW * 0.5f);
+            guidesX.add(screenW * 0.95f);
+
+            guidesY.add(screenH * 0.05f);
+            guidesY.add(screenH * 0.5f);
+            guidesY.add(screenH * 0.95f);
+
+            // =========================================================
+            // 2. ДИНАМИЧЕСКИЕ НАПРАВЛЯЮЩИЕ ОТ ДРУГИХ ОКОН
+            // =========================================================
+
+            List<Window> otherWindows = windowManager == null ? Collections.emptyList() : windowManager.windows;
+            for (Window other : otherWindows) {
+                if (other == this)
+                    continue; // Себя не учитываем
+
+                Vector2f otherXY = other.getScreenXY();
+                float otherW = other.getComputedWidth();
+                float otherH = other.getComputedHeight();
+
+                // Добавляем края и центры других окон как магниты
+                guidesX.add(otherXY.x);
+                guidesX.add(otherXY.x + otherW / 2f);
+                guidesX.add(otherXY.x + otherW);
+
+                guidesY.add(otherXY.y);
+                guidesY.add(otherXY.y + otherH / 2f);
+                guidesY.add(otherXY.y + otherH);
+            }
+
+            // Точки нашего окна (лево, центр, право / верх, центр, низ)
+            float[] windowPointsX = {rawX, rawX + w / 2f, rawX + w};
+            float[] windowPointsY = {rawY, rawY + h / 2f, rawY + h};
+
+            float minDiffX = SNAP_THRESHOLD;
+            float minDiffY = SNAP_THRESHOLD;
+
+            activeGuideX = null;
+            activeGuideY = null;
+
+            for (float guideX : guidesX) {
+                for (int i = 0; i < windowPointsX.length; i++) {
+                    float diff = Math.abs(guideX - windowPointsX[i]);
+                    if (diff < minDiffX) {
+                        minDiffX = diff;
+                        activeGuideX = guideX;
+                        xIndex = i;
+                        if (i == 0) bestX = guideX;
+                        else if (i == 1) bestX = guideX - w / 2f;
+                        else if (i == 2) bestX = guideX - w;
+                    }
                 }
             }
-        }
 
-        for (float guideY : guidesY) {
-            for (int i = 0; i < windowPointsY.length; i++) {
-                float diff = Math.abs(guideY - windowPointsY[i]);
-                if (diff < minDiffY) {
-                    minDiffY = diff;
-                    activeGuideY = guideY;
-                    yIndex = i;
-                    if (i == 0) bestY = guideY;
-                    else if (i == 1) bestY = guideY - h / 2f;
-                    else if (i == 2) bestY = guideY - h;
+            for (float guideY : guidesY) {
+                for (int i = 0; i < windowPointsY.length; i++) {
+                    float diff = Math.abs(guideY - windowPointsY[i]);
+                    if (diff < minDiffY) {
+                        minDiffY = diff;
+                        activeGuideY = guideY;
+                        yIndex = i;
+                        if (i == 0) bestY = guideY;
+                        else if (i == 1) bestY = guideY - h / 2f;
+                        else if (i == 2) bestY = guideY - h;
+                    }
                 }
             }
         }
@@ -479,6 +506,10 @@ public class Window {
         resizeStartScale = scale;
         resizeStartContentWidth = root.getComputedWidth();
         resizeStartContentHeight = root.getComputedHeight();
+    }
+
+    private boolean isIgnoreSnapping() {
+        return Platform.input().hasControlDown();
     }
 
     public float getScale() {
