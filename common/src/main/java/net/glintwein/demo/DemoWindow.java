@@ -52,6 +52,7 @@ public class DemoWindow extends Window {
     public static final int ORANGE = 0xffF78C6C;
 
     private int initWithInitializers = -1;
+    private boolean minimized = false;
 
     public DemoWindow() {
         super("glintwein_demo");
@@ -101,6 +102,9 @@ public class DemoWindow extends Window {
         titleBar.setBorderRadius(new BorderRadius().top(5));
         titleBar.setMargin(Edge.BOTTOM, 5);
 
+        Element rightSide = new Element();
+        rightSide.setFlexDirection(FlexDirection.ROW);
+
         Text refreshButton = new Text("refresh");
         refreshButton.setAlignSelf(Align.CENTER);
         refreshButton.setFont(refreshButton.getFont().withSize(12));
@@ -108,17 +112,33 @@ public class DemoWindow extends Window {
             init();
             return true;
         });
-        refreshButton.setOnMouseEnter(() -> {
-            refreshButton.setBackground(BG_ACCENT);
+        addHoverBg(refreshButton);
+        rightSide.addChild(refreshButton);
+
+        Text minimize = new Text("min");
+        minimize.setAlignSelf(Align.CENTER);
+        minimize.setFont(minimize.getFont().withSize(12));
+        minimize.setOnClick(button -> {
+            minimized = !minimized;
+            minimize.setText(minimized ? "max" : "min");
+            for (Element child : root.getChildren())
+                if (child != titleBar)
+                    child.setDisplay(minimized ? Display.NONE : Display.FLEX);
+            return true;
         });
-        refreshButton.setOnMouseExit(() -> {
-            refreshButton.setBackground(0);
-        });
+        minimize.setMargin(Edge.LEFT, 5);
+        addHoverBg(minimize);
+        rightSide.addChild(minimize);
 
         titleBar.addChild(new Text("Glintwein Demo"));
-        titleBar.addChild(refreshButton);
+        titleBar.addChild(rightSide);
 
         return titleBar;
+    }
+
+    public static void addHoverBg(Element el) {
+        el.setOnMouseEnter(() -> el.setBackground(BG_ACCENT));
+        el.setOnMouseExit(() -> el.setBackground(0));
     }
 
     public static class Collapse extends Element {
@@ -429,15 +449,13 @@ public class DemoWindow extends Window {
 
             Text addBox = new Text("Add box");
             addBox.setAlignSelf(Align.FLEX_START);
-            addBox.setOnMouseEnter(() -> addBox.setBackground(BG_ACCENT));
-            addBox.setOnMouseExit(() -> addBox.setBackground(0));
+            addHoverBg(addBox);
             addBox.setMargin(Edge.RIGHT, 5);
             row.addChild(addBox);
 
             Text removeBox = new Text("Remove random box");
             removeBox.setAlignSelf(Align.FLEX_START);
-            removeBox.setOnMouseEnter(() -> removeBox.setBackground(BG_ACCENT));
-            removeBox.setOnMouseExit(() -> removeBox.setBackground(0));
+            addHoverBg(removeBox);
             row.addChild(removeBox);
 
             Element container = new Element();
@@ -483,15 +501,13 @@ public class DemoWindow extends Window {
 
             Text setText1 = new Text("Set Text 1");
             setText1.setAlignSelf(Align.FLEX_START);
-            setText1.setOnMouseEnter(() -> setText1.setBackground(BG_ACCENT));
-            setText1.setOnMouseExit(() -> setText1.setBackground(0));
+            addHoverBg(setText1);
             setText1.setMargin(Edge.RIGHT, 5);
             row.addChild(setText1);
 
             Text setText2 = new Text("Set Text 2");
             setText2.setAlignSelf(Align.FLEX_START);
-            setText2.setOnMouseEnter(() -> setText2.setBackground(BG_ACCENT));
-            setText2.setOnMouseExit(() -> setText2.setBackground(0));
+            addHoverBg(setText2);
             row.addChild(setText2);
 
             Text text = new Text("Hello");
@@ -519,8 +535,7 @@ public class DemoWindow extends Window {
 
             Text spawnWaypoint = new Text("Spawn waypoint");
             spawnWaypoint.setAlignSelf(Align.FLEX_START);
-            spawnWaypoint.setOnMouseEnter(() -> spawnWaypoint.setBackground(BG_ACCENT));
-            spawnWaypoint.setOnMouseExit(() -> spawnWaypoint.setBackground(0));
+            addHoverBg(spawnWaypoint);
             spawnWaypoint.setOnClick(button -> {
                 WaypointElement waypointElement = new WaypointElement() {
                     @Override
@@ -545,8 +560,7 @@ public class DemoWindow extends Window {
             Text clearWaypoints = new Text("Clear waypoints");
             clearWaypoints.setAlignSelf(Align.FLEX_START);
             clearWaypoints.setMargin(Edge.TOP, 5);
-            clearWaypoints.setOnMouseEnter(() -> clearWaypoints.setBackground(BG_ACCENT));
-            clearWaypoints.setOnMouseExit(() -> clearWaypoints.setBackground(0));
+            addHoverBg(clearWaypoints);
             clearWaypoints.setOnClick(button -> {
                 Glintwein.instance.layerIngame.getContent().getChildren().removeIf(child -> child instanceof WaypointElement);
                 return true;
