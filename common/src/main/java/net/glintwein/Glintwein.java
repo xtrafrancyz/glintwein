@@ -13,6 +13,7 @@ import net.glintwein.ui.render.texture.Texture;
 import net.glintwein.ui.render.texture.TextureSimple;
 import net.glintwein.ui.util.NativeCleaner;
 import net.glintwein.util.KVStore;
+import net.glintwein.util.PerFrameObjectPool;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -61,6 +62,7 @@ public class Glintwein {
         PipAtlasManager.reset();
         NativeCleaner.cleanUp();
         KVStore.save();
+        PerFrameObjectPool.onFrameEndAllPools();
     }
 
     void tickStart() {

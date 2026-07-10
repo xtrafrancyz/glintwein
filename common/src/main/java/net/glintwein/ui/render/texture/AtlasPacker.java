@@ -8,46 +8,28 @@ package net.glintwein.ui.render.texture;
  * free regions into smaller rectangles.
  */
 public class AtlasPacker {
-    public static class Rectangle {
-        public final int left, top, right, bottom;
+    // -------------------------------------------------------------------------
+    // Node (internal binary tree node)
+    // -------------------------------------------------------------------------
 
-        public Rectangle(int left, int top, int right, int bottom) {
+    private static class Node {
+        Node child0;
+        Node child1;
+        public int left, top, right, bottom;
+        boolean occupied;
+
+        Node() {
+        }
+
+        Node(int left, int top, int right, int bottom) {
             this.left = left;
             this.top = top;
             this.right = right;
             this.bottom = bottom;
         }
 
-        public int width() {
-            return right - left + 1;
-        }
-
-        public int height() {
-            return bottom - top + 1;
-        }
-
-        @Override
-        public String toString() {
-            return String.format("Rect(%d,%d -> %d,%d  [%dx%d])",
-                left, top, right, bottom, width(), height());
-        }
-    }
-
-    // -------------------------------------------------------------------------
-    // Node (internal binary tree node)
-    // -------------------------------------------------------------------------
-
-    private static class Node {
-        Node[] child = new Node[2];
-        Rectangle rect;
-        boolean occupied;
-
-        Node(Rectangle rect) {
-            this.rect = rect;
-        }
-
         boolean isLeaf() {
-            return child[0] == null && child[1] == null;
+            return child0 == null && child1 == null;
         }
 
         /**
@@ -60,8 +42,8 @@ public class AtlasPacker {
 
             // --- internal node: try children ---
             if (!isLeaf()) {
-                Node result = child[0].insert(width, height);
-                return (result != null) ? result : child[1].insert(width, height);
+                Node result = child0.insert(width, height);
+                return (result != null) ? result : child1.insert(width, height);
             }
 
             // --- leaf node ---
@@ -69,8 +51,8 @@ public class AtlasPacker {
             // Already occupied
             if (occupied) return null;
 
-            int rw = rect.width();
-            int rh = rect.height();
+            int rw = width();
+            int rh = height();
 
             // Image doesn't fit
             if (width > rw || height > rh) return null;
@@ -79,35 +61,45 @@ public class AtlasPacker {
             if (width == rw && height == rh) return this;
 
             // Split this node and recurse into the first child
-            child[0] = new Node(null);
-            child[1] = new Node(null);
+            child0 = new Node();
+            child1 = new Node();
 
             int dw = rw - width;
             int dh = rh - height;
 
             if (dw > dh) {
                 // Split vertically (left / right)
-                child[0].rect = new Rectangle(rect.left,
-                    rect.top,
-                    rect.left + width - 1,
-                    rect.bottom);
-                child[1].rect = new Rectangle(rect.left + width,
-                    rect.top,
-                    rect.right,
-                    rect.bottom);
+                child0.left = left;
+                child0.top = top;
+                child0.right = left + width - 1;
+                child0.bottom = bottom;
+
+                child1.left = left + width;
+                child1.top = top;
+                child1.right = right;
+                child1.bottom = bottom;
             } else {
                 // Split horizontally (top / bottom)
-                child[0].rect = new Rectangle(rect.left,
-                    rect.top,
-                    rect.right,
-                    rect.top + height - 1);
-                child[1].rect = new Rectangle(rect.left,
-                    rect.top + height,
-                    rect.right,
-                    rect.bottom);
+                child0.left = left;
+                child0.top = top;
+                child0.right = right;
+                child0.bottom = top + height - 1;
+
+                child1.left = left;
+                child1.top = top + height;
+                child1.right = right;
+                child1.bottom = bottom;
             }
 
-            return child[0].insert(width, height);
+            return child0.insert(width, height);
+        }
+
+        public int width() {
+            return right - left + 1;
+        }
+
+        public int height() {
+            return bottom - top + 1;
         }
     }
 
@@ -122,12 +114,12 @@ public class AtlasPacker {
     public AtlasPacker(int width, int height) {
         this.atlasWidth = width;
         this.atlasHeight = height;
-        this.root = new Node(new Rectangle(0, 0, width - 1, height - 1));
+        this.root = new Node(0, 0, width - 1, height - 1);
     }
 
     public void reset() {
-        root.child[0] = null;
-        root.child[1] = null;
+        root.child0 = null;
+        root.child1 = null;
         root.occupied = false;
     }
 
@@ -136,13 +128,12 @@ public class AtlasPacker {
         if (node == null)
             return null;
         node.occupied = true;
-        Rectangle r = node.rect;
         return new Rect(
-            r.left, r.top, r.right + 1, r.bottom + 1,
-            (float) r.left / atlasWidth,
-            (float) r.top / atlasHeight,
-            (float) (r.right + 1) / atlasWidth,
-            (float) (r.bottom + 1) / atlasHeight
+            node.left, node.top, node.right + 1, node.bottom + 1,
+            (float) node.left / atlasWidth,
+            (float) node.top / atlasHeight,
+            (float) (node.right + 1) / atlasWidth,
+            (float) (node.bottom + 1) / atlasHeight
         );
     }
 

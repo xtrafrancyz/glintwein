@@ -6,31 +6,49 @@ import net.glintwein.ui.data.Bounds;
 import net.glintwein.ui.render.program.GlProgram;
 import net.glintwein.ui.render.program.GlintVertexConsumer;
 import net.glintwein.ui.util.ARGB;
+import net.glintwein.util.PerFrameObjectPool;
+import org.joml.Matrix3x2f;
 import org.joml.Matrix3x2fc;
 
 import java.util.List;
 
 public class DrawShadowCommand extends DrawCommand {
-    private final Matrix3x2fc pose;
-    private final float x0, y0, x1, y1;
-    private final BorderRadius radius;
-    private final int colorTL, colorTR, colorBR, colorBL;
-    private final float blurSpread;
+    public static final PerFrameObjectPool<DrawShadowCommand> POOL = new PerFrameObjectPool<>(
+        DrawShadowCommand::new,
+        DrawShadowCommand::reset
+    );
 
-    public DrawShadowCommand(Matrix3x2fc pose, float x0, float y0, float x1, float y1, BorderRadius radius, int colorTL, int colorTR, int colorBR, int colorBL, float blurSpread) {
+    private final Matrix3x2f pose;
+    private float x0, y0, x1, y1;
+    private BorderRadius radius;
+    private int colorTL, colorTR, colorBR, colorBL;
+    private float blurSpread;
+
+    public DrawShadowCommand() {
+        pose = new Matrix3x2f();
+        bounds = Bounds.empty();
+    }
+
+    public DrawShadowCommand set(Matrix3x2fc pose, float x0, float y0, float x1, float y1, BorderRadius radius, int colorTL, int colorTR, int colorBR, int colorBL, float blurSpread) {
         blurSpread /= 2.0f;
         this.x0 = x0 - blurSpread;
         this.y0 = y0 - blurSpread;
         this.x1 = x1 + blurSpread;
         this.y1 = y1 + blurSpread;
-        this.bounds = Bounds.fromMinMax(this.x0, this.y0, this.x1, this.y1).transformMaxBounds(pose);
-        this.pose = pose;
+        this.bounds.set(this.x0, this.y0, this.x1, this.y1).transformMaxBounds(pose);
+        this.pose.set(pose);
         this.radius = radius;
         this.colorTL = colorTL;
         this.colorTR = colorTR;
         this.colorBR = colorBR;
         this.colorBL = colorBL;
         this.blurSpread = blurSpread;
+        return this;
+    }
+
+    @Override
+    public void release() {
+        POOL.release(this);
     }
 
     public static class Executor implements DrawCommand.Executor<DrawShadowCommand> {

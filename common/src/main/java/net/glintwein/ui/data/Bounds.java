@@ -70,6 +70,22 @@ public class Bounds {
         return this;
     }
 
+    public Bounds set(Box box) {
+        this.minX = box.x;
+        this.minY = box.y;
+        this.maxX = box.x + box.width;
+        this.maxY = box.y + box.height;
+        return this;
+    }
+
+    public Bounds setXYWH(float x, float y, float width, float height) {
+        this.minX = x;
+        this.minY = y;
+        this.maxX = x + width;
+        this.maxY = y + height;
+        return this;
+    }
+
     public Bounds setEmpty() {
         this.minX = Float.POSITIVE_INFINITY;
         this.minY = Float.POSITIVE_INFINITY;

@@ -6,25 +6,37 @@ import net.glintwein.ui.data.Bounds;
 import net.glintwein.ui.render.program.GlProgram;
 import net.glintwein.ui.render.program.GlintVertexConsumer;
 import net.glintwein.ui.util.ARGB;
+import net.glintwein.util.PerFrameObjectPool;
+import org.joml.Matrix3x2f;
 import org.joml.Matrix3x2fc;
 
 import java.util.List;
 
 public class DrawRectCommand extends DrawCommand {
-    private final Matrix3x2fc pose;
-    private final float x0, y0, x1, y1;
-    private final BorderRadius radius;
-    private final int colorTL, colorTR, colorBR, colorBL;
-    private final int outlineColor;
-    private final float outlineWidth;
+    public static final PerFrameObjectPool<DrawRectCommand> POOL = new PerFrameObjectPool<>(
+        DrawRectCommand::new,
+        DrawRectCommand::reset
+    );
 
-    public DrawRectCommand(Matrix3x2fc pose, float x0, float y0, float x1, float y1, BorderRadius radius, int color, int outlineColor, float outlineWidth) {
-        this(pose, x0, y0, x1, y1, radius, color, color, color, color, outlineColor, outlineWidth);
+    private final Matrix3x2f pose;
+    private float x0, y0, x1, y1;
+    private BorderRadius radius;
+    private int colorTL, colorTR, colorBR, colorBL;
+    private int outlineColor;
+    private float outlineWidth;
+
+    public DrawRectCommand() {
+        this.bounds = Bounds.empty();
+        this.pose = new Matrix3x2f();
     }
 
-    public DrawRectCommand(Matrix3x2fc pose, float x0, float y0, float x1, float y1, BorderRadius radius, int colorTL, int colorTR, int colorBR, int colorBL, int outlineColor, float outlineWidth) {
-        this.bounds = Bounds.fromMinMax(x0, y0, x1, y1).transformMaxBounds(pose);
-        this.pose = pose;
+    public DrawRectCommand set(Matrix3x2fc pose, float x0, float y0, float x1, float y1, BorderRadius radius, int color, int outlineColor, float outlineWidth) {
+        return set(pose, x0, y0, x1, y1, radius, color, color, color, color, outlineColor, outlineWidth);
+    }
+
+    public DrawRectCommand set(Matrix3x2fc pose, float x0, float y0, float x1, float y1, BorderRadius radius, int colorTL, int colorTR, int colorBR, int colorBL, int outlineColor, float outlineWidth) {
+        this.bounds.set(x0, y0, x1, y1).transformMaxBounds(pose);
+        this.pose.set(pose);
         this.x0 = x0;
         this.y0 = y0;
         this.x1 = x1;
@@ -36,6 +48,12 @@ public class DrawRectCommand extends DrawCommand {
         this.colorBL = colorBL;
         this.outlineColor = outlineColor;
         this.outlineWidth = outlineWidth;
+        return this;
+    }
+
+    @Override
+    public void release() {
+        POOL.release(this);
     }
 
     public static class Executor implements DrawCommand.Executor<DrawRectCommand> {

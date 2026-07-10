@@ -4,7 +4,6 @@ import it.unimi.dsi.fastutil.floats.FloatArrayFIFOQueue;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.glintwein.platform.Platform;
-import net.glintwein.ui.GlobalUIState;
 import net.glintwein.ui.data.BorderRadius;
 import net.glintwein.ui.data.Bounds;
 import net.glintwein.ui.data.Box;
@@ -16,7 +15,9 @@ import net.glintwein.ui.render.texture.Sprite;
 import net.glintwein.ui.util.ARGB;
 import net.glintwein.ui.util.GMath;
 import org.jetbrains.annotations.Nullable;
-import org.joml.*;
+import org.joml.Matrix3x2f;
+import org.joml.Matrix3x2fStack;
+import org.joml.Vector2f;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -53,6 +54,9 @@ public class Context {
         opacityStack.clear();
         opacityStack.enqueue(1.0f);
         scissorStack.clear();
+        for (List<DrawCommand> list : priorityCommandMap.values())
+            for (DrawCommand cmd : list)
+                cmd.release();
         priorityCommandMap.clear();
         currentPriority = 0;
         for (PipCommand cmd : pipCommands)
@@ -62,6 +66,10 @@ public class Context {
 
     public Matrix3x2fStack pose() {
         return transform;
+    }
+
+    public float getPixelSize() {
+        return 1 / ((transform.m00 + transform.m11) * 0.5f);
     }
 
     public float pushOpacityExact(float opacity) {
@@ -135,8 +143,8 @@ public class Context {
         if (ARGB.alpha(color = mulOpacity(color)) == 0)
             return;
 
-        addCommand(new DrawRectCommand(
-            new Matrix3x2f(transform),
+        addCommand(DrawRectCommand.POOL.acquire().set(
+            transform,
             x, y, x + width, y + height,
             radius,
             color,
@@ -152,8 +160,8 @@ public class Context {
         color = mulOpacity(color);
         if (color.isFullyTransparent())
             return;
-        addCommand(new DrawRectCommand(
-            new Matrix3x2f(transform),
+        addCommand(DrawRectCommand.POOL.acquire().set(
+            transform,
             x, y, x + width, y + height,
             radius,
             color.topLeft(), color.topRight(), color.bottomRight(), color.bottomLeft(),
@@ -180,8 +188,8 @@ public class Context {
             color00 = color10 = color11 = color01 = builder.color;
         }
 
-        addCommand(new DrawRectCommand(
-            new Matrix3x2f(transform),
+        addCommand(DrawRectCommand.POOL.acquire().set(
+            transform,
             builder.x0, builder.y0, builder.x1, builder.y1,
             builder.radius,
             color00, color10, color11, color01,
@@ -193,8 +201,8 @@ public class Context {
         color = mulOpacity(color);
         if (ARGB.alpha(color) == 0)
             return;
-        addCommand(new DrawShadowCommand(
-            new Matrix3x2f(transform),
+        addCommand(DrawShadowCommand.POOL.acquire().set(
+            transform,
             box.x, box.y, box.x + box.width, box.y + box.height,
             radius,
             color, color, color, color,
@@ -211,8 +219,8 @@ public class Context {
         if (ARGB.alpha(color00) == 0 && ARGB.alpha(color10) == 0 && ARGB.alpha(color11) == 0 && ARGB.alpha(color01) == 0)
             return;
 
-        addCommand(new DrawShadowCommand(
-            new Matrix3x2f(transform),
+        addCommand(DrawShadowCommand.POOL.acquire().set(
+            transform,
             builder.x0, builder.y0, builder.x1, builder.y1,
             builder.radius,
             color00, color10, color11, color01,
@@ -254,7 +262,7 @@ public class Context {
         float half = length * 0.5f;
         float halfW = width * 0.5f;
 
-        addCommand(new DrawRectCommand(
+        addCommand(DrawRectCommand.POOL.acquire().set(
             pose,
             -half, -halfW, half, halfW,
             radius,
@@ -280,8 +288,8 @@ public class Context {
         if (ARGB.alpha(color = mulOpacity(color)) == 0)
             return;
 
-        addCommand(new DrawTextureCommand(
-            new Matrix3x2f(transform),
+        addCommand(DrawTextureCommand.POOL.acquire().set(
+            transform,
             x, y, x + width, y + height,
             sprite.u0, sprite.v0, sprite.u1, sprite.v1,
             radius, sprite.textureId,
@@ -297,8 +305,8 @@ public class Context {
         if (ARGB.alpha(color) == 0 && !hasOutline)
             return;
 
-        addCommand(new DrawTextureCommand(
-            new Matrix3x2f(transform),
+        addCommand(DrawTextureCommand.POOL.acquire().set(
+            transform,
             builder.x0, builder.y0, builder.x1, builder.y1,
             builder.u0, builder.v0, builder.u1, builder.v1,
             builder.radius,
@@ -311,8 +319,8 @@ public class Context {
         if (ARGB.alpha(color = mulOpacity(color)) == 0)
             return;
 
-        addCommand(new DrawTextCommand(
-            new Matrix3x2f(transform),
+        addCommand(DrawTextCommand.POOL.acquire().set(
+            transform,
             font, text,
             x, y, size,
             color
@@ -338,8 +346,8 @@ public class Context {
             color00 = color10 = color11 = color01 = builder.color;
         }
 
-        addCommand(new DrawTextCommand(
-            new Matrix3x2f(transform),
+        addCommand(DrawTextCommand.POOL.acquire().set(
+            transform,
             builder.font, builder.text,
             builder.x, builder.y, builder.size,
             color00, color10, color11, color01,
@@ -370,8 +378,8 @@ public class Context {
         Sprite sprite = capturePip(render, width, height);
         if (sprite == null)
             return;
-        addCommand(new DrawTextureCommand(
-            new Matrix3x2f(pose()),
+        addCommand(DrawTextureCommand.POOL.acquire().set(
+            transform,
             x, y, x + width, y + height,
             sprite.u0, sprite.v0, sprite.u1, sprite.v1,
             BorderRadius.ZERO, sprite.textureId,
@@ -403,8 +411,10 @@ public class Context {
         Bounds scissor = scissorStack.peekLast();
         if (scissor != null && scissor != UNBOUNDED) {
             cmd.scissor = scissor;
-            if (!scissor.intersects(cmd.bounds))
+            if (!scissor.intersects(cmd.bounds)) {
+                cmd.release();
                 return;
+            }
             boolean contains = scissor.contains(cmd.bounds);
             if (contains)
                 cmd.scissor = null;
@@ -438,21 +448,25 @@ public class Context {
             }
         }
 
-        Platform.render().beforeDraw();
+        try {
+            Platform.render().beforeDraw();
 
-        int startIndex = 0;
-        DrawCommand currentCommand = commands.get(0);
-        for (int i = 1; i < commands.size(); i++) {
-            DrawCommand cmd = commands.get(i);
-            if (cmd.firstInBatch) {
-                executeBatch(currentCommand.getClass(), commands.subList(startIndex, i));
-                startIndex = i;
-                currentCommand = cmd;
+            int startIndex = 0;
+            DrawCommand currentCommand = commands.get(0);
+            for (int i = 1; i < commands.size(); i++) {
+                DrawCommand cmd = commands.get(i);
+                if (cmd.firstInBatch) {
+                    executeBatch(currentCommand.getClass(), commands.subList(startIndex, i));
+                    startIndex = i;
+                    currentCommand = cmd;
+                }
             }
-        }
-        executeBatch(currentCommand.getClass(), commands.subList(startIndex, commands.size()));
+            executeBatch(currentCommand.getClass(), commands.subList(startIndex, commands.size()));
 
-        Platform.render().afterDraw();
+            Platform.render().afterDraw();
+        } catch (Exception e) {
+            Platform.log().error("Error during draw execution", e);
+        }
 
         reset();
     }

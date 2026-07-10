@@ -6,34 +6,46 @@ import net.glintwein.ui.render.font.GigaFont;
 import net.glintwein.ui.render.program.GlProgram;
 import net.glintwein.ui.render.program.GlintVertexConsumer;
 import net.glintwein.ui.util.ARGB;
+import net.glintwein.util.PerFrameObjectPool;
 import org.joml.Matrix3x2f;
+import org.joml.Matrix3x2fc;
 
 import java.util.List;
 
 public class DrawTextCommand extends DrawCommand {
-    private final Matrix3x2f pose;
-    private final GigaFont font;
-    private final String text;
-    private final float x;
-    private final float y;
-    private final float size;
-    private final int colorTL, colorTR, colorBR, colorBL;
-    private final boolean solidColor;
-    private final float outlineWidth;
-    private final int outlineColor;
+    public static final PerFrameObjectPool<DrawTextCommand> POOL = new PerFrameObjectPool<>(
+        DrawTextCommand::new,
+        DrawTextCommand::reset
+    );
 
-    public DrawTextCommand(Matrix3x2f pose, GigaFont font, String text, float x, float y, float size, int color) {
-        this(pose, font, text, x, y, size, color, color, color, color, 0, 0f);
+    private final Matrix3x2f pose;
+    private GigaFont font;
+    private String text;
+    private float x;
+    private float y;
+    private float size;
+    private int colorTL, colorTR, colorBR, colorBL;
+    private boolean solidColor;
+    private float outlineWidth;
+    private int outlineColor;
+
+    public DrawTextCommand() {
+        this.bounds = Bounds.empty();
+        this.pose = new Matrix3x2f();
     }
 
-    public DrawTextCommand(
-        Matrix3x2f pose, GigaFont font, String text,
+    public DrawTextCommand set(Matrix3x2fc pose, GigaFont font, String text, float x, float y, float size, int color) {
+        return set(pose, font, text, x, y, size, color, color, color, color, 0, 0f);
+    }
+
+    public DrawTextCommand set(
+        Matrix3x2fc pose, GigaFont font, String text,
         float x, float y, float size,
         int colorTL, int colorTR, int colorBR, int colorBL,
         int outlineColor, float outlineWidth
     ) {
-        this.pose = pose;
-        this.bounds = Bounds.fromXYWH(x, y, font.getWidth(text, size), font.getHeight(size)).transformMaxBounds(pose);
+        this.pose.set(pose);
+        this.bounds.setXYWH(x, y, font.getWidth(text, size), font.getHeight(size)).transformMaxBounds(pose);
         this.font = font;
         this.text = text;
         this.x = x;
@@ -46,6 +58,7 @@ public class DrawTextCommand extends DrawCommand {
         this.solidColor = (colorTL == colorTR) && (colorTL == colorBR) && (colorTL == colorBL);
         this.outlineWidth = Math.max(0, outlineWidth);
         this.outlineColor = this.outlineWidth <= 0 ? 0 : outlineColor;
+        return this;
     }
 
     @Override
@@ -53,6 +66,17 @@ public class DrawTextCommand extends DrawCommand {
         if (!super.isSimilar(other)) return false;
         DrawTextCommand cmd = (DrawTextCommand) other;
         return this.font == cmd.font && this.outlineWidth == cmd.outlineWidth && this.outlineColor == cmd.outlineColor;
+    }
+
+    @Override
+    public void release() {
+        POOL.release(this);
+    }
+
+    @Override
+    public void reset() {
+        super.reset();
+        font = null;
     }
 
     public static class Executor implements DrawCommand.Executor<DrawTextCommand> {
