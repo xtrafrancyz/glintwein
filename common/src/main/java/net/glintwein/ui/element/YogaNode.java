@@ -7,21 +7,20 @@ import net.glintwein.ui.data.*;
 import net.glintwein.ui.util.NativeCleaner;
 import org.lwjgl.system.NativeResource;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.lang.ref.WeakReference;
 
 public abstract class YogaNode {
     protected final long yogaNode;
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
-    private final List<NativeCleaner.Handle> cleanerHandlers = new ArrayList<>();
     private Display display = Display.FLEX;
     private Overflow overflow = Overflow.VISIBLE;
+    private YogaMeasureFunction measureFunction;
 
     public YogaNode() {
         this.yogaNode = Platform.yoga().NodeNewWithConfig(GlobalUIState.getYogaConfigHandle());
 
         long yogaNodeFinal = this.yogaNode;
-        cleanerHandlers.add(NativeCleaner.register(() -> Platform.yoga().NodeFree(yogaNodeFinal)));
+        NativeCleaner.register(this, () -> Platform.yoga().NodeFree(yogaNodeFinal));
     }
 
     public Display getDisplayType() {
@@ -218,8 +217,23 @@ public abstract class YogaNode {
     }
 
     protected void setMeasureFunction(YogaMeasureFunction measureFunc) {
-        NativeResource nativeResource = Platform.yoga().NodeSetMeasureFunc(yogaNode, measureFunc);
-        cleanerHandlers.add(NativeCleaner.register(nativeResource::free));
+        if (this.measureFunction != null)
+            throw new IllegalStateException("Measure function is already set. It can only be set once.");
+        measureFunction = measureFunc;
+
+        // decouple lambda from YogaNode to avoid memory leaks.
+        // The lambda will hold a strong reference to the YogaNode, preventing it from being garbage collected.
+        // Using a WeakReference allows the YogaNode to be collected if there are no other strong references to it.
+        WeakReference<YogaNode> weakNodeRef = new WeakReference<>(this);
+        YogaMeasureFunction nativeMeasureFunc = (width, widthMode, height, heightMode) -> {
+            YogaNode yogaNode = weakNodeRef.get();
+            if (yogaNode == null)
+                return new Size(0, 0);
+            return yogaNode.measureFunction.measure(width, widthMode, height, heightMode);
+        };
+
+        NativeResource nativeResource = Platform.yoga().NodeSetMeasureFunc(yogaNode, nativeMeasureFunc);
+        NativeCleaner.register(this, nativeResource::free);
     }
 
     public static long getYogaNodeHandle(YogaNode node) {
