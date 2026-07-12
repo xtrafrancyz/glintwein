@@ -79,20 +79,24 @@ public class DrawTextCommand extends DrawCommand {
         font = null;
     }
 
-    public static class Executor implements DrawCommand.Executor<DrawTextCommand> {
+    public static class Executor extends SimpleExecutor<DrawTextCommand> {
+        public Executor() {
+            super(GlProgram.MSDF);
+        }
+
         @Override
-        public void execute(List<DrawTextCommand> commands) {
-            DrawTextCommand first = commands.get(0);
-            GlProgram msdf = GlProgram.MSDF;
-            msdf.bind();
-            msdf.getUniform("Atlas").setTexture(first.font.getTextureId());
-            msdf.getUniform("Range").setFloat(first.font.getPixelRange());
-            msdf.getUniform("Thickness").setFloat(0f);
-            msdf.getUniform("Smoothness").setFloat(0.5f);
-            msdf.getUniform("OutlineThickness").setFloat(first.outlineWidth);
-            msdf.getUniform("OutlineColor").setColor4f(first.outlineColor);
-            msdf.getUniform("ProjMat").setMat4(GlobalUIState.getGuiProjectionMatrix());
-            GlintVertexConsumer consumer = msdf.begin();
+        protected void bindUniforms(GlProgram program, DrawTextCommand first) {
+            program.getUniform("Atlas").setTexture(first.font.getTextureId());
+            program.getUniform("Range").setFloat(first.font.getPixelRange());
+            program.getUniform("Thickness").setFloat(0f);
+            program.getUniform("Smoothness").setFloat(0.5f);
+            program.getUniform("OutlineThickness").setFloat(first.outlineWidth);
+            program.getUniform("OutlineColor").setColor4f(first.outlineColor);
+            program.getUniform("ProjMat").setMat4(GlobalUIState.getGuiProjectionMatrix());
+        }
+
+        @Override
+        protected void buildVertexBuffer(GlintVertexConsumer consumer, List<DrawTextCommand> commands) {
             for (DrawTextCommand cmd : commands) {
                 if (cmd.solidColor)
                     cmd.font.render(consumer, cmd.pose, cmd.text, cmd.x, cmd.y, cmd.size, ARGB.premulAlpha(cmd.colorTL));
@@ -103,7 +107,6 @@ public class DrawTextCommand extends DrawCommand {
                         ARGB.premulAlpha(cmd.colorBR), ARGB.premulAlpha(cmd.colorBL)
                     );
             }
-            msdf.draw();
         }
     }
 }

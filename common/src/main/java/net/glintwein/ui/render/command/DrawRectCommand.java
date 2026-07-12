@@ -56,13 +56,18 @@ public class DrawRectCommand extends DrawCommand {
         POOL.release(this);
     }
 
-    public static class Executor implements DrawCommand.Executor<DrawRectCommand> {
+    public static class Executor extends DrawCommand.SimpleExecutor<DrawRectCommand> {
+        public Executor() {
+            super(GlProgram.RECT);
+        }
+
         @Override
-        public void execute(List<DrawRectCommand> commands) {
-            GlProgram program = GlProgram.RECT;
-            program.bind();
+        protected void bindUniforms(GlProgram program, DrawRectCommand first) {
             program.getUniform("ProjMat").setMat4(GlobalUIState.getGuiProjectionMatrix());
-            GlintVertexConsumer consumer = program.begin();
+        }
+
+        @Override
+        protected void buildVertexBuffer(GlintVertexConsumer consumer, List<DrawRectCommand> commands) {
             for (DrawRectCommand cmd : commands) {
                 float sx = (float) Math.sqrt(cmd.pose.m00() * cmd.pose.m00() + cmd.pose.m01() * cmd.pose.m01());
                 float sy = (float) Math.sqrt(cmd.pose.m10() * cmd.pose.m10() + cmd.pose.m11() * cmd.pose.m11());
@@ -77,10 +82,9 @@ public class DrawRectCommand extends DrawCommand {
                 vertex(consumer, cmd, cmd.x1, cmd.y1, cmd.colorBR, w, h, radiusPacked, outlineWidth);
                 vertex(consumer, cmd, cmd.x1, cmd.y0, cmd.colorTR, w, h, radiusPacked, outlineWidth);
             }
-            program.draw();
         }
 
-        private void vertex(GlintVertexConsumer consumer, DrawRectCommand cmd, float x, float y, int color, float w, float h, int radiusPacked, float outlineWidth) {
+        private static void vertex(GlintVertexConsumer consumer, DrawRectCommand cmd, float x, float y, int color, float w, float h, int radiusPacked, float outlineWidth) {
             consumer.vertex2(cmd.pose, x, y)
                 .color(ARGB.premulAlpha(color))
                 .radius(radiusPacked)

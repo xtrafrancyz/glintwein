@@ -570,7 +570,7 @@ public class DemoWindow extends Window {
     }
 
     public static class CustomShaderDemo extends Element {
-        private static final GlProgram PROGRAM = new GlProgram(
+        private static final GlProgram PROGRAM = new GlProgram("DemoShader",
             // VERTEX SHADER
             "#version 130\n" +
                 "\n" +

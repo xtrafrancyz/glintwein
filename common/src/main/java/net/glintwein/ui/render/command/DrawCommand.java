@@ -1,6 +1,8 @@
 package net.glintwein.ui.render.command;
 
 import net.glintwein.ui.data.Bounds;
+import net.glintwein.ui.render.program.GlProgram;
+import net.glintwein.ui.render.program.GlintVertexConsumer;
 
 import java.util.List;
 
@@ -35,5 +37,28 @@ public abstract class DrawCommand {
 
     public interface Executor<T extends DrawCommand> {
         void execute(List<T> commands);
+    }
+
+    public static abstract class SimpleExecutor<T extends DrawCommand> implements Executor<T> {
+        private final GlProgram program;
+
+        public SimpleExecutor(GlProgram program) {
+            this.program = program;
+        }
+
+        @Override
+        public void execute(List<T> commands) {
+            if (!program.isValid())
+                return;
+            program.bind();
+            bindUniforms(program, commands.get(0));
+            GlintVertexConsumer consumer = program.begin();
+            buildVertexBuffer(consumer, commands);
+            program.draw();
+        }
+
+        protected abstract void bindUniforms(GlProgram program, T first);
+
+        protected abstract void buildVertexBuffer(GlintVertexConsumer consumer, List<T> commands);
     }
 }

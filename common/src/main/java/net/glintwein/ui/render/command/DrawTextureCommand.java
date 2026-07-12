@@ -69,15 +69,19 @@ public class DrawTextureCommand extends DrawCommand {
         POOL.release(this);
     }
 
-    public static class Executor implements DrawCommand.Executor<DrawTextureCommand> {
+    public static class Executor extends DrawCommand.SimpleExecutor<DrawTextureCommand> {
+        public Executor() {
+            super(GlProgram.RECT_TEXTURED);
+        }
+
         @Override
-        public void execute(List<DrawTextureCommand> commands) {
-            DrawTextureCommand first = commands.get(0);
-            GlProgram program = GlProgram.RECT_TEXTURED;
-            program.bind();
+        protected void bindUniforms(GlProgram program, DrawTextureCommand first) {
             program.getUniform("Texture").setTexture(first.textureId);
             program.getUniform("ProjMat").setMat4(GlobalUIState.getGuiProjectionMatrix());
-            GlintVertexConsumer consumer = program.begin();
+        }
+
+        @Override
+        protected void buildVertexBuffer(GlintVertexConsumer consumer, List<DrawTextureCommand> commands) {
             for (DrawTextureCommand cmd : commands) {
                 float sx = (float) Math.sqrt(cmd.pose.m00() * cmd.pose.m00() + cmd.pose.m01() * cmd.pose.m01());
                 float sy = (float) Math.sqrt(cmd.pose.m10() * cmd.pose.m10() + cmd.pose.m11() * cmd.pose.m11());
@@ -92,10 +96,9 @@ public class DrawTextureCommand extends DrawCommand {
                 vertex(consumer, cmd, cmd.x1, cmd.y1, cmd.u1, cmd.v1, w, h, radiusPacked, outlineWidth);
                 vertex(consumer, cmd, cmd.x1, cmd.y0, cmd.u1, cmd.v0, w, h, radiusPacked, outlineWidth);
             }
-            program.draw();
         }
 
-        private void vertex(GlintVertexConsumer consumer, DrawTextureCommand cmd, float x, float y, float u, float v, float w, float h, int radiusPacked, float outlineWidth) {
+        private static void vertex(GlintVertexConsumer consumer, DrawTextureCommand cmd, float x, float y, float u, float v, float w, float h, int radiusPacked, float outlineWidth) {
             consumer.vertex2(cmd.pose, x, y)
                 .color(ARGB.premulAlpha(cmd.color))
                 .uv(u, v)

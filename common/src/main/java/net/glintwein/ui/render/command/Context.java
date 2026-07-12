@@ -10,6 +10,7 @@ import net.glintwein.ui.data.Box;
 import net.glintwein.ui.data.Gradient;
 import net.glintwein.ui.render.PipAtlasManager;
 import net.glintwein.ui.render.font.GigaFont;
+import net.glintwein.ui.render.program.GlProgramInvalidException;
 import net.glintwein.ui.render.texture.AtlasPacker;
 import net.glintwein.ui.render.texture.Sprite;
 import net.glintwein.ui.util.ARGB;
@@ -18,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2f;
 import org.joml.Matrix3x2fStack;
 import org.joml.Vector2f;
+import org.lwjgl.opengl.GL20;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -448,9 +450,9 @@ public class Context {
             }
         }
 
-        try {
-            Platform.render().beforeDraw();
+        Platform.render().beforeDraw();
 
+        try {
             int startIndex = 0;
             DrawCommand currentCommand = commands.get(0);
             for (int i = 1; i < commands.size(); i++) {
@@ -463,10 +465,14 @@ public class Context {
             }
             executeBatch(currentCommand.getClass(), commands.subList(startIndex, commands.size()));
 
-            Platform.render().afterDraw();
         } catch (Exception e) {
             Platform.log().error("Error during draw execution", e);
         }
+
+        Platform.render().stateActiveTexture(GL20.GL_TEXTURE0);
+        GL20.glUseProgram(0);
+
+        Platform.render().afterDraw();
 
         reset();
     }
@@ -481,7 +487,13 @@ public class Context {
             } else {
                 Platform.render().stateDisableScissor();
             }
-            executor.execute((List<T>) batch);
+            try {
+                executor.execute((List<T>) batch);
+            } catch (GlProgramInvalidException ignored) {
+                // Ignore broken program exceptions, they will be logged by the program itself
+            } catch (Exception e) {
+                Platform.log().error("Error during draw command execution", e);
+            }
         }
     }
 

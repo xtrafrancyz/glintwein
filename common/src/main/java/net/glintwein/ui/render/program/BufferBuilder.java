@@ -187,6 +187,16 @@ public class BufferBuilder {
         this.lastRenderedCountIndex = 0;
     }
 
+    public void discardIncompleteBuildingState() {
+        if (this.building) {
+            this.building = false;
+            this.currentElement = null;
+            this.elementIndex = 0;
+            this.nextElementByte = this.totalRenderedBytes + this.vertices * this.format.getVertexSize();
+            this.vertices = 0;
+        }
+    }
+
     public GlintVertexFormatElement currentElement() {
         if (this.currentElement == null) {
             throw new IllegalStateException("BufferBuilder not started");

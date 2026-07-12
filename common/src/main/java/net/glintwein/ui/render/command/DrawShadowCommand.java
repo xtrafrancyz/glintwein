@@ -51,13 +51,18 @@ public class DrawShadowCommand extends DrawCommand {
         POOL.release(this);
     }
 
-    public static class Executor implements DrawCommand.Executor<DrawShadowCommand> {
+    public static class Executor extends SimpleExecutor<DrawShadowCommand> {
+        public Executor() {
+            super(GlProgram.RECT_SHADOW);
+        }
+
         @Override
-        public void execute(List<DrawShadowCommand> commands) {
-            GlProgram program = GlProgram.RECT_SHADOW;
-            program.bind();
+        protected void bindUniforms(GlProgram program, DrawShadowCommand first) {
             program.getUniform("ProjMat").setMat4(GlobalUIState.getGuiProjectionMatrix());
-            GlintVertexConsumer consumer = program.begin();
+        }
+
+        @Override
+        protected void buildVertexBuffer(GlintVertexConsumer consumer, List<DrawShadowCommand> commands) {
             for (DrawShadowCommand cmd : commands) {
                 float sx = (float) Math.sqrt(cmd.pose.m00() * cmd.pose.m00() + cmd.pose.m01() * cmd.pose.m01());
                 float sy = (float) Math.sqrt(cmd.pose.m10() * cmd.pose.m10() + cmd.pose.m11() * cmd.pose.m11());
@@ -88,7 +93,6 @@ public class DrawShadowCommand extends DrawCommand {
                     .size(w, h, spread)
                     .endVertex();
             }
-            program.draw();
         }
     }
 }

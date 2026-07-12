@@ -26,6 +26,7 @@ public class GlProgram {
 
     private static final BufferBuilder BUFFER_BUILDER = new BufferBuilder(98304);
 
+    private final String name;
     private final GlintVertexFormat format;
     private final int programId;
     private final Map<String, Uniform> uniforms = new HashMap<>();
@@ -35,16 +36,39 @@ public class GlProgram {
     private int vaoId = -1;
     private int vboId = -1;
     private boolean vaoInitialized = false;
+    private boolean broken = false;
 
     public GlProgram(String vertexShader, String fragmentShader, GlintVertexFormat format) {
-        this.format = format;
+        this(null, vertexShader, fragmentShader, format);
+    }
 
-        int vertexShaderId = compileShader(vertexShader, GL20.GL_VERTEX_SHADER);
-        int fragmentShaderId = compileShader(fragmentShader, GL20.GL_FRAGMENT_SHADER);
+    public GlProgram(String name, String vertexShader, String fragmentShader, GlintVertexFormat format) {
+        this.name = name;
+        this.format = format;
+        this.vao = Platform.render().shouldUseVAO();
 
         this.programId = GL20.glCreateProgram();
         if (this.programId <= 0)
-            throw new RuntimeException("Failed to create GL program (ID: " + this.programId + ")");
+            throw new RuntimeException("Failed to create GL program");
+
+        try {
+            prepareProgram(vertexShader, fragmentShader);
+        } catch (Exception e) {
+            broken = true;
+            GL20.glDeleteProgram(this.programId);
+            Platform.log().error("Failed to compile shaders for " + name, e);
+            return;
+        }
+
+        if (vao) {
+            vaoId = GL30.glGenVertexArrays();
+            vboId = GL30.glGenBuffers();
+        }
+    }
+
+    private void prepareProgram(String vertexShader, String fragmentShader) {
+        int vertexShaderId = compileShader(vertexShader, GL20.GL_VERTEX_SHADER);
+        int fragmentShaderId = compileShader(fragmentShader, GL20.GL_FRAGMENT_SHADER);
 
         GL20.glAttachShader(this.programId, vertexShaderId);
         GL20.glAttachShader(this.programId, fragmentShaderId);
@@ -61,12 +85,6 @@ public class GlProgram {
             GL20.glDeleteProgram(this.programId);
             throw new RuntimeException("Failed to link GL program: " + infoLog);
         }
-
-        vao = Platform.render().shouldUseVAO();
-        if (vao) {
-            vaoId = GL30.glGenVertexArrays();
-            vboId = GL30.glGenBuffers();
-        }
     }
 
     private void setupVertexAttribs(long pointer) {
@@ -81,7 +99,13 @@ public class GlProgram {
         }
     }
 
+    public boolean isValid() {
+        return !broken;
+    }
+
     public void bind() {
+        if (broken)
+            throw new GlProgramInvalidException(name);
         GL20.glUseProgram(programId);
     }
 
@@ -91,6 +115,7 @@ public class GlProgram {
 
     public GlintVertexConsumer begin() {
         BufferBuilder b = BUFFER_BUILDER;
+        b.discardIncompleteBuildingState();
         b.begin(GL20.GL_QUADS, format);
         return new GlintVertexConsumer(b);
     }
@@ -133,9 +158,6 @@ public class GlProgram {
                 }
             }
         }
-
-        Platform.render().stateActiveTexture(GL20.GL_TEXTURE0);
-        unbind();
     }
 
     public Uniform getUniform(String name) {
@@ -145,7 +167,7 @@ public class GlProgram {
             if (location == -1) {
                 // Note: This often happens if the uniform is not used in the shader
                 // code, as the GLSL compiler will optimize it away.
-                System.err.println("Warning: Uniform '" + name + "' not found!");
+                Platform.log().warn("Warning: Uniform '" + name + "' not found!");
             }
             uniform = new Uniform(this, location);
             uniforms.put(name, uniform);
@@ -171,7 +193,7 @@ public class GlProgram {
              InputStream fshStream = ResourceLoaderUtil.getStream("/assets/shaders/" + name + ".fsh")) {
             String vertexSource = ResourceLoaderUtil.toString(vshStream);
             String fragmentSource = ResourceLoaderUtil.toString(fshStream);
-            return new GlProgram(vertexSource, fragmentSource, format);
+            return new GlProgram(name, vertexSource, fragmentSource, format);
         } catch (Exception e) {
             throw new RuntimeException("Failed to load shader: " + name, e);
         }
@@ -286,6 +308,7 @@ public class GlProgram {
          * );
          * }</pre>
          */
+        @SuppressWarnings("unchecked")
         public <T> void setCustomTypeCopy(T value, GlUniformSetter<T> setter, Supplier<T> constructor, BiConsumer<T, T> copy) {
             T val = (this.val != null) ? (T) this.val : null;
             if (val == null || !val.equals(value)) {
@@ -310,6 +333,7 @@ public class GlProgram {
          * );
          * }</pre>
          */
+        @SuppressWarnings("unchecked")
         public <T> void setCustomTypeClone(T value, GlUniformSetter<T> setter, Function<T, T> clone) {
             T val = (this.val != null) ? (T) this.val : null;
             if (val == null || !val.equals(value)) {
