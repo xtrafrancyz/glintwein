@@ -183,7 +183,8 @@ public class GlProgram {
         if (compileStatus == GL20.GL_FALSE) {
             String infoLog = GL20.glGetShaderInfoLog(shaderId);
             GL20.glDeleteShader(shaderId);
-            throw new RuntimeException("Failed to compile shader: " + infoLog);
+            String type = shaderType == GL20.GL_VERTEX_SHADER ? "vertex" : "fragment";
+            throw new RuntimeException("Failed to compile " + type + " shader: " + infoLog);
         }
         return shaderId;
     }
