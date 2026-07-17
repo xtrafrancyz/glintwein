@@ -26,6 +26,7 @@ public class AsyncCanvas {
     // shared fields
     private final Object lock = new Object();
     private IntBuffer pixelBuffer;
+    private boolean zeroSize = true;
     private int width;
     private int height;
     private boolean pixelBufferDirty;
@@ -81,8 +82,6 @@ public class AsyncCanvas {
     public void scheduleResize(int width, int height) {
         if (releasedNative)
             return;
-        if (width <= 0 || height <= 0)
-            return;
         if (!isResizing && this.width == width && this.height == height)
             return;
         isResizing = true;
@@ -103,7 +102,7 @@ public class AsyncCanvas {
     }
 
     private void updateInner(boolean force) {
-        if (releasedNative)
+        if (releasedNative || zeroSize)
             return;
 
         ensureInitCalled();
@@ -133,6 +132,10 @@ public class AsyncCanvas {
         synchronized (lock) {
             this.width = width;
             this.height = height;
+            this.zeroSize = width <= 0 || height <= 0;
+            if (zeroSize)
+                return;
+
             if (pixelBuffer == null || pixelBuffer.capacity() < capacity) {
                 if (pixelBuffer != null) {
                     MemoryUtil.memFree(pixelBuffer);
@@ -162,10 +165,10 @@ public class AsyncCanvas {
             throw new IllegalStateException("AsyncCanvas has been closed");
 
         synchronized (lock) {
-            if (pixelBufferDirty && pixelBuffer != null && width > 0 && height > 0) {
+            if (pixelBufferDirty && pixelBuffer != null && !zeroSize) {
                 uploadTexture(pixelBuffer, width, height);
                 pixelBufferDirty = false;
-            } else if (textureId == 0)
+            } else if (textureId == 0 || zeroSize)
                 return null;
         }
 
