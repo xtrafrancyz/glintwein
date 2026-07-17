@@ -81,7 +81,7 @@ public class AsyncCanvas {
     public void scheduleResize(int width, int height) {
         if (releasedNative)
             return;
-        if (!isResizing && this.width == width && this.height == height)
+        if (!isResizing && this.width == width && this.height == height && width > 0 && height > 0)
             return;
         isResizing = true;
         ThorvgHelper.execute(() -> {
