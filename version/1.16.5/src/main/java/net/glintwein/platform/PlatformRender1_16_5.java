@@ -95,6 +95,7 @@ public class PlatformRender1_16_5 implements Platform.Render {
         Minecraft.getInstance().getMainRenderTarget().bindWrite(true);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void beforeDraw() {
         RenderSystem.disableCull();
@@ -105,6 +106,7 @@ public class PlatformRender1_16_5 implements Platform.Render {
         RenderSystem.disableDepthTest();
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void afterDraw() {
         RenderSystem.disableScissor();

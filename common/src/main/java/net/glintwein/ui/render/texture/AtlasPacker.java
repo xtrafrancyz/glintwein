@@ -146,11 +146,11 @@ public class AtlasPacker {
     }
 
     public static class Rect {
-        public final float left, top, right, bottom;
+        public final int left, top, right, bottom;
         public float u0, v0, u1, v1;
 
         public Rect(
-            float left, float top, float right, float bottom,
+            int left, int top, int right, int bottom,
             float u0, float v0, float u1, float v1
         ) {
             this.left = left;
@@ -161,6 +161,14 @@ public class AtlasPacker {
             this.v0 = v0;
             this.u1 = u1;
             this.v1 = v1;
+        }
+
+        public int width() {
+            return right - left;
+        }
+
+        public int height() {
+            return bottom - top;
         }
     }
 }

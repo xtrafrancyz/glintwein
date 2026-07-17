@@ -13,6 +13,8 @@ public class LeafElement extends Element {
         setMeasureFunction((width, widthMode, height, heightMode) -> {
             float ownWidth = widthGetter.get();
             float ownHeight = heightGetter.get();
+            if (ownWidth <= 0 || ownHeight <= 0)
+                return new Size(0, 0);
             float aspectRatio = ownWidth / ownHeight;
             if (widthMode == YogaMeasureFunction.SizeMode.EXACTLY) {
                 float measuredHeight = width / aspectRatio;

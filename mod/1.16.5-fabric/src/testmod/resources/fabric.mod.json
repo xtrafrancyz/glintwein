@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "glintwein-testmod",
+  "version": "${version}",
+  "name": "glintwein-testmod",
+  "description": "heheuheuehe",
+  "authors": ["xtrafrancyz"],
+  "contact": {
+    "homepage": "https://github.com/xtrafrancyz/glintwein",
+    "sources": "https://github.com/xtrafrancyz/glintwein"
+  },
+  "license": "unlicense",
+  "icon": "assets/glintwein/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "net.glintwein.fabric.testmod.GlintweinTestmod"
+    ]
+  },
+  "mixins": [],
+  "depends": {
+    "fabricloader": ">=0.8.9",
+    "fabric": "*",
+    "minecraft": "1.16.5",
+    "glintwein": "*"
+  }
+}

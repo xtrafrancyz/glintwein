@@ -30,6 +30,21 @@ sourceSets {
             srcDir '../../version/1.16.5/src/main/resources'
         }
     }
+
+    testmod {
+        java {
+            srcDirs = ['src/testmod/java']
+        }
+        resources {
+            srcDirs = ['src/testmod/resources']
+        }
+        compileClasspath += main.compileClasspath
+        runtimeClasspath += main.runtimeClasspath
+    }
+}
+
+configurations {
+    testmodImplementation.extendsFrom implementation
 }
 
 dependencies {
@@ -46,6 +61,19 @@ dependencies {
     include implementation("org.lwjgl:lwjgl-yoga:3.2.2:natives-windows")
 
     implementation project(":common")
+
+    testmodImplementation sourceSets.main.output
+    testmodImplementation project(":thorvg")
+}
+
+loom {
+    runs {
+        testmodClient {
+            client()
+            name = "Testmod Client"
+            source sourceSets.testmod
+        }
+    }
 }
 
 processResources {
@@ -76,9 +104,7 @@ tasks.register('sourcesJar', Jar) {
 }
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(8)
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    toolchain.languageVersion = JavaLanguageVersion.of(17)
 }
 
 publishing {

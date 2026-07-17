@@ -18,8 +18,7 @@ public class PerFrameObjectPool<T> {
     private final Supplier<T> factory;
     private final Consumer<T> resetter;
 
-    private ArrayDeque<T> free = new ArrayDeque<>();
-    private int maxTrackedFreeSize = 0;
+    private final ArrayDeque<T> free = new ArrayDeque<>();
     private int usage;
     private int peakUsage;
     private final int[] usageHistory = new int[40];
@@ -60,15 +59,8 @@ public class PerFrameObjectPool<T> {
         peakUsage = 0;
 
         int targetFreeSize = computeTargetFreeSize();
-        maxTrackedFreeSize = Math.max(maxTrackedFreeSize, free.size());
-        // recreate free list when it gets much bigger than the average usage
-        if (maxTrackedFreeSize > 1000 && maxTrackedFreeSize > targetFreeSize * 5) {
-            free = new ArrayDeque<>(targetFreeSize);
-            maxTrackedFreeSize = targetFreeSize;
-        } else {
-            while (free.size() > targetFreeSize)
-                free.pop();
-        }
+        while (free.size() > targetFreeSize)
+            free.pop();
     }
 
     private int computeTargetFreeSize() {

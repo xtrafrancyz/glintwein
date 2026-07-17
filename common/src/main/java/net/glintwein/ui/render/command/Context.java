@@ -294,8 +294,7 @@ public class Context {
             transform,
             x, y, x + width, y + height,
             sprite.u0, sprite.v0, sprite.u1, sprite.v1,
-            radius, sprite.textureId,
-            color,
+            radius, sprite.textureId, color,
             0, 0
         ));
     }
@@ -311,8 +310,7 @@ public class Context {
             transform,
             builder.x0, builder.y0, builder.x1, builder.y1,
             builder.u0, builder.v0, builder.u1, builder.v1,
-            builder.radius,
-            builder.texture, color,
+            builder.radius, builder.texture, color,
             outlineColor, builder.outlineWidth
         ));
     }

@@ -9,4 +9,5 @@ pluginManagement {
 }
 
 include ':common'
+include ':thorvg'
 include ':mod:1.16.5-fabric'

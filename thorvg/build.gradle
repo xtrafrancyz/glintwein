@@ -1,0 +1,45 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+apply from: '../shared_util.gradle'
+version = artifactVersion
+
+repositories {
+    mavenCentral()
+}
+
+base {
+    archivesName = "jthorvg"
+}
+
+dependencies {
+    compileOnly("org.lwjgl:lwjgl-glfw:3.2.2")
+    compileOnly("org.lwjgl:lwjgl-opengl:3.2.2")
+    compileOnly("org.joml:joml:1.10.8")
+    compileOnly project(":common")
+
+    api("io.github.xtrafrancyz:jthorvg:0.1.0")
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.encoding = "UTF-8"
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(17)
+    withSourcesJar()
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            groupId = group
+            artifactId = base.archivesName.get()
+            version = version
+        }
+    }
+}
