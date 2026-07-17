@@ -20,7 +20,7 @@ dependencies {
     compileOnly("org.joml:joml:1.10.8")
     compileOnly project(":common")
 
-    api("io.github.xtrafrancyz:jthorvg:0.1.0")
+    api("io.github.xtrafrancyz:jthorvg:0.1.1")
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -28,7 +28,7 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(17)
+    toolchain.languageVersion = JavaLanguageVersion.of(8)
     withSourcesJar()
 }
 
