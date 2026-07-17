@@ -1,13 +1,19 @@
 package net.glintwein.fabric.testmod;
 
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.command.v1.ClientCommandManager;
 import net.glintwein.demo.DemoWindow;
 import net.glintwein.thorvg.Lottie;
 import net.glintwein.thorvg.SVGImage;
+import net.glintwein.ui.GlintweinTooltip;
 import net.glintwein.ui.data.Edge;
 import net.glintwein.ui.data.PositionType;
 import net.glintwein.ui.element.Element;
+import net.glintwein.ui.element.Text;
 import net.glintwein.util.ResourceLoaderUtil;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 public class GlintweinTestmod implements ClientModInitializer {
     @Override
@@ -15,6 +21,22 @@ public class GlintweinTestmod implements ClientModInitializer {
         DemoWindow.addCustomInitializer(demo -> {
             demo.root.addChild(new DemoWindow.Collapse("ThorVG", new ThorVGDemo()));
         });
+
+        GlintweinTooltip.register("glintwein_testmod", data -> {
+            if (data.equals("hello")) {
+                return new Text("Hello, Glintwein!");
+            }
+            return null;
+        });
+
+        ClientCommandManager.DISPATCHER.register(
+            ClientCommandManager.literal("hello").executes(context -> {
+                ItemStack is = new ItemStack(Items.MUSIC_DISC_11, 1);
+                is.setHoverName(GlintweinTooltip.createKey("glintwein_testmod", "hello"));
+                Minecraft.getInstance().player.inventory.add(is);
+                return 0;
+            })
+        );
     }
 
     private static class ThorVGDemo extends Element {

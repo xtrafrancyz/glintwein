@@ -8,6 +8,7 @@
   ],
   "client": [
     "ui.MixinLevelRenderer",
+    "ui.MixinScreen",
     "ui.MixinMinecraft"
   ],
   "injectors": {

@@ -25,6 +25,10 @@ public class Glintwein {
     public static long time;
 
     private static final List<Runnable> initListeners = new ArrayList<>();
+    private static final List<Runnable> tickStartListeners = new ArrayList<>();
+    private static final List<Runnable> tickEndListeners = new ArrayList<>();
+    private static final List<Runnable> preRenderListeners = new ArrayList<>();
+    private static final List<Runnable> postRenderListeners = new ArrayList<>();
 
     private final Context sharedDrawContext = new Context();
 
@@ -48,13 +52,7 @@ public class Glintwein {
         if (DemoWindow.isEnabled())
             layerIngame.getWindowManager().addWindow(new DemoWindow());
 
-        for (Runnable listener : initListeners) {
-            try {
-                listener.run();
-            } catch (Exception e) {
-                Platform.log().error("Init listener error", e);
-            }
-        }
+        runListeners(initListeners, "Init");
         initListeners.clear();
     }
 
@@ -63,6 +61,7 @@ public class Glintwein {
         NativeCleaner.cleanUp();
         KVStore.save();
         PerFrameObjectPool.onFrameEndAllPools();
+        runListeners(tickEndListeners, "Tick end");
     }
 
     void tickStart() {
@@ -78,10 +77,12 @@ public class Glintwein {
             }
         }
         PipAtlasManager.tickStart();
+        runListeners(tickStartListeners, "Tick start");
     }
 
     void preRender() {
         uiTickedThisFrame = false;
+        runListeners(preRenderListeners, "Pre render");
     }
 
     private void tickUIIfNeeded() {
@@ -104,6 +105,7 @@ public class Glintwein {
     void postRender() {
         tickUIIfNeeded();
         layerAlwaysOnTop.render(sharedDrawContext);
+        runListeners(postRenderListeners, "Post render");
     }
 
     private void updateTime() {
@@ -195,6 +197,34 @@ public class Glintwein {
             initListeners.add(listener);
         } else {
             listener.run();
+        }
+    }
+
+    public static void addTickStartListener(Runnable listener) {
+        tickStartListeners.add(listener);
+    }
+
+    public static void addTickEndListener(Runnable listener) {
+        tickEndListeners.add(listener);
+    }
+
+    public static void addPreRenderListener(Runnable listener) {
+        preRenderListeners.add(listener);
+    }
+
+    public static void addPostRenderListener(Runnable listener) {
+        postRenderListeners.add(listener);
+    }
+
+    private static void runListeners(List<Runnable> listeners, String listenerType) {
+        if (listeners.isEmpty())
+            return;
+        for (Runnable listener : listeners) {
+            try {
+                listener.run();
+            } catch (Exception e) {
+                Platform.log().error(listenerType + " listener error", e);
+            }
         }
     }
 
