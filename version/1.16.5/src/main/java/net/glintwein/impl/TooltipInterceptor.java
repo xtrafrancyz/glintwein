@@ -1,18 +1,17 @@
 package net.glintwein.impl;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import net.glintwein.Glintwein;
 import net.glintwein.platform.Platform;
 import net.glintwein.ui.GlobalUIState;
 import net.glintwein.ui.data.Align;
+import net.glintwein.ui.data.Edge;
+import net.glintwein.ui.data.PositionType;
 import net.glintwein.ui.element.Element;
 import net.glintwein.ui.render.command.Context;
 import net.minecraft.util.FormattedCharSequence;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 public class TooltipInterceptor {
@@ -21,9 +20,7 @@ public class TooltipInterceptor {
     private static boolean initialized = false;
 
     private static TooltipContainer container;
-    private static final Cache<String, Element> factoryCache = CacheBuilder.newBuilder()
-        .expireAfterAccess(5, TimeUnit.SECONDS)
-        .build();
+    private static final Map<String, Element> factoryCache = new HashMap<>();
     private static final Map<Element, Integer> seenTooltips = new HashMap<>();
     private static final Map<FormattedCharSequence, Element> parsedCache = new HashMap<>();
     private static int tooltipBaseX = 0;
@@ -37,15 +34,18 @@ public class TooltipInterceptor {
                 Glintwein.instance.layerAlwaysOnTop.getContent().addChild(container, 0);
             });
             Glintwein.addTickEndListener(() -> {
+                if (container.getChildren().isEmpty())
+                    return;
                 for (Element el : container.getChildren()) {
                     if (!seenTooltips.containsKey(el)) {
                         container.removeChild(el);
+                        factoryCache.values().remove(el);
                     }
                 }
+                if (seenTooltips.isEmpty())
+                    factoryCache.clear();
                 seenTooltips.clear();
                 parsedCache.clear();
-                if (factoryCache.size() > 0)
-                    factoryCache.cleanUp();
             });
         }
     }
@@ -88,7 +88,7 @@ public class TooltipInterceptor {
         if (idx == -1)
             return null;
 
-        Element el = factoryCache.getIfPresent(text);
+        Element el = factoryCache.get(text);
         if (el == null) {
             String namespace = text.substring(0, idx);
             String data = text.substring(idx + 1);
@@ -127,52 +127,87 @@ public class TooltipInterceptor {
     }
 
     private static class TooltipContainer extends Element {
+        private float scale;
+
         public TooltipContainer() {
             setWidthPercent(100);
             setHeightPercent(100);
+            setPositionType(PositionType.ABSOLUTE);
+            setPosition(Edge.TOP, 0);
+            setPosition(Edge.LEFT, 0);
             setAlignItems(Align.FLEX_START);
         }
 
         @Override
+        public void tick() {
+            super.tick();
+
+            float uiScale = GlobalUIState.getScale();
+            float mcScale = Platform.get().getGuiScale();
+            scale = mcScale / uiScale;
+        }
+
+        private boolean overrideChildrenPos() {
+            if (seenTooltips.isEmpty())
+                return false;
+            for (Element el : getChildren()) {
+                Integer yPos = seenTooltips.get(el);
+                if (yPos != null) {
+                    el.contentBox.x = tooltipBaseX + el.contentBox.x - el.borderBox.x;
+                    el.contentBox.y = tooltipBaseY + yPos + el.contentBox.y - el.borderBox.y;
+                    el.paddingBox.x = tooltipBaseX + el.paddingBox.x - el.borderBox.x;
+                    el.paddingBox.y = tooltipBaseY + yPos + el.paddingBox.y - el.borderBox.y;
+                    el.borderBox.x = tooltipBaseX;
+                    el.borderBox.y = tooltipBaseY + yPos;
+                }
+            }
+            return true;
+        }
+
+        @Override
         protected void handleMouseMoved(float mouseX, float mouseY, boolean canHover) {
-            // Do nothing
+            if (!overrideChildrenPos())
+                return;
+            super.handleMouseMoved(scaleMouse(mouseX), scaleMouse(mouseY), canHover);
         }
 
         @Override
         protected boolean handleMousePress(float mouseX, float mouseY, int button) {
-            return false;
+            if (!overrideChildrenPos())
+                return false;
+            return super.handleMousePress(scaleMouse(mouseX), scaleMouse(mouseY), button);
         }
 
         @Override
         protected boolean handleMouseRelease(float mouseX, float mouseY, int button, boolean blocked) {
-            return false;
+            if (!overrideChildrenPos())
+                return false;
+            return super.handleMouseRelease(scaleMouse(mouseX), scaleMouse(mouseY), button, blocked);
         }
 
         @Override
         protected boolean handleMouseScroll(float mouseX, float mouseY, float horizontal, float vertical) {
-            return false;
+            if (!overrideChildrenPos())
+                return false;
+            return super.handleMouseScroll(scaleMouse(mouseX), scaleMouse(mouseY), horizontal, vertical);
+        }
+
+        private float scaleMouse(float pos) {
+            return pos / scale;
         }
 
         @Override
         public void draw(Context ctx) {
-            if (getChildren().isEmpty())
+            if (!overrideChildrenPos())
                 return;
 
             ctx.pose().pushMatrix();
-            float uiScale = GlobalUIState.getScale();
-            float mcScale = Platform.get().getGuiScale();
-            ctx.pose().scale(mcScale / uiScale);
-            ctx.pose().translate(tooltipBaseX, tooltipBaseY);
+            ctx.pose().scale(scale);
 
             for (Element el : getChildren()) {
-                Integer yPos = seenTooltips.get(el);
-                if (yPos == null)
+                if (!seenTooltips.containsKey(el))
                     continue;
-
-                ctx.pose().pushMatrix();
-                ctx.pose().translate(-el.borderBox.x, -el.borderBox.y + yPos);
                 el.draw(ctx);
-                ctx.pose().popMatrix();
             }
 
             ctx.pose().popMatrix();
