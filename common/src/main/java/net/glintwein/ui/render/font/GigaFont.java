@@ -7,7 +7,6 @@ import net.glintwein.platform.GlintImage;
 import net.glintwein.platform.Platform;
 import net.glintwein.ui.render.program.GlintVertexConsumer;
 import net.glintwein.ui.render.texture.TextureSimple;
-import net.glintwein.ui.util.ARGB;
 import net.glintwein.util.ResourceLoaderUtil;
 import org.joml.Matrix3x2f;
 import org.lwjgl.opengl.GL11;
@@ -128,6 +127,24 @@ public class GigaFont {
                     if (currentLine.length() > 0) {
                         output.add(currentLine.toString());
                     }
+
+                    // If the word itself is longer than maxWidth, we need to split it into smaller parts
+                    if (wordWidth > maxWidth) {
+                        while (!word.isEmpty()) {
+                            String trimmed = trimToWidth(word, size, maxWidth);
+                            if (trimmed.isEmpty()) {
+                                // If we can't fit any characters, break to avoid infinite loop
+                                break;
+                            }
+                            output.add(trimmed);
+                            word = word.substring(trimmed.length());
+                            wordWidth = getWidth(word, size);
+                            if (wordWidth <= maxWidth) {
+                                break;
+                            }
+                        }
+                    }
+
                     currentLine = new StringBuilder(word);
                     currentWidth = wordWidth;
                 }
