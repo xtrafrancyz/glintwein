@@ -7,6 +7,7 @@ import net.glintwein.ui.Window;
 import net.glintwein.ui.data.*;
 import net.glintwein.ui.element.*;
 import net.glintwein.ui.element.component.Dropdown;
+import net.glintwein.ui.element.component.RichElement;
 import net.glintwein.ui.render.command.*;
 import net.glintwein.ui.render.font.GigaFont;
 import net.glintwein.ui.render.program.GlProgram;
@@ -14,6 +15,7 @@ import net.glintwein.ui.render.program.GlintVertexConsumer;
 import net.glintwein.ui.render.program.GlintVertexFormat;
 import net.glintwein.ui.render.program.GlintVertexFormatElement;
 import net.glintwein.ui.render.texture.Sprite;
+import net.glintwein.ui.rtf.RichContent;
 import net.glintwein.ui.util.ARGB;
 import net.glintwein.ui.util.Animated;
 import net.glintwein.ui.util.Easing;
@@ -339,12 +341,22 @@ public class DemoWindow extends Window {
 
             int color = ARGB.lerp(0.2f, BG, BG_ACCENT);
 
-            TextInput input = new TextInput();
-            input.setBackground(color);
-            input.setPlaceholder("Max length 20");
-            input.setMaxLength(20);
-            input.setPadding(Edge.ALL, 5);
-            this.addChild(input);
+            RichElement rich = new RichElement(RichContent.builder()
+                .append("Rich text")
+                .color(0xff82AAFF).append(" with ")
+                .color(0xffC5E478).outline(0xffff0000, 0.2f).append("multiple ")
+                .resetOutline()
+                .color(0xffF78C6C).append("colors")
+                .color(0xffffffff).append(", ")
+                .fontSize(20).append("font ")
+                .fontSize(12).append("sizes")
+                .fontSize(16).append(" and multiline text with wrapping")
+                .color(0xffC5E478).append("\nnext line")
+                .build());
+            rich.setMaxWidth(300);
+            rich.setBackground(color);
+            rich.setPadding(Edge.ALL, 5);
+            this.addChild(rich);
 
             TextInput maxWidthInput = new TextInput();
             maxWidthInput.setBackground(color);
@@ -353,14 +365,6 @@ public class DemoWindow extends Window {
             maxWidthInput.setPadding(Edge.ALL, 5);
             maxWidthInput.setMargin(Edge.TOP, 5);
             this.addChild(maxWidthInput);
-
-            TextInput regexInput = new TextInput();
-            regexInput.setBackground(color);
-            regexInput.setPlaceholder("Custom select color");
-            regexInput.setHighlightColor(0x88ff0000);
-            regexInput.setPadding(Edge.ALL, 5);
-            regexInput.setMargin(Edge.TOP, 5);
-            this.addChild(regexInput);
 
             TextInput multilineInput = new TextInput();
             multilineInput.setBackground(color);

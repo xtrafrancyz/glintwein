@@ -10,10 +10,15 @@ import net.glintwein.ui.data.Edge;
 import net.glintwein.ui.data.PositionType;
 import net.glintwein.ui.element.Element;
 import net.glintwein.ui.element.Text;
+import net.glintwein.ui.element.component.RichElement;
 import net.glintwein.util.ResourceLoaderUtil;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.TooltipFlag;
+
+import java.util.List;
 
 public class GlintweinTestmod implements ClientModInitializer {
     @Override
@@ -23,20 +28,28 @@ public class GlintweinTestmod implements ClientModInitializer {
         });
 
         GlintweinTooltip.register("glintwein_testmod", data -> {
-            if (data.equals("hello")) {
+            if (data.equals("hello"))
                 return new Text("Hello, Glintwein!");
+            if (data.equals("richtext")) {
+                List<Component> lore = new ItemStack(Items.IRON_AXE)
+                    .getTooltipLines(Minecraft.getInstance().player, TooltipFlag.Default.ADVANCED);
+                return new RichElement(GlintweinTooltip.mcToRichContent(lore));
             }
             return null;
         });
 
-        ClientCommandManager.DISPATCHER.register(
-            ClientCommandManager.literal("hello").executes(context -> {
-                ItemStack is = new ItemStack(Items.MUSIC_DISC_11, 1);
-                is.setHoverName(GlintweinTooltip.createKey("glintwein_testmod", "hello"));
-                Minecraft.getInstance().player.inventory.add(is);
-                return 0;
-            })
-        );
+        ClientCommandManager.DISPATCHER.register(ClientCommandManager.literal("hello").executes(context -> {
+            ItemStack is = new ItemStack(Items.MUSIC_DISC_11, 1);
+            is.setHoverName(GlintweinTooltip.createKey("glintwein_testmod", "hello"));
+            Minecraft.getInstance().player.inventory.add(is);
+            return 0;
+        }));
+        ClientCommandManager.DISPATCHER.register(ClientCommandManager.literal("hello2").executes(context -> {
+            ItemStack is = new ItemStack(Items.EGG, 1);
+            is.setHoverName(GlintweinTooltip.createKey("glintwein_testmod", "richtext"));
+            Minecraft.getInstance().player.inventory.add(is);
+            return 0;
+        }));
     }
 
     private static class ThorVGDemo extends Element {

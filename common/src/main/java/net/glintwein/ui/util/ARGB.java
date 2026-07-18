@@ -1,6 +1,10 @@
 package net.glintwein.ui.util;
 
 public class ARGB {
+    public static String toString(int color) {
+        return String.format("#%08X", color);
+    }
+
     public static int alpha(int color) {
         return (color >> 24) & 0xFF;
     }

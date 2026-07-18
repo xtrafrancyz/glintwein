@@ -232,6 +232,10 @@ public class Glintwein {
         return GigaFont.load(json, texture);
     }
 
+    public static GigaFont loadFont(String name, InputStream json, InputStream texture) {
+        return GigaFont.load(name, json, texture);
+    }
+
     public static Texture loadTexture(InputStream is) {
         try {
             return new TextureSimple(Platform.get().loadImage(is));

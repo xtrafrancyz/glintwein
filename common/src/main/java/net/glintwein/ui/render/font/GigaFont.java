@@ -20,6 +20,7 @@ import java.util.function.Function;
 public class GigaFont {
     private static final int CACHE_MAX_ENTRIES = 500;
 
+    private final String name;
     private final MsdfModel.Atlas atlas;
     private final MsdfModel.FontMetrics metrics;
     private final Char2ObjectMap<Glyph> glyphs;
@@ -35,7 +36,8 @@ public class GigaFont {
     };
     private final Function<String, Float> widthCacheLoader = this::calculateWidth;
 
-    private GigaFont(MsdfModel model, GlintImage image) {
+    private GigaFont(String name, MsdfModel model, GlintImage image) {
+        this.name = name;
         this.atlas = model.atlas;
         this.metrics = model.metrics;
 
@@ -68,6 +70,10 @@ public class GigaFont {
             }
         }
         return width;
+    }
+
+    public float getSpaceWidth(float size) {
+        return spaceWidth * size;
     }
 
     public float getWidth(String text, float size) {
@@ -223,6 +229,10 @@ public class GigaFont {
         return atlas.distanceRange;
     }
 
+    public String getName() {
+        return name;
+    }
+
     public void dispose() {
         if (textureId == -1)
             return;
@@ -231,6 +241,10 @@ public class GigaFont {
     }
 
     public static GigaFont load(InputStream jsonStream, InputStream imageStream) {
+        return load("unnamed", jsonStream, imageStream);
+    }
+
+    public static GigaFont load(String name, InputStream jsonStream, InputStream imageStream) {
         MsdfModel model = ResourceLoaderUtil.getJson(jsonStream, MsdfModel.class);
 
         GlintImage image;
@@ -240,7 +254,7 @@ public class GigaFont {
             throw new RuntimeException("Failed to load GigaFont texture", e);
         }
         try {
-            return new GigaFont(model, image);
+            return new GigaFont(name, model, image);
         } finally {
             image.close();
         }

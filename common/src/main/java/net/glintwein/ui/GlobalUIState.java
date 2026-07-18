@@ -34,7 +34,7 @@ public class GlobalUIState {
         String defaultFontPath = "assets/fonts/sf-pro-regular";
         try (InputStream jsonStream = ResourceLoaderUtil.getStream(defaultFontPath + ".json");
              InputStream imageStream = ResourceLoaderUtil.getStream(defaultFontPath + ".png")) {
-            defaultFont = Glintwein.loadFont(jsonStream, imageStream);
+            defaultFont = Glintwein.loadFont("sf-pro-regular", jsonStream, imageStream);
         } catch (Exception e) {
             throw new RuntimeException("Failed to load GigaFont: " + defaultFontPath, e);
         }
