@@ -51,5 +51,17 @@ public class TextSpan implements Span {
             newStyle.outlineWidth = this.outlineWidth;
             return newStyle;
         }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (obj == null || getClass() != obj.getClass()) return false;
+            Style style = (Style) obj;
+            return fontSize == style.fontSize &&
+                color == style.color &&
+                outlineColor == style.outlineColor &&
+                outlineWidth == style.outlineWidth &&
+                font == style.font;
+        }
     }
 }

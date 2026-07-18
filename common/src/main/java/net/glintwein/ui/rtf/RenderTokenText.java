@@ -2,7 +2,6 @@ package net.glintwein.ui.rtf;
 
 import net.glintwein.ui.render.command.Context;
 import net.glintwein.ui.render.command.DrawTextBuilder;
-import net.glintwein.ui.util.ARGB;
 
 public class RenderTokenText implements RenderToken {
     private final String text;
@@ -36,5 +35,18 @@ public class RenderTokenText implements RenderToken {
         } else {
             ctx.drawText(style.font, text, x, y, style.fontSize, style.color);
         }
+    }
+
+    @Override
+    public RenderToken tryMergeNext(RenderToken next) {
+        if (next instanceof RenderTokenSpace) {
+            if (next.getWidth() == style.font.getSpaceWidth(style.fontSize))
+                return new RenderTokenText(text + " ", style);
+        } else if (next instanceof RenderTokenText) {
+            RenderTokenText nextText = (RenderTokenText) next;
+            if (nextText.style.equals(this.style))
+                return new RenderTokenText(text + nextText.text, style);
+        }
+        return null;
     }
 }

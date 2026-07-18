@@ -56,6 +56,18 @@ public class RichElement extends LeafElement {
                     continue;  // skip leading space
                 }
             }
+
+            // merge with previous token if possible
+            if (!line.tokens.isEmpty()) {
+                RenderToken prev = line.tokens.get(line.tokens.size() - 1);
+                RenderToken merged = prev.tryMergeNext(token);
+                if (merged != null) {
+                    line.width = line.width - prev.getWidth() + merged.getWidth();
+                    line.tokens.set(line.tokens.size() - 1, merged);
+                    continue;
+                }
+            }
+
             line.tokens.add(token);
             line.width += tokenWidth;
         }

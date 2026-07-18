@@ -8,4 +8,8 @@ public interface RenderToken {
     float getHeight();
 
     void draw(Context ctx, float x, float y);
+
+    default RenderToken tryMergeNext(RenderToken next) {
+        return null;
+    }
 }
