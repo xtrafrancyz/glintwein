@@ -274,17 +274,17 @@ public class TextInput extends Text {
                 }
 
                 for (int i = min.y(); i <= max.y(); i++) {
-                    RenderLine line = getRenderLines().get(i);
+                    WrappedLine line = getWrappedLines().get(i);
                     float x1 = i == min.y() ? font.getWidth(line.text.substring(0, min.x())) : 0;
                     float x2 = i == max.y() ? font.getWidth(line.text.substring(0, max.x())) : line.width;
-                    ctx.drawRect(line.x + x1, line.y, x2 - x1, font.getHeight(), highlightColor);
+                    ctx.drawRect(line.x() + x1, line.y(), x2 - x1, font.getHeight(), highlightColor);
                 }
             }
 
             if ((Glintwein.time - blinkTimer) % 1060L < 530L) {
-                RenderLine line = getRenderLines().get(cursor.y());
+                WrappedLine line = getWrappedLines().get(cursor.y());
                 float cursorOffset = font.getWidth(line.text.substring(0, cursor.x()));
-                ctx.drawRect(line.x + cursorOffset, line.y, GlobalUIState.getPixelSize() * 2, font.getHeight(), 0xFFFFFFFF);
+                ctx.drawRect(line.x() + cursorOffset, line.y(), GlobalUIState.getPixelSize() * 2, font.getHeight(), 0xFFFFFFFF);
             }
         }
 
@@ -315,7 +315,7 @@ public class TextInput extends Text {
             return;
         }
 
-        RenderLine line = getRenderLines().get(0);
+        WrappedLine line = getWrappedLines().get(0);
         hasOverflow = line.width - contentBox.width > GlobalUIState.getPixelSize();
         if (!hasOverflow) {
             scrollX = 0;
@@ -334,14 +334,15 @@ public class TextInput extends Text {
     private int translatePixelToPos(float mx, float my) {
         if (isPlaceholderVisible())
             return 0;
-        List<RenderLine> renderLines = getRenderLines();
-        if (renderLines.get(0).y > my)
+        List<WrappedLine> lines = getWrappedLines();
+        if (lines.get(0).y() > my)
             return 0;
         float lineHeight = font.getHeight();
-        for (int i = 0; i < renderLines.size(); i++) {
-            RenderLine line = renderLines.get(i);
-            if (line.y <= my && my <= line.y + lineHeight) {
-                float xRelativeToLine = mx - line.x + scrollX;
+        for (int i = 0; i < lines.size(); i++) {
+            WrappedLine line = lines.get(i);
+            float lineY = line.y();
+            if (lineY <= my && my <= lineY + lineHeight) {
+                float xRelativeToLine = mx - line.x() + scrollX;
                 if (xRelativeToLine <= 0)
                     return translateRowColToPos(i, 0);
                 String strBefore = this.font.trimToWidth(line.text, xRelativeToLine);
@@ -354,12 +355,12 @@ public class TextInput extends Text {
     private int translateRowColToPos(int row, int col) {
         if (isPlaceholderVisible())
             return 0;
-        List<RenderLine> renderLines = getRenderLines();
+        List<WrappedLine> lines = getWrappedLines();
         int pos = 0;
-        for (int i = 0; i < renderLines.size(); i++) {
+        for (int i = 0; i < lines.size(); i++) {
             if (i == row)
                 return Math.min(value.length(), pos + col);
-            RenderLine line = renderLines.get(i);
+            WrappedLine line = lines.get(i);
             pos += line.text.length();
             char c = value.charAt(pos);
             if (c == ' ' || c == '\n')
@@ -369,15 +370,15 @@ public class TextInput extends Text {
     }
 
     private Vector2i translatePosToRowCol(int pos) {
-        List<RenderLine> renderLines = getRenderLines();
+        List<WrappedLine> lines = getWrappedLines();
 
         // special case for position at the end of text which is exactly on a newline
         if (pos > 0 && pos == value.length())
-            return new Vector2i(renderLines.get(renderLines.size() - 1).text.length(), renderLines.size() - 1);
+            return new Vector2i(lines.get(lines.size() - 1).text.length(), lines.size() - 1);
 
         int posTracker = 0;
-        for (int i = 0; i < renderLines.size(); i++) {
-            RenderLine line = renderLines.get(i);
+        for (int i = 0; i < lines.size(); i++) {
+            WrappedLine line = lines.get(i);
             if (pos <= line.text.length())
                 return new Vector2i(pos, i);
 
@@ -495,20 +496,20 @@ public class TextInput extends Text {
     }
 
     private void moveCursorVertical(int delta) {
-        List<RenderLine> renderLines = getRenderLines();
+        List<WrappedLine> lines = getWrappedLines();
         Vector2i current = translatePosToRowCol(cursorPos);
-        int newRow = GMath.clamp(current.y() + delta, 0, renderLines.size() - 1);
+        int newRow = GMath.clamp(current.y() + delta, 0, lines.size() - 1);
         if (newRow == current.y())
             return;
         float pixelX;
         if (verticalCursorXCache == -1) {
-            RenderLine line = renderLines.get(current.y());
-            pixelX = line.x + font.getWidth(line.text.substring(0, current.x()));
+            WrappedLine line = lines.get(current.y());
+            pixelX = line.x() + font.getWidth(line.text.substring(0, current.x()));
             verticalCursorXCache = pixelX;
         } else {
             pixelX = verticalCursorXCache;
         }
-        float pixelY = renderLines.get(newRow).y + 1;
+        float pixelY = lines.get(newRow).y() + 1;
         int newPos = translatePixelToPos(pixelX, pixelY);
         moveCursorTo(newPos);
     }

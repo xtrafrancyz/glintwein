@@ -1,7 +1,6 @@
 package net.glintwein.ui.render.command;
 
 import net.glintwein.ui.data.Gradient;
-import net.glintwein.ui.element.Text;
 import net.glintwein.ui.render.font.GigaFont;
 import net.glintwein.ui.render.font.SizedFont;
 
@@ -75,10 +74,6 @@ public class DrawTextBuilder {
 
     public static DrawTextBuilder of(String text, SizedFont font) {
         return of(text, font.font(), font.size());
-    }
-
-    public static DrawTextBuilder of(Text.RenderLine line, SizedFont font) {
-        return of(line.text, font).offset(line.x, line.y);
     }
 
     public static DrawTextBuilder of() {

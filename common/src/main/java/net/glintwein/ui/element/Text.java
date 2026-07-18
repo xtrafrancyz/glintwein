@@ -8,6 +8,7 @@ import net.glintwein.ui.render.font.GigaFont;
 import net.glintwein.ui.render.font.SizedFont;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Text extends LeafElement {
@@ -17,20 +18,15 @@ public class Text extends LeafElement {
     private WrapMode wrapMode = WrapMode.WORD;
     private Align align = Align.LEFT;
 
-    private List<WrappedLine> splitLinesText;
-    private float splitLinesMaxWidth = 0;
     private final List<WrappedLine> wrappedLines = new ArrayList<>();
-    private final List<RenderLine> renderLines = new ArrayList<>();
-    private float cachedContentBoxX = Float.NaN;
-    private float cachedContentBoxY = Float.NaN;
 
     public Text() {
-        this("");
+        this.font = GlobalUIState.getDefaultTextFont();
+        setMeasureFunction(this::wrapAndMeasure);
     }
 
     public Text(String text) {
-        this.font = GlobalUIState.getDefaultTextFont();
-        setMeasureFunction(this::wrapAndMeasure);
+        this();
         setText(text);
     }
 
@@ -38,32 +34,24 @@ public class Text extends LeafElement {
                                 float height, YogaMeasureFunction.SizeMode heightMode) {
         // wrap content
         wrappedLines.clear();
-        renderLines.clear();
         float contentWidth = 0;
         if (widthMode != YogaMeasureFunction.SizeMode.UNDEFINED && wrapMode == WrapMode.WORD) {
             List<String> wrapped = new ArrayList<>();
             font.wrapText(this.text, width, wrapped);
             for (String line : wrapped) {
                 float lineWidth = font.getWidth(line);
-                wrappedLines.add(new WrappedLine(line, lineWidth));
+                wrappedLines.add(new WrappedLine(wrappedLines.size(), line, lineWidth));
                 contentWidth = Math.max(contentWidth, lineWidth);
             }
         } else {
-            if (splitLinesText == null) {
-                String[] lines = this.text.split("\n", -1);
-                splitLinesMaxWidth = 0;
-                splitLinesText = new ArrayList<>(lines.length);
-                for (String line : lines) {
-                    float lineWidth = font.getWidth(line);
-                    splitLinesText.add(new WrappedLine(line, lineWidth));
-                    splitLinesMaxWidth = Math.max(splitLinesMaxWidth, lineWidth);
-                }
+            for (String line : this.text.split("\n", -1)) {
+                float lineWidth = font.getWidth(line);
+                wrappedLines.add(new WrappedLine(wrappedLines.size(), line, lineWidth));
+                contentWidth = Math.max(contentWidth, lineWidth);
             }
-            wrappedLines.addAll(splitLinesText);
-            contentWidth = splitLinesMaxWidth;
         }
         if (wrappedLines.isEmpty())
-            wrappedLines.add(new WrappedLine("", 0));
+            wrappedLines.add(new WrappedLine(0, "", 0));
         float contentHeight = font.getHeight() * wrappedLines.size();
 
         float measuredWidth;
@@ -87,10 +75,7 @@ public class Text extends LeafElement {
     }
 
     public void setAlign(Align align) {
-        if (this.align == align)
-            return;
         this.align = align;
-        markDirty();
     }
 
     public void setFont(GigaFont font, float size) {
@@ -137,90 +122,69 @@ public class Text extends LeafElement {
         return color;
     }
 
-    protected List<RenderLine> getRenderLines() {
-        if (renderLines.isEmpty() || cachedContentBoxX != contentBox.x || cachedContentBoxY != contentBox.y) {
-            if (wrappedLines.isEmpty()) {
-                wrapAndMeasure(
-                    contentBox.width, YogaMeasureFunction.SizeMode.EXACTLY,
-                    contentBox.height, YogaMeasureFunction.SizeMode.EXACTLY
-                );
-            }
-            renderLines.clear();
-            cachedContentBoxX = contentBox.x;
-            cachedContentBoxY = contentBox.y;
-
-            float y = contentBox.y;
-            for (WrappedLine line : wrappedLines) {
-                float x;
-                switch (align) {
-                    case LEFT:
-                        x = contentBox.x;
-                        break;
-                    case CENTER:
-                        x = contentBox.x + (contentBox.width - line.width) / 2f;
-                        break;
-                    case RIGHT:
-                        x = contentBox.x + contentBox.width - line.width;
-                        break;
-                    default:
-                        throw new IllegalStateException("Unexpected value: " + align);
-                }
-                renderLines.add(new RenderLine(line.text, line.width, x, y));
-                y += font.getHeight();
-            }
-            if (renderLines.isEmpty()) {
-                // ensure phantom empty string, not to crash
-                renderLines.add(new RenderLine("", 0, 0, 0));
-            }
-        }
-        return renderLines;
+    protected List<WrappedLine> getWrappedLines() {
+        if (wrappedLines.isEmpty())
+            return Collections.singletonList(new WrappedLine(0, "", 0));
+        return wrappedLines;
     }
 
     @Override
     protected void readYogaLayout() {
         super.readYogaLayout();
-        renderLines.clear();
+        if (wrappedLines.isEmpty()) {
+            wrapAndMeasure(
+                contentBox.width, YogaMeasureFunction.SizeMode.EXACTLY,
+                contentBox.height, YogaMeasureFunction.SizeMode.EXACTLY
+            );
+        }
     }
 
     @Override
     protected void markDirty() {
         super.markDirty();
-        renderLines.clear();
         wrappedLines.clear();
-        splitLinesText = null;
     }
 
     @Override
     protected void drawContent(Context ctx) {
-        for (RenderLine line : getRenderLines())
+        for (WrappedLine line : getWrappedLines())
             drawLine(ctx, line);
     }
 
-    protected void drawLine(Context ctx, RenderLine line) {
-        ctx.drawText(font.font(), line.text, line.x, line.y, font.size(), getTextColor());
+    protected void drawLine(Context ctx, WrappedLine line) {
+        ctx.drawText(font.font(), line.text, line.x(), line.y(), font.size(), getTextColor());
     }
 
-    private static class WrappedLine {
-        String text;
-        float width;
+    public class WrappedLine {
+        private final int index;
+        public final String text;
+        public final float width;
 
-        WrappedLine(String text, float width) {
+        WrappedLine(int index, String text, float width) {
+            this.index = index;
             this.text = text;
             this.width = width;
         }
-    }
 
-    public static class RenderLine {
-        public String text;
-        public float width;
-        public float x;
-        public float y;
+        public float x() {
+            return contentBox.x + alignX();
+        }
 
-        RenderLine(String text, float width, float x, float y) {
-            this.text = text;
-            this.width = width;
-            this.x = x;
-            this.y = y;
+        public float y() {
+            return contentBox.y + font.getHeight() * index;
+        }
+
+        public float alignX() {
+            switch (align) {
+                case LEFT:
+                    return 0;
+                case CENTER:
+                    return (contentBox.width - width) / 2f;
+                case RIGHT:
+                    return contentBox.width - width;
+                default:
+                    throw new IllegalStateException("Unexpected value: " + align);
+            }
         }
     }
 

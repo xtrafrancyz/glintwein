@@ -8,6 +8,7 @@ import net.glintwein.ui.data.*;
 import net.glintwein.ui.element.*;
 import net.glintwein.ui.element.component.Dropdown;
 import net.glintwein.ui.element.component.RichElement;
+import net.glintwein.ui.element.component.Slider;
 import net.glintwein.ui.render.command.*;
 import net.glintwein.ui.render.font.GigaFont;
 import net.glintwein.ui.render.program.GlProgram;
@@ -77,7 +78,7 @@ public class DemoWindow extends Window {
         });
         root.addChild(titleBar());
         root.addChild(new Collapse("Drawing", new DrawingDemo()));
-        root.addChild(new Collapse("Text Input", new InputDemo()));
+        root.addChild(new Collapse("Text", new TextDemo()));
         root.addChild(new Collapse("Popup", new PopupDemo()));
         root.addChild(new Collapse("Layout Lerp", new LayoutLerpDemo()));
         root.addChild(new Collapse("Waypoints", new WaypointDemo()));
@@ -335,11 +336,23 @@ public class DemoWindow extends Window {
         }
     }
 
-    public static class InputDemo extends Element {
-        public InputDemo() {
+    public static class TextDemo extends Element {
+        public TextDemo() {
             this.setPadding(Edge.ALL, 5);
 
-            int color = ARGB.lerp(0.2f, BG, BG_ACCENT);
+            Slider slider = new Slider(50, 290, 290);
+            slider.setMargin(Edge.BOTTOM, 5);
+            this.addChild(slider);
+
+            int bgColor = ARGB.lerp(0.2f, BG, BG_ACCENT);
+
+            Text text = new Text("Regular text with wrapping");
+            text.setBackground(bgColor);
+            text.setPadding(Edge.ALL, 5);
+            text.setMargin(Edge.BOTTOM, 5);
+            text.setMaxWidth(290);
+            text.setAlignSelf(Align.FLEX_START);
+            this.addChild(text);
 
             RichElement rich = new RichElement(RichContent.builder()
                 .append("Rich text")
@@ -353,22 +366,33 @@ public class DemoWindow extends Window {
                 .fontSize(16).append(" and multiline text with wrapping")
                 .color(0xffC5E478).append("\nnext line")
                 .build());
-            rich.setMaxWidth(300);
-            rich.setBackground(color);
+            rich.setMaxWidth(290);
+            rich.setBackground(bgColor);
             rich.setPadding(Edge.ALL, 5);
+            rich.setAlignSelf(Align.FLEX_START);
             this.addChild(rich);
 
+            slider.setOnValueChanged(value -> {
+                if (value == 290) {
+                    rich.setWidthAuto();
+                    text.setWidthAuto();
+                } else {
+                    rich.setWidth(value);
+                    text.setWidth(value);
+                }
+            });
+
             TextInput maxWidthInput = new TextInput();
-            maxWidthInput.setBackground(color);
-            maxWidthInput.setPlaceholder("Fixed width");
+            maxWidthInput.setBackground(bgColor);
+            maxWidthInput.setPlaceholder("Input fixed width");
             maxWidthInput.setWidth(150);
             maxWidthInput.setPadding(Edge.ALL, 5);
             maxWidthInput.setMargin(Edge.TOP, 5);
             this.addChild(maxWidthInput);
 
             TextInput multilineInput = new TextInput();
-            multilineInput.setBackground(color);
-            multilineInput.setPlaceholder("Multiline...");
+            multilineInput.setBackground(bgColor);
+            multilineInput.setPlaceholder("Multiline input...");
             multilineInput.setMultiline(true);
             multilineInput.setPadding(Edge.ALL, 5);
             multilineInput.setMargin(Edge.TOP, 5);

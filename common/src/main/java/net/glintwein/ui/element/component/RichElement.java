@@ -15,9 +15,6 @@ public class RichElement extends LeafElement {
     private Text.Align align = Text.Align.LEFT;
     private final List<RenderToken> renderTokens = new ArrayList<>();
     private final List<Line> lines = new ArrayList<>();
-    private float lastContentWidth = -1;
-    private float lastContentHeight = -1;
-    private boolean justWrapped;
 
     public RichElement() {
         setMeasureFunction(this::wrapAndMeasure);
@@ -32,7 +29,6 @@ public class RichElement extends LeafElement {
                                 float height, YogaMeasureFunction.SizeMode heightMode) {
         // wrap content
         lines.clear();
-        justWrapped = true;
 
         float maxWidth;
         if (widthMode != YogaMeasureFunction.SizeMode.UNDEFINED && wrapMode == Text.WrapMode.WORD)
@@ -96,13 +92,12 @@ public class RichElement extends LeafElement {
     @Override
     protected void readYogaLayout() {
         super.readYogaLayout();
-        if (!justWrapped || contentBox.width != lastContentWidth || contentBox.height != lastContentHeight) {
+        if (lines.isEmpty()) {
             wrapAndMeasure(
                 contentBox.width, YogaMeasureFunction.SizeMode.EXACTLY,
                 contentBox.height, YogaMeasureFunction.SizeMode.EXACTLY
             );
         }
-        justWrapped = false;
     }
 
     public void setAlign(Text.Align align) {
@@ -114,6 +109,12 @@ public class RichElement extends LeafElement {
         for (Span span : content.spans)
             span.generateRenderTokens(renderTokens);
         markDirty();
+    }
+
+    @Override
+    protected void markDirty() {
+        super.markDirty();
+        lines.clear();
     }
 
     @Override
