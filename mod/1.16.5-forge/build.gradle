@@ -16,7 +16,7 @@ loom {
     silentMojangMappingsLicense()
 
     forge {
-        mixinConfigs = ["glintwein.mixins.json"]
+        mixinConfigs = ["glintwein.mixins.json", "glintwein-forge.mixins.json"]
     }
 }
 

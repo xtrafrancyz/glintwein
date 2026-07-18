@@ -1,14 +1,11 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "net.glintwein.mixin",
+  "package": "net.glintwein.forge.mixin",
   "compatibilityLevel": "JAVA_8",
-  "refmap": "glintwein.refmap.json",
   "mixins": [
   ],
   "client": [
-    "ui.MixinLevelRenderer",
-    "ui.MixinMinecraft"
   ],
   "injectors": {
     "defaultRequire": 1

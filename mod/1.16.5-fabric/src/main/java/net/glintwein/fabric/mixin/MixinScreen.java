@@ -1,10 +1,10 @@
-package net.glintwein.mixin.ui;
+package net.glintwein.fabric.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.llamalad7.mixinextras.sugar.ref.LocalIntRef;
-import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.glintwein.impl.TooltipInterceptor;
 import net.glintwein.ui.element.Element;
@@ -42,9 +42,7 @@ public class MixinScreen {
         at = @At(
             value = "FIELD",
             target = "Lnet/minecraft/client/gui/screens/Screen;width:I",
-            opcode = Opcodes.GETFIELD,
-            shift = At.Shift.BY,
-            by = -2
+            opcode = Opcodes.GETFIELD
         )
     )
     private void renderTooltipCorrectHeight(
@@ -83,28 +81,22 @@ public class MixinScreen {
         TooltipInterceptor.setTooltipBase(x, y);
     }
 
-    @Inject(
+    @ModifyExpressionValue(
         method = "renderTooltip(Lcom/mojang/blaze3d/vertex/PoseStack;Ljava/util/List;II)V",
         at = @At(
             value = "INVOKE",
-            target = "Ljava/util/List;get(I)Ljava/lang/Object;",
-            shift = At.Shift.BY,
-            by = 3
+            target = "Ljava/util/List;get(I)Ljava/lang/Object;"
         )
     )
-    private void renderTooltipInterceptDraw(
-        PoseStack pose, List<? extends FormattedCharSequence> tooltips,
-        int mouseX, int mouseY,
-        CallbackInfo ci,
-        @Local LocalRef<FormattedCharSequence> line, @Local(ordinal = 4) LocalIntRef y
-    ) {
-        FormattedCharSequence seq = line.get();
+    private Object renderTooltipInterceptDraw(Object original, @Local(ordinal = 4) LocalIntRef y) {
+        FormattedCharSequence seq = (FormattedCharSequence) original;
         if (seq == null)
-            return;
+            return null;
         Element el = TooltipInterceptor.getCachedElement(seq);
         if (el != null) {
             y.set(y.get() - 10 + GMath.ceil(el.getComputedHeight()));
-            line.set(null);
+            return null;
         }
+        return seq;
     }
 }
