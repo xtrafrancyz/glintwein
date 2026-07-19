@@ -6,15 +6,15 @@ import net.glintwein.ui.GlobalUIState;
 import net.glintwein.ui.data.*;
 import net.glintwein.ui.render.command.Context;
 import net.glintwein.ui.util.*;
+import net.glintwein.util.UnmodifiableArrayList;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Element extends YogaNode {
     private Element parent;
-    private final ChildrenList children = new ChildrenList();
+    private UnmodifiableArrayList<Element> children = UnmodifiableArrayList.empty();
     public final Box borderBox = new Box();
     public final Box paddingBox = new Box();
     public final Box contentBox = new Box();
@@ -92,14 +92,14 @@ public class Element extends YogaNode {
 
     public void addChild(Element child) {
         Platform.yoga().NodeInsertChild(yogaNode, child.yogaNode, children.size());
-        children.add0(child);
         child.parent = this;
+        children = children.cloneAdd(child);
     }
 
     public void addChild(Element child, int index) {
         Platform.yoga().NodeInsertChild(yogaNode, child.yogaNode, index);
-        children.add0(index, child);
         child.parent = this;
+        children = children.cloneAdd(index, child);
     }
 
     public void removeChild(Element child) {
@@ -107,8 +107,8 @@ public class Element extends YogaNode {
         if (index == -1)
             return;
         Platform.yoga().NodeRemoveChild(yogaNode, child.yogaNode);
-        children.remove0(index);
         child.parent = null;
+        children = children.cloneRemove(index);
     }
 
     public List<Element> getChildren() {
@@ -119,7 +119,7 @@ public class Element extends YogaNode {
         Platform.yoga().NodeRemoveAllChildren(yogaNode);
         for (Element child : children)
             child.parent = null;
-        children.clear0();
+        children = UnmodifiableArrayList.empty();
     }
 
     public float getComputedWidth() {
@@ -377,54 +377,6 @@ public class Element extends YogaNode {
 
     public boolean isHoveredByChild() {
         return hovered == 2;
-    }
-
-    private static class ChildrenList extends CopyOnWriteArrayList<Element> {
-        boolean add0(Element e) {
-            return super.add(e);
-        }
-
-        void add0(int index, Element element) {
-            super.add(index, element);
-        }
-
-        boolean remove0(Object o) {
-            return super.remove(o);
-        }
-
-        Element remove0(int index) {
-            return super.remove(index);
-        }
-
-        void clear0() {
-            super.clear();
-        }
-
-        @Override
-        @Deprecated
-        public boolean add(Element e) {
-            throw new UnsupportedOperationException("Use addChild() instead");
-        }
-
-        @Override
-        public void add(int index, Element element) {
-            throw new UnsupportedOperationException("Use addChild() instead");
-        }
-
-        @Override
-        public boolean remove(Object o) {
-            throw new UnsupportedOperationException("Use removeChild() instead");
-        }
-
-        @Override
-        public Element remove(int index) {
-            throw new UnsupportedOperationException("Use removeChild() instead");
-        }
-
-        @Override
-        public void clear() {
-            throw new UnsupportedOperationException("Use clearChildren() instead");
-        }
     }
 
     public interface ClickHandler {
