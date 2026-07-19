@@ -4,13 +4,67 @@ import net.glintwein.ui.render.font.GigaFont;
 import net.glintwein.ui.render.font.SizedFont;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 public class RichContent {
-    public final List<Span> spans;
+    public List<Span> spans;
 
     public RichContent(List<Span> spans) {
         this.spans = spans;
+    }
+
+    public RichContent(Span... spans) {
+        this.spans = Arrays.asList(spans);
+    }
+
+    public void append(Span span) {
+        spans.add(span);
+    }
+
+    public void append(RichContent content) {
+        spans.addAll(content.spans);
+    }
+
+    public void filterTextSpans(BiConsumer<TextSpan, List<Span>> filter) {
+        List<Span> newSpans = new ArrayList<>(spans.size());
+        for (Span span : spans) {
+            if (span instanceof TextSpan)
+                filter.accept((TextSpan) span, newSpans);
+            else
+                newSpans.add(span);
+        }
+        spans = newSpans;
+    }
+
+    /**
+     * <pre>{@code
+     * RichContent content = ...;
+     * content.filterSpans((span, output) -> {
+     *    if (span instanceof TextSpan textSpan) {
+     *       // Modify the textSpan or filter it out
+     *       if (textSpan.getText().contains("skip")) {
+     *          // Skip this span (filter it out)
+     *          return;
+     *       }
+     *       // Modify the textSpan (e.g., change its color)
+     *       TextSpan.Style newStyle = textSpan.getStyle().copy();
+     *       newStyle.color = 0xFF0000; // Change color to red
+     *       TextSpan modifiedSpan = new TextSpan(textSpan.text, newStyle);
+     *       output.add(modifiedSpan);
+     *    } else {
+     *       // Keep other types of spans unchanged
+     *       output.add(span);
+     *    }
+     * });
+     * }</pre>
+     */
+    public void filterSpans(BiConsumer<Span, List<Span>> filter) {
+        List<Span> newSpans = new ArrayList<>(spans.size());
+        for (Span span : spans)
+            filter.accept(span, newSpans);
+        spans = newSpans;
     }
 
     public static Builder builder() {

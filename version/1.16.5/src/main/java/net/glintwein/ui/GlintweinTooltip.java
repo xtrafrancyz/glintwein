@@ -48,16 +48,20 @@ public class GlintweinTooltip {
 
     public static void mcToRichContentInner(RichContent.Builder output, Component component, SizedFont regular, SizedFont bold, SizedFont italic) {
         component.visit((style, content) -> {
-            output.color(style.getColor() != null ? ARGB.setAlpha(style.getColor().getValue(), 255) : 0xFFFFFFFF);
+            SizedFont font;
             if (style.isBold() && bold != null) {
-                output.font(bold);
+                font = bold;
             } else if (style.isItalic() && italic != null) {
-                output.font(italic);
+                font = italic;
             } else if (regular != null) {
-                output.font(regular);
+                font = regular;
             } else {
-                output.font(GlobalUIState.getDefaultTextFont());
+                font = GlobalUIState.getDefaultTextFont();
             }
+            int color = style.getColor() != null ? ARGB.setAlpha(style.getColor().getValue(), 255) : 0xFFFFFFFF;
+            output.color(color);
+            output.font(font);
+            //System.out.println("mcToRichContentInner: " + content + " color:" + ARGB.toString(color));
             output.append(content);
             return Optional.empty();
         }, Style.EMPTY);

@@ -1,5 +1,6 @@
 package net.glintwein.ui.render.font;
 
+import it.unimi.dsi.fastutil.chars.Char2CharFunction;
 import it.unimi.dsi.fastutil.chars.Char2ObjectMap;
 import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2FloatOpenHashMap;
@@ -54,6 +55,63 @@ public class GigaFont {
         spaceWidth = getWidth(" ", 1.0f);
 
         textureId = new TextureSimple(image).getSprite().textureId;
+    }
+
+    /**
+     * Sets a fallback glyph for a specific character.
+     * If the specified 'to' character is not present in the font, this method does nothing.
+     * <p>
+     * <pre>{@code
+     * // Some random 'ᴅ' character is missing in the font,
+     * // so we can use regular 'D' as a fallback.
+     * .setGlyphFallback('ᴅ', 'D');
+     * }</pre>
+     */
+    public void setGlyphFallback(char from, char to) {
+        if (!glyphs.containsKey(to))
+            return;
+        glyphs.put(from, glyphs.get(to));
+    }
+
+    /**
+     * Sets a default glyph to be used when a character is not found in the font.
+     * If the specified fallbackDefault character is not present in the font, this method does nothing.
+     */
+    public void setGlyphFallbackDefault(char fallbackDefault) {
+        if (!glyphs.containsKey(fallbackDefault))
+            return;
+        glyphs.defaultReturnValue(glyphs.get(fallbackDefault));
+    }
+
+    /**
+     * Removes the default glyph fallback, so that characters not found in the font will not be rendered.
+     */
+    public void removeGlyphFallbackDefault() {
+        glyphs.defaultReturnValue(null);
+    }
+
+    public String filterUnsupportedCharacters(String text, Char2CharFunction replace) {
+        StringBuilder result = null;
+        int len = text.length();
+        for (int i = 0; i < len; i++) {
+            char c = text.charAt(i);
+            if (glyphs.containsKey(c)) {
+                if (result != null) {
+                    result.append(c);
+                }
+            } else {
+                if (result == null) {
+                    result = new StringBuilder(text.length());
+                    result.append(text, 0, i);
+                }
+                char replacement = replace.get(c);
+                if (glyphs.containsKey(replacement))
+                    result.append(replacement);
+            }
+        }
+        if (result == null)
+            return text;
+        return result.toString();
     }
 
     private float calculateWidth(String text) {
