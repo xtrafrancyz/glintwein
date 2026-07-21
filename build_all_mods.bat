@@ -14,5 +14,8 @@ cmd /d /c "cd /d mod\1.16.5-forge && gradlew.bat %JDK17% %GRADLE_COMMAND%"
 :: fabric 1.21.4
 cmd /d /c "cd /d mod\1.21.4-fabric && gradlew.bat %JDK21% %GRADLE_COMMAND%"
 
+:: fabric 1.21.11
+cmd /d /c "cd /d mod\1.21.11-fabric && gradlew.bat %JDK21% %GRADLE_COMMAND%"
+
 :: fabric 26.1.2
 cmd /d /c "cd /d mod\26.1.2-fabric && gradlew.bat %JDK25% %GRADLE_COMMAND%"
