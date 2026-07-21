@@ -5,7 +5,7 @@ import net.glintwein.OffscreenHudRenderer;
 import net.glintwein.demo.DemoWindow;
 import net.glintwein.platform.Platform1_21_11;
 import net.glintwein.platform.PlatformProvider;
-import net.glintwein.ui.DemoSection1_21_11;
+import net.glintwein.impl.DemoSection1_21_11;
 import net.minecraft.client.Minecraft;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

@@ -1,30 +1,26 @@
-package net.glintwein.impl;
+package net.glintwein.ui;
 
 import net.glintwein.Glintwein;
 import net.glintwein.platform.Platform;
-import net.glintwein.ui.GlobalUIState;
 import net.glintwein.ui.data.Align;
 import net.glintwein.ui.data.Edge;
 import net.glintwein.ui.data.PositionType;
 import net.glintwein.ui.element.Element;
 import net.glintwein.ui.render.command.Context;
-import net.minecraft.util.FormattedCharSequence;
+import org.joml.Vector2i;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-public class TooltipInterceptor {
+public class MinecraftTooltipRenderer {
     public static final String TOOLTIP_PREFIX = "$$glint$$";
     private static final Map<String, Function<String, Element>> FACTORIES = new HashMap<>();
     private static boolean initialized = false;
 
     private static TooltipContainer container;
     private static final Map<String, Element> factoryCache = new HashMap<>();
-    private static final Map<Element, Integer> seenTooltips = new HashMap<>();
-    private static final Map<FormattedCharSequence, Element> parsedCache = new HashMap<>();
-    private static int tooltipBaseX = 0;
-    private static int tooltipBaseY = 0;
+    private static final Map<Element, Vector2i> seenTooltips = new HashMap<>();
 
     private static void init() {
         if (!initialized) {
@@ -45,12 +41,15 @@ public class TooltipInterceptor {
                 if (seenTooltips.isEmpty())
                     factoryCache.clear();
                 seenTooltips.clear();
-                parsedCache.clear();
             });
         }
     }
 
-    public static void registerTooltipFactory(String namespace, Function<String, Element> factory) {
+    public static boolean enabled() {
+        return initialized;
+    }
+
+    public static void registerFactory(String namespace, Function<String, Element> factory) {
         if (FACTORIES.containsKey(namespace)) {
             throw new IllegalArgumentException("Tooltip factory for namespace '" + namespace + "' is already registered.");
         }
@@ -58,31 +57,20 @@ public class TooltipInterceptor {
         init();
     }
 
-    public static Element parseElement(FormattedCharSequence seq) {
+    public static Element parseElement(CharSeqReader reader) {
         if (!initialized)
             return null;
 
-        StringBuilder sb = new StringBuilder();
-        boolean[] state = {
-            true, // waiting for "$$glint$$"
-            false // glint found
-        };
-        seq.accept((i, style, codePoint) -> {
-            sb.appendCodePoint(codePoint);
-            if (state[0]) {
-                if (sb.length() >= 9) {
-                    state[0] = false;
-                    if (!TOOLTIP_PREFIX.contentEquals(sb))
-                        return false;
-                    sb.setLength(0);
-                    state[1] = true;
-                }
-            }
-            return true;
-        });
-        if (!state[1])
+        reader.run();
+        String text = reader.getResult();
+        if (text == null)
             return null;
-        String text = sb.toString();
+        return parseElement(text);
+    }
+
+    public static Element parseElement(String text) {
+        if (!initialized)
+            return null;
 
         int idx = text.indexOf(":");
         if (idx == -1)
@@ -107,23 +95,13 @@ public class TooltipInterceptor {
 
         if (el == null)
             return null;
-        parsedCache.put(seq, el);
         return el;
     }
 
-    public static Element getCachedElement(FormattedCharSequence seq) {
-        return parsedCache.get(seq);
-    }
-
-    public static void setElementY(Element el, int y) {
-        seenTooltips.put(el, y);
+    public static void setElementPos(Element el, int x, int y) {
+        seenTooltips.put(el, new Vector2i(x, y));
         if (el.getParent() == null)
             container.addChild(el);
-    }
-
-    public static void setTooltipBase(int x, int y) {
-        tooltipBaseX = x;
-        tooltipBaseY = y;
     }
 
     private static class TooltipContainer extends Element {
@@ -151,14 +129,14 @@ public class TooltipInterceptor {
             if (seenTooltips.isEmpty())
                 return false;
             for (Element el : getChildren()) {
-                Integer yPos = seenTooltips.get(el);
-                if (yPos != null) {
-                    el.contentBox.x = tooltipBaseX + el.contentBox.x - el.borderBox.x;
-                    el.contentBox.y = tooltipBaseY + yPos + el.contentBox.y - el.borderBox.y;
-                    el.paddingBox.x = tooltipBaseX + el.paddingBox.x - el.borderBox.x;
-                    el.paddingBox.y = tooltipBaseY + yPos + el.paddingBox.y - el.borderBox.y;
-                    el.borderBox.x = tooltipBaseX;
-                    el.borderBox.y = tooltipBaseY + yPos;
+                Vector2i pos = seenTooltips.get(el);
+                if (pos != null) {
+                    el.contentBox.x = pos.x + el.contentBox.x - el.borderBox.x;
+                    el.contentBox.y = pos.y + el.contentBox.y - el.borderBox.y;
+                    el.paddingBox.x = pos.x + el.paddingBox.x - el.borderBox.x;
+                    el.paddingBox.y = pos.y + el.paddingBox.y - el.borderBox.y;
+                    el.borderBox.x = pos.x;
+                    el.borderBox.y = pos.y;
                 }
             }
             return true;
@@ -211,6 +189,28 @@ public class TooltipInterceptor {
             }
 
             ctx.pose().popMatrix();
+        }
+    }
+
+    public abstract static class CharSeqReader implements Runnable {
+        private final StringBuilder builder = new StringBuilder();
+        private int readCount = 0;
+        private boolean foundGlint = false;
+
+        protected boolean readChar(int codePoint) {
+            builder.appendCodePoint(codePoint);
+            readCount++;
+            if (readCount == 9) {
+                if (!TOOLTIP_PREFIX.contentEquals(builder))
+                    return false;
+                builder.setLength(0);
+                foundGlint = true;
+            }
+            return true;
+        }
+
+        public String getResult() {
+            return foundGlint ? builder.toString() : null;
         }
     }
 }

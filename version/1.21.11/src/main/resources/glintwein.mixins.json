@@ -7,6 +7,7 @@
   ],
   "client": [
     "ui.AccessorGlBuffer",
+    "ui.MixinClientTooltipComponent",
     "ui.MixinLevelRenderer",
     "ui.MixinMinecraft"
   ],

@@ -6,7 +6,6 @@ import net.glintwein.ui.rtf.RichContent;
 import net.glintwein.ui.util.ARGB;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import net.minecraft.network.chat.TextComponent;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,7 +17,7 @@ public class GlintweinTooltip {
     }
 
     public static Component createKey(String namespace, String date) {
-        return new TextComponent(MinecraftTooltipRenderer.TOOLTIP_PREFIX + namespace + ":" + date);
+        return Component.literal(MinecraftTooltipRenderer.TOOLTIP_PREFIX + namespace + ":" + date);
     }
 
     public static RichContent mcToRichContent(Component component) {
