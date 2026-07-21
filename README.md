@@ -34,6 +34,7 @@ Current modules in this repository:
 - **Minecraft 1.16.5 (Fabric)** - included in the root Gradle build.
 - **Minecraft 1.16.5 (Forge)** - standalone Gradle project under `mod/1.16.5-forge/`.
 - **Minecraft 1.21.4 (Fabric)** - standalone Gradle project under `mod/1.21.4-fabric/`.
+- **Minecraft 1.21.11 (Fabric)** - standalone Gradle project under `mod/1.21.11-fabric/`.
 - **Minecraft 26.1.2 (Fabric)** - standalone Gradle project under `mod/26.1.2-fabric/`.
 
 ## Usage

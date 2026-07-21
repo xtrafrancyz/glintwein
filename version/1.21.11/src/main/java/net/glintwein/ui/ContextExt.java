@@ -1,0 +1,98 @@
+package net.glintwein.ui;
+
+import com.mojang.blaze3d.opengl.GlTexture;
+import com.mojang.blaze3d.platform.Lighting;
+import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.blaze3d.vertex.PoseStack;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
+import net.glintwein.ui.data.BorderRadius;
+import net.glintwein.ui.render.command.Context;
+import net.glintwein.ui.render.command.DrawTextureBuilder;
+import net.glintwein.ui.render.texture.AtlasPacker;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.LoadingOverlay;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.SubmitNodeStorage;
+import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
+import net.minecraft.client.renderer.item.ItemStackRenderState;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.item.ItemStack;
+import org.lwjgl.opengl.GL11;
+
+import java.util.function.Consumer;
+
+public class ContextExt {
+    private static final ItemStackRenderState itemState = new ItemStackRenderState();
+    private static final IntSet nearestFilteredTextures = new IntOpenHashSet();
+
+    public static void drawItem(Context ctx, ItemStack is, float x, float y, float size, boolean decoration) {
+        // Item models are not loaded during loading screen, leading to crash
+        if (is.isEmpty() || Minecraft.getInstance().getOverlay() instanceof LoadingOverlay)
+            return;
+        addNativePipCommand(ctx, pose -> {
+            pose.translate(0.5f, 0.5f, 1);
+            pose.scale(1, -1, 1);
+
+            Minecraft mc = Minecraft.getInstance();
+            FeatureRenderDispatcher dispatcher = mc.gameRenderer.getFeatureRenderDispatcher();
+            SubmitNodeStorage submitNodeStorage = mc.gameRenderer.getSubmitNodeStorage();
+            mc.getItemModelResolver().updateForTopItem(itemState, is, ItemDisplayContext.GUI, mc.level, mc.player, 0);
+            Lighting.Entry lighting = itemState.usesBlockLight() ? Lighting.Entry.ITEMS_3D : Lighting.Entry.ITEMS_FLAT;
+            mc.gameRenderer.getLighting().setupFor(lighting);
+            itemState.submit(pose, submitNodeStorage, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, 0);
+            dispatcher.renderAllFeatures();
+            mc.renderBuffers().bufferSource().endBatch();
+        }, x, y, size, size);
+    }
+
+    public static void drawPlayerHead(Context ctx, AbstractClientPlayer player, float x, float y, float size, BorderRadius radius) {
+        int textureId = getTextureId(player.getSkin().body().texturePath());
+        glFilteringNearest(textureId);
+
+        // head
+        ctx.drawTexture(DrawTextureBuilder.fromXYWH(x, y, size, size)
+            .uv(8, 8, 8, 8, 64, 64)
+            .texture(textureId)
+            .radius(radius)
+        );
+        // helmet overlay
+        ctx.drawTexture(DrawTextureBuilder.fromXYWH(x, y, size, size)
+            .uv(40, 8, 8, 8, 64, 64)
+            .texture(textureId)
+            .radius(radius)
+        );
+    }
+
+    public static void addNativePipCommand(Context ctx, Consumer<PoseStack> command, float x, float y, float width, float height) {
+        ctx.addPipCommand(cmd -> {
+            PoseStack pose = new PoseStack();
+
+            AtlasPacker.Rect rect = cmd.sprite.atlasRect();
+            pose.translate(rect.left, rect.top, -3000);
+            float sx = rect.right - rect.left;
+            float sy = rect.bottom - rect.top;
+            pose.scale(sx, sy, (sx + sy) / 2f);
+
+            command.accept(pose);
+        }, x, y, width, height);
+    }
+
+    public static int getTextureId(Identifier texture) {
+        GpuTexture gpuTexture = Minecraft.getInstance().getTextureManager()
+            .getTexture(texture)
+            .getTexture();
+        return ((GlTexture) gpuTexture).glId();
+    }
+
+    public static void glFilteringNearest(int textureId) {
+        if (!nearestFilteredTextures.add(textureId))
+            return;
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
+    }
+}
