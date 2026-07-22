@@ -492,7 +492,7 @@ public class Window {
     }
 
     private boolean isOnResizeHandle(float localX, float localY) {
-        float handleSize = Math.min(RESIZE_HANDLE_SIZE / scale, Math.min(root.getComputedWidth(), root.getComputedHeight()));
+        float handleSize = Math.min(RESIZE_HANDLE_SIZE, Math.min(root.getComputedWidth(), root.getComputedHeight()));
         float width = root.getComputedWidth();
         float height = root.getComputedHeight();
         return localX >= width - handleSize && localY >= height - handleSize && localX <= width && localY <= height;
