@@ -2,6 +2,7 @@ package net.glintwein.ui.render.command;
 
 import net.glintwein.ui.data.BorderRadius;
 import net.glintwein.ui.data.Box;
+import net.glintwein.ui.data.NineSliceSpec;
 import net.glintwein.ui.render.texture.Sprite;
 
 public class DrawTextureBuilder {
@@ -12,6 +13,7 @@ public class DrawTextureBuilder {
     int color;
     int outlineColor;
     float outlineWidth;
+    NineSliceSpec nineSlice;
 
     private DrawTextureBuilder(float x0, float y0, float x1, float y1) {
         this.x0 = x0;
@@ -98,6 +100,35 @@ public class DrawTextureBuilder {
         this.y0 -= outlineWidth;
         this.x1 += outlineWidth;
         this.y1 += outlineWidth;
+        return this;
+    }
+
+    public DrawTextureBuilder nineSlice(NineSliceSpec spec) {
+        this.nineSlice = spec;
+        return this;
+    }
+
+    public DrawTextureBuilder nineSliceType(NineSliceSpec.Type type) {
+        if (this.nineSlice == null)
+            this.nineSlice = new NineSliceSpec(type, 0, 0, 0, 0, 1, 1);
+        else
+            this.nineSlice = this.nineSlice.withType(type);
+        return this;
+    }
+
+    public DrawTextureBuilder nineSliceScale(float scale) {
+        if (this.nineSlice == null)
+            this.nineSlice = new NineSliceSpec(NineSliceSpec.Type.STRETCH, 0, 0, 0, 0, 1, 1, scale);
+        else
+            this.nineSlice = this.nineSlice.withScale(scale);
+        return this;
+    }
+
+    public DrawTextureBuilder nineSliceInsets(int left, int top, int right, int bottom, int textureWidth, int textureHeight) {
+        if (this.nineSlice == null)
+            this.nineSlice = new NineSliceSpec(NineSliceSpec.Type.STRETCH, left, top, right, bottom, textureWidth, textureHeight);
+        else
+            this.nineSlice = this.nineSlice.withInsets(left, top, right, bottom, textureWidth, textureHeight);
         return this;
     }
 

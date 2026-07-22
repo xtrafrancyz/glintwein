@@ -295,7 +295,7 @@ public class Context {
             x, y, x + width, y + height,
             sprite.u0, sprite.v0, sprite.u1, sprite.v1,
             radius, sprite.textureId, color,
-            0, 0
+            0, 0, null
         ));
     }
 
@@ -311,7 +311,8 @@ public class Context {
             builder.x0, builder.y0, builder.x1, builder.y1,
             builder.u0, builder.v0, builder.u1, builder.v1,
             builder.radius, builder.texture, color,
-            outlineColor, builder.outlineWidth
+            outlineColor, builder.outlineWidth,
+            builder.nineSlice
         ));
     }
 
@@ -384,7 +385,7 @@ public class Context {
             sprite.u0, sprite.v0, sprite.u1, sprite.v1,
             BorderRadius.ZERO, sprite.textureId,
             0xFFFFFFFF,
-            0, 0
+            0, 0, null
         ));
     }
 

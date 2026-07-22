@@ -1,6 +1,7 @@
 package net.glintwein.demo;
 
 import net.glintwein.Glintwein;
+import net.glintwein.platform.GlintImage;
 import net.glintwein.platform.Platform;
 import net.glintwein.ui.GlobalUIState;
 import net.glintwein.ui.Window;
@@ -16,15 +17,25 @@ import net.glintwein.ui.render.program.GlintVertexConsumer;
 import net.glintwein.ui.render.program.GlintVertexFormat;
 import net.glintwein.ui.render.program.GlintVertexFormatElement;
 import net.glintwein.ui.render.texture.Sprite;
+import net.glintwein.ui.render.texture.Texture;
+import net.glintwein.ui.render.texture.TextureSimple;
 import net.glintwein.ui.rtf.RichContent;
 import net.glintwein.ui.util.ARGB;
 import net.glintwein.ui.util.Animated;
 import net.glintwein.ui.util.Easing;
+import net.glintwein.ui.util.GMath;
 import org.joml.Matrix3x2f;
 import org.joml.Vector3f;
 
+import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class DemoWindow extends Window {
@@ -42,6 +53,8 @@ public class DemoWindow extends Window {
     }
 
     public static final String ANIME_URL = "https://other.xtrafrancyz.net/graphen/chise.png";
+    public static final String FLEXBG_URL = "https://other.xtrafrancyz.net/graphen/nine_slice.png";
+    private static final NineSliceSpec FLEXBG_SLICE = new NineSliceSpec(NineSliceSpec.Type.TILE, 70, 70, 70, 70, 256, 256, 0.4f);
 
 
     public static final int BG = 0xff17181c;
@@ -56,10 +69,26 @@ public class DemoWindow extends Window {
 
     private int initWithInitializers = -1;
     private boolean minimized = false;
+    private Texture flexBgTexture;
+    private Texture animeTexture;
+    private final Queue<Runnable> tickTasksQueue = new ConcurrentLinkedQueue<>();
 
     public DemoWindow() {
         super("glintwein_demo");
         setResizeable(true);
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        BiConsumer<String, Consumer<GlintImage>> loadImage = (url, cb) -> executor.submit(() -> {
+            try (InputStream in = new URL(url).openStream()) {
+                GlintImage image = Platform.get().loadImage(in);
+                tickTasksQueue.add(() -> cb.accept(image));
+            } catch (Exception e) {
+                Platform.log().error("Failed to load texture from URL: " + url, e);
+            }
+        });
+        loadImage.accept(FLEXBG_URL, image -> flexBgTexture = new TextureSimple(image));
+        loadImage.accept(ANIME_URL, image -> animeTexture = new TextureSimple(image));
+        executor.shutdown();
     }
 
     private void init() {
@@ -93,6 +122,8 @@ public class DemoWindow extends Window {
         if (initWithInitializers != CUSTOM_INITIALIZERS.size()) {
             init();
         }
+        for (Runnable task = tickTasksQueue.poll(); task != null; task = tickTasksQueue.poll())
+            task.run();
         super.tick(mouseX, mouseY, canHover);
     }
 
@@ -198,9 +229,9 @@ public class DemoWindow extends Window {
         }
     }
 
-    private static class DrawingDemo extends Element {
+    private class DrawingDemo extends Element {
         public DrawingDemo() {
-            this.setHeight(275);
+            this.setHeight(365);
             this.setPadding(Edge.ALL, 5);
         }
 
@@ -331,6 +362,31 @@ public class DemoWindow extends Window {
                     .radius(20)
                     .outline(0xffffffff, 2)
                 );
+
+            y += 50;
+
+            if (animeTexture != null) {
+                ctx.drawTexture(DrawTextureBuilder.fromXYWH(0, y, 80, 80)
+                    .texture(animeTexture.getSprite())
+                    .radius(20)
+                    .outline(0xffffffff, 2)
+                );
+            } else {
+                ctx.drawRect(0, y, 80, 80, BorderRadius.of(20), 0xff000000);
+                ctx.drawText(GlobalUIState.getDefaultFont(), "Loading...", 2, y + 2, 16, WHITE);
+            }
+
+            if (flexBgTexture != null) {
+                float width = GMath.lerp(0.5f + 0.5f * (float) Math.sin(Glintwein.time / 1000f), 80, 200);
+                ctx.drawTexture(DrawTextureBuilder.fromXYWH(90, y, width, 80)
+                    .texture(flexBgTexture.getSprite())
+                    .nineSlice(FLEXBG_SLICE)
+                    .radius(10)
+                );
+            } else {
+                ctx.drawRect(90, y, 80, 80, BorderRadius.of(20), 0xff000000);
+                ctx.drawText(GlobalUIState.getDefaultFont(), "Loading...", 92, y + 2, 16, WHITE);
+            }
 
             ctx.pose().popMatrix();
         }
