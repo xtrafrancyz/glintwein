@@ -115,7 +115,7 @@ public class Window {
         float[] staticX = {screenW * 0.05f, screenW * 0.5f, screenW * 0.95f};
         float[] staticY = {screenH * 0.05f, screenH * 0.5f, screenH * 0.95f};
 
-        float pixSize = GlobalUIState.getPixelSize();
+        float pixSize = ctx.getPixelSize();
 
         for (float x : staticX) ctx.drawRect(x, 0, pixSize, screenH, staticColor);
         for (float y : staticY) ctx.drawRect(0, y, screenW, pixSize, staticColor);
@@ -409,7 +409,10 @@ public class Window {
                 break;
         }
 
-        return new Vector2f(GlobalUIState.snapToPixel(x), GlobalUIState.snapToPixel(y));
+        float scale = GlobalUIState.getScale();
+        x = Math.round(x * scale) / scale;
+        y = Math.round(y * scale) / scale;
+        return new Vector2f(x, y);
     }
 
     public void setResizeable(boolean resizeable) {

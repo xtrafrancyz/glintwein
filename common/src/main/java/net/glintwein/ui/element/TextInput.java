@@ -248,7 +248,7 @@ public class TextInput extends Text {
 
     @Override
     protected void drawContent(Context ctx) {
-        updateScroll();
+        updateScroll(ctx);
 
         if (hasOverflow) {
             if (!ctx.pushScissor(Bounds.fromBox(contentBox)))
@@ -284,7 +284,7 @@ public class TextInput extends Text {
             if ((Glintwein.time - blinkTimer) % 1060L < 530L) {
                 WrappedLine line = getWrappedLines().get(cursor.y());
                 float cursorOffset = font.getWidth(line.text.substring(0, cursor.x()));
-                ctx.drawRect(line.x() + cursorOffset, line.y(), GlobalUIState.getPixelSize() * 2, font.getHeight(), 0xFFFFFFFF);
+                ctx.drawRect(GMath.ceilX(ctx.pose(), line.x() + cursorOffset), line.y(), ctx.getPixelSize() * 2, font.getHeight(), 0xFFFFFFFF);
             }
         }
 
@@ -298,14 +298,13 @@ public class TextInput extends Text {
     protected void readYogaLayout() {
         super.readYogaLayout();
         scrollDirty = true;
-        updateScroll();
     }
 
     protected void onValueChange() {
         scrollDirty = true;
     }
 
-    private void updateScroll() {
+    private void updateScroll(Context ctx) {
         if (!scrollDirty)
             return;
         scrollDirty = false;
@@ -316,15 +315,15 @@ public class TextInput extends Text {
         }
 
         WrappedLine line = getWrappedLines().get(0);
-        hasOverflow = line.width - contentBox.width > GlobalUIState.getPixelSize();
+        hasOverflow = line.width - contentBox.width > ctx.getPixelSize();
         if (!hasOverflow) {
             scrollX = 0;
             return;
         }
         float cursorOffset = font.getWidth(line.text.substring(0, translatePosToRowCol(cursorPos).x()));
-        float minScroll = GMath.clamp(cursorOffset - contentBox.width + GlobalUIState.getPixelSize() * 3, 0, cursorOffset);
+        float minScroll = GMath.clamp(cursorOffset - contentBox.width + ctx.getPixelSize() * 3, 0, cursorOffset);
         float maxScroll = GMath.clamp(line.width - contentBox.width, 0, cursorOffset);
-        scrollX = GlobalUIState.snapToPixel(GMath.clamp(scrollX, minScroll, maxScroll));
+        scrollX = GMath.clamp(scrollX, minScroll, maxScroll);
     }
 
     private boolean isPlaceholderVisible() {

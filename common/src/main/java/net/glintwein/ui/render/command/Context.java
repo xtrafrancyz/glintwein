@@ -74,6 +74,24 @@ public class Context {
         return 1 / ((transform.m00 + transform.m11) * 0.5f);
     }
 
+    public float roundPixelX(float value) {
+        return GMath.roundX(transform, value);
+    }
+
+    public float roundPixelY(float value) {
+        return GMath.roundY(transform, value);
+    }
+
+    public Vector2f roundPixel(Vector2f value) {
+        return roundPixel(value, new Vector2f());
+    }
+
+    public Vector2f roundPixel(Vector2f value, Vector2f dest) {
+        dest.x = GMath.roundX(transform, value.x);
+        dest.y = GMath.roundY(transform, value.y);
+        return dest;
+    }
+
     public float pushOpacityExact(float opacity) {
         opacityStack.enqueueFirst(opacity);
         return opacity;

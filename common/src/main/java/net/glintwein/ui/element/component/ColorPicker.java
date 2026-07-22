@@ -144,7 +144,7 @@ public class ColorPicker extends Element {
             };
 
             float width = contentBox.width / 6f;
-            float half_pixel = GlobalUIState.getPixelSize() * 0.5f;
+            float half_pixel = ctx.getPixelSize() * 0.5f;
             for (int i = 0; i < hueColors.length - 1; i++) {
                 BorderRadius radius = BorderRadius.ZERO;
                 if (i == 0)

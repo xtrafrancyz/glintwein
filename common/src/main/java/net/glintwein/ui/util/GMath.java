@@ -1,5 +1,7 @@
 package net.glintwein.ui.util;
 
+import org.joml.Matrix3x2f;
+
 public class GMath {
     public static final float PI = (float) Math.PI;
     public static final float HALF_PI = (float) (Math.PI / 2.0);
@@ -47,5 +49,53 @@ public class GMath {
 
     public static int clamp(int value, int min, int max) {
         return Math.max(min, Math.min(max, value));
+    }
+
+    public static float roundX(Matrix3x2f m, float value) {
+        if (m.m01 != 0.0f)
+            return value;
+        float scale = m.m00;
+        float subpixel = m.m20 - Math.round(m.m20);
+        return (Math.round(value * scale) - subpixel) / scale;
+    }
+
+    public static float roundY(Matrix3x2f m, float value) {
+        if (m.m10 != 0.0f)
+            return value;
+        float scale = m.m11;
+        float subpixel = m.m21 - Math.round(m.m21);
+        return (Math.round(value * scale) - subpixel) / scale;
+    }
+
+    public static float floorX(Matrix3x2f m, float value) {
+        if (m.m01 != 0.0f)
+            return value;
+        float scale = m.m00;
+        float subpixel = m.m20 - Math.round(m.m20);
+        return ((float) Math.floor(value * scale) - subpixel) / scale;
+    }
+
+    public static float floorY(Matrix3x2f m, float value) {
+        if (m.m10 != 0.0f)
+            return value;
+        float scale = m.m11;
+        float subpixel = m.m21 - Math.round(m.m21);
+        return ((float) Math.floor(value * scale) - subpixel) / scale;
+    }
+
+    public static float ceilX(Matrix3x2f m, float value) {
+        if (m.m01 != 0.0f)
+            return value;
+        float scale = m.m00;
+        float subpixel = m.m20 - Math.round(m.m20);
+        return ((float) Math.ceil(value * scale) - subpixel) / scale;
+    }
+
+    public static float ceilY(Matrix3x2f m, float value) {
+        if (m.m10 != 0.0f)
+            return value;
+        float scale = m.m11;
+        float subpixel = m.m21 - Math.round(m.m21);
+        return ((float) Math.ceil(value * scale) - subpixel) / scale;
     }
 }

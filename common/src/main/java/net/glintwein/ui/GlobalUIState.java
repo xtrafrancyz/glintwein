@@ -3,6 +3,7 @@ package net.glintwein.ui;
 import net.glintwein.Glintwein;
 import net.glintwein.platform.Platform;
 import net.glintwein.ui.element.Element;
+import net.glintwein.ui.render.command.Context;
 import net.glintwein.ui.render.font.GigaFont;
 import net.glintwein.ui.render.font.SizedFont;
 import net.glintwein.util.ResourceLoaderUtil;
@@ -133,15 +134,12 @@ public class GlobalUIState {
         return lastWindowHeight / scale;
     }
 
+    /**
+     * @deprecated Use {@link Context#getPixelSize()} instead
+     */
+    @Deprecated
     public static float getPixelSize() {
         return 1 / scale;
-    }
-
-    /**
-     * @return 1 или >=1 в зависимости от масштаба, чтобы гарантировать, что линии толщиной в 1 пиксель всегда будут видимыми.
-     */
-    public static float minimumOnePixel() {
-        return scale >= 1 ? 1 : getPixelSize();
     }
 
     public static float getScale() {
@@ -171,12 +169,12 @@ public class GlobalUIState {
         return true;
     }
 
+    /**
+     * @deprecated Use {@link Context#roundPixelX(float)} instead
+     */
+    @Deprecated
     public static float snapToPixel(float value) {
-        return (float) (Math.floor(value * scale + 0.5) / scale);
-    }
-
-    public static float floorToPixel(float value) {
-        return (float) (Math.floor(value * scale) / scale);
+        return Math.round(value * scale) / scale;
     }
 
     public static Matrix4f getGuiProjectionMatrix() {

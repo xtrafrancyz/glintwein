@@ -330,10 +330,13 @@ public class DemoWindow extends Window {
                 float offset = (Glintwein.time % period) / period * contentBox.width;
                 float half_pixel = GlobalUIState.getPixelSize() * 0.5f;
                 float w = contentBox.width / 6f;
+                float x = -offset;
                 for (int i = 0; i < 14; i++) {
-                    float x = w * i - offset;
-                    ctx.drawRect(x, y, w + half_pixel, 20, BorderRadius.ZERO,
-                        Gradient.leftToRight(hueColors[i % 6], hueColors[(i + 1) % 6]));
+                    float next = ctx.roundPixelX(x + w);
+                    ctx.drawRect(DrawRectBuilder.fromMinMax(x, y, next, y + 20)
+                        .color(Gradient.leftToRight(hueColors[i % 6], hueColors[(i + 1) % 6]))
+                    );
+                    x = next;
                 }
                 ctx.popScissor();
             }

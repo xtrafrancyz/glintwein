@@ -170,9 +170,6 @@ public class Element extends YogaNode {
         borderBox.set(result.border);
         paddingBox.set(result.padding);
         contentBox.set(result.content);
-        borderBox.snapToPixels();
-        paddingBox.snapToPixels();
-        contentBox.snapToPixels();
         if (layoutLerp != null)
             layoutLerp.animate(borderBox, paddingBox, contentBox);
     }

@@ -139,7 +139,7 @@ public class WaypointElement extends Element {
             padding1.setXY(padding);
             content1.setXY(content);
 
-            float epsilon = GlobalUIState.getPixelSize() * 1.5f;
+            float epsilon = 0.002f;
 
             if (!(Math.abs(border1.height - border.height) < epsilon &&
                 Math.abs(border1.width - border.width) < epsilon &&

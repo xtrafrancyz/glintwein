@@ -49,8 +49,12 @@ public class RootElement extends Element {
         return super.handleMouseScroll(mouseX, mouseY, horizontal, vertical);
     }
 
+    /**
+     * Called when the UI scale is changed, to invalidate the layout and recalculate it.
+     * Not used currently.
+     */
     public void invalidateLayout() {
         // TODO support for new yoga without this method
-        Platform.yoga().NodeMarkDirtyAndPropogateToDescendants(getYogaNodeHandle(this));
+        // Platform.yoga().NodeMarkDirtyAndPropogateToDescendants(getYogaNodeHandle(this));
     }
 }

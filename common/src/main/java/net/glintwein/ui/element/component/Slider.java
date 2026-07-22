@@ -1,6 +1,5 @@
 package net.glintwein.ui.element.component;
 
-import net.glintwein.ui.GlobalUIState;
 import net.glintwein.ui.data.BorderRadius;
 import net.glintwein.ui.data.Gradient;
 import net.glintwein.ui.data.Size;
@@ -86,7 +85,7 @@ public class Slider extends LeafElement {
         ctx.drawRect(DrawRectBuilder.fromXYWH(contentBox.x, trackY, filledWidth, trackHeight)
             .radius(radius)
             .color(Gradient.leftToRight(leftColor, ARGB.lerp(filledWidth / contentBox.width, leftColor, rightColor)))
-            .outline(0xFF4A82BE, GlobalUIState.minimumOnePixel())
+            .outline(0xFF4A82BE, Math.max(1, ctx.getPixelSize()))
         );
 
         float thumbX = contentBox.x + ((value - minValue) / (maxValue - minValue)) * (contentBox.width - thumbSize);
