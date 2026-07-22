@@ -103,17 +103,23 @@ public class Platform1_21_11 implements Platform {
 
         @Override
         public boolean hasControlDown() {
-            return currentKeyEvent != null && currentKeyEvent.hasControlDown();
+            if (currentKeyEvent != null)
+                return currentKeyEvent.hasControlDown();
+            return Minecraft.getInstance().hasControlDown();
         }
 
         @Override
         public boolean hasShiftDown() {
-            return currentKeyEvent != null && currentKeyEvent.hasShiftDown();
+            if (currentKeyEvent != null)
+                return currentKeyEvent.hasShiftDown();
+            return Minecraft.getInstance().hasShiftDown();
         }
 
         @Override
         public boolean hasAltDown() {
-            return currentKeyEvent != null && currentKeyEvent.hasAltDown();
+            if (currentKeyEvent != null)
+                return currentKeyEvent.hasAltDown();
+            return Minecraft.getInstance().hasAltDown();
         }
 
         @Override
