@@ -30,7 +30,7 @@ public class Gradient {
     }
 
     public static Gradient rightToLeft(int right, int left) {
-        return new Gradient(right, left, left, right);
+        return new Gradient(left, right, right, left);
     }
 
     public static Gradient topToBottom(int top, int bottom) {
@@ -38,7 +38,7 @@ public class Gradient {
     }
 
     public static Gradient bottomToTop(int bottom, int top) {
-        return new Gradient(bottom, bottom, top, top);
+        return new Gradient(top, top, bottom, bottom);
     }
 
     public static Gradient fromCorners(int tl, int tr, int br, int bl) {

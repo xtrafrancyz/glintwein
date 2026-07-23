@@ -8,6 +8,7 @@ import net.glintwein.ui.Window;
 import net.glintwein.ui.data.*;
 import net.glintwein.ui.element.*;
 import net.glintwein.ui.element.component.Dropdown;
+import net.glintwein.ui.element.component.CurrencyPlot;
 import net.glintwein.ui.element.component.RichElement;
 import net.glintwein.ui.element.component.Slider;
 import net.glintwein.ui.render.command.*;
@@ -112,6 +113,7 @@ public class DemoWindow extends Window {
         root.addChild(new Collapse("Layout Lerp", new LayoutLerpDemo()));
         root.addChild(new Collapse("Waypoints", new WaypointDemo()));
         root.addChild(new Collapse("Custom Shader", new CustomShaderDemo()));
+        root.addChild(new Collapse("Plot", new PlotDemo()));
         for (Consumer<DemoWindow> initializer : CUSTOM_INITIALIZERS) {
             initializer.accept(this);
         }
@@ -328,7 +330,6 @@ public class DemoWindow extends Window {
                 int[] hueColors = new int[]{0xFFFF0000, 0xFFFFFF00, 0xFF00FF00, 0xFF00FFFF, 0xFF0000FF, 0xFFFF00FF, 0xFFFF0000};
                 float period = 3000f;
                 float offset = (Glintwein.time % period) / period * contentBox.width;
-                float half_pixel = GlobalUIState.getPixelSize() * 0.5f;
                 float w = contentBox.width / 6f;
                 float x = -offset;
                 for (int i = 0; i < 14; i++) {
@@ -649,7 +650,12 @@ public class DemoWindow extends Window {
             clearWaypoints.setMargin(Edge.TOP, 5);
             addHoverBg(clearWaypoints);
             clearWaypoints.setOnClick(button -> {
-                Glintwein.instance.layerIngame.getContent().getChildren().removeIf(child -> child instanceof WaypointElement);
+                Glintwein.instance.layerIngame.getContent()
+                    .getChildren()
+                    .forEach(child -> {
+                        if (child instanceof WaypointElement)
+                            child.getParent().removeChild(child);
+                    });
                 return true;
             });
             this.addChild(clearWaypoints);
@@ -751,6 +757,35 @@ public class DemoWindow extends Window {
                 }
                 program.draw();
             }
+        }
+    }
+
+    public static class PlotDemo extends Element {
+        private final CurrencyPlot plot;
+        private float[] data = new float[200];
+        private int dataIndex = 0;
+
+        public PlotDemo() {
+            this.setPadding(Edge.ALL, 5);
+
+            plot = new CurrencyPlot();
+            plot.setSize(300, 120);
+            plot.setBackground(BG2);
+            plot.setFont(GlobalUIState.getDefaultTextFont().withSize(12));
+            this.addChild(plot);
+        }
+
+        @Override
+        public void tick() {
+            super.tick();
+            float phase = (float) (Glintwein.time / 450d);
+            if (dataIndex >= data.length) {
+                System.arraycopy(data, 1, data, 0, data.length - 1);
+                dataIndex = data.length - 1;
+            }
+            data[dataIndex] = (float) Math.sin(phase) * 0.5f + 0.5f;
+            dataIndex++;
+            plot.setData(data);
         }
     }
 }

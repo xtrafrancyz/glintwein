@@ -116,6 +116,8 @@ public class Element extends YogaNode {
     }
 
     public void clearChildren() {
+        if (children.isEmpty())
+            return;
         Platform.yoga().NodeRemoveAllChildren(yogaNode);
         for (Element child : children)
             child.parent = null;
@@ -152,6 +154,11 @@ public class Element extends YogaNode {
             current = current.parent;
         }
         return Bounds.fromXYWH(absX, absY, borderBox.width, borderBox.height);
+    }
+
+    public void initCalculateLayout() {
+        Platform.yoga().NodeCalculateLayout(yogaNode, Float.NaN, Float.NaN);
+        propagateLayoutRead();
     }
 
     protected void propagateLayoutRead() {
